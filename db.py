@@ -44,7 +44,7 @@ conn = sqlite3.connect(str(db_path))
 conn.row_factory = Row
 cur = conn.cursor()
 
-def select(query, params):
+def select(query, params=[]):
     return cur.execute(query, params).fetchall()
 
 def execute(query, params):
