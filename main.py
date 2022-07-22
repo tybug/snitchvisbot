@@ -95,7 +95,14 @@ class MyClient(Client):
         await message.channel.send(m)
 
     async def index(self, message):
-        pass
+        channels = db.get_snitch_channels(message.guild)
+        await message.channel.send("Indexing the following snitch channels: "
+            f"{utils.channel_str(channels)}. This could take a LONG time if "
+            "they have lots of messages in them.")
+
+        for channel in channels:
+            await message.channel.send(f"Indexing channel {channel.mention}...")
+
 
 client = MyClient()
 client.run(TOKEN)
