@@ -51,15 +51,18 @@ def execute(query, params):
     cur.execute(query, params)
     conn.commit()
 
+def convert(rows, Class):
+    intances = []
+    for row in rows:
+        kwargs = dict(zip(row.keys(), list(row)))
+        intances.append(Class(**kwargs))
+    return intances
+
 ## snitch channels
 
 def get_snitch_channels(guild):
     rows = select("SELECT * FROM snitch_channel WHERE guild_id = ?", [guild.id])
-    channels = []
-    for row in rows:
-        kwargs = dict(zip(row.keys(), list(row)))
-        channels.append(SnitchChannel(**kwargs))
-    return channels
+    return convert(rows, SnitchChannel)
 
 def add_snitch_channel(channel):
     execute("INSERT INTO snitch_channel (guild_id, id) VALUES (?, ?)",
