@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 @dataclass
 class SnitchChannel:
@@ -27,5 +28,8 @@ class Event:
     x: int
     y: int
     z: int
-    # time in ms
-    t: int
+    # gets passed as ms since epoch and converted on post_init
+    t: datetime
+
+    def __post_init__(self):
+        self.t = datetime.fromtimestamp(self.t)

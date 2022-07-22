@@ -1,6 +1,7 @@
-from discord import Client
+from discord import Client, File
 from discord.utils import remove_markdown
-from snitchvis import Event, InvalidEventException
+from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
+    create_users, snitches_from_events)
 
 import db
 import utils
@@ -21,6 +22,8 @@ class MyClient(Client):
             await self.channel_list(message)
         if message.content == ".index":
             await self.index(message)
+        if message.content == ".v":
+            await self.visualize(message)
 
     async def setup(self, message):
         await message.channel.send("Looking for snitch channels...")
@@ -140,7 +143,44 @@ class MyClient(Client):
 
         await message.channel.send("Finished indexing snitch channels")
 
+    async def visualize(self, message):
+        # everything after the first space
+        # args = " ".join(message.content.split(" ")[1:])
+        recent_events = db.get_recent_events(message.guild, 30)
+        if not recent_events:
+            await message.channel.send("No events to visualize. Try adding "
+                "snitch channels with `.channel add #channel` or indexing with "
+                "`.index` first.")
+            return
+
+        all_events = db.get_events(message.guild)
+        # use all known events to construct snitches
+        snitches = snitches_from_events(all_events)
+        users = create_users(recent_events)
+        size = 500
+        fps = 30
+        duration = 5 * 1000
+        show_all_snitches = False
+        event_fade_percentage = 10
+        output_file = "out.mp4"
+
+        def run_snitch_vis():
+            vis = SnitchVisRecord(snitches, recent_events, users, size, fps,
+                duration, show_all_snitches, event_fade_percentage, output_file)
+            vis.exec()
+
+        m = await message.channel.send("rendering video...")
+        await self.loop.run_in_executor(None, run_snitch_vis)
+        vis_file = File(output_file)
+        await message.channel.send(file=vis_file)
+        await m.delete()
+
+
 client = MyClient()
 client.run(TOKEN)
 
-# TODO reindexing known snitch channels (automatically / on command)
+# TODO reindex known snitch channels on bot restart, careful to immediately
+# retrieve last_indexed_id so it doesn't get updated by an incoming message and
+# cause us to lose all messages between the last indexed message and the
+# incoming message (messages might have come in while the bot was down that are
+# waiting to be indexed).

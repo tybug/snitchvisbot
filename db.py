@@ -2,7 +2,7 @@ from pathlib import Path
 import sqlite3
 from sqlite3 import Row
 
-from models import SnitchChannel
+from models import SnitchChannel, Event
 
 db_path = Path(__file__).parent / "snitchvis.db"
 
@@ -99,3 +99,21 @@ def add_event(message, event):
 def event_exists(message_id):
     rows = select("SELECT * FROM event WHERE message_id = ?", [message_id])
     return bool(rows)
+
+def get_recent_events(guild, minutes):
+    # first find the most recent event, then retrieve all events less than
+    # `minutes` minutes older than that event.
+    rows = select("SELECT * FROM event WHERE guild_id = ? ORDER BY t DESC "
+        "LIMIT 1", [guild.id])
+    if not rows:
+        return []
+
+    recent_event = rows[0]
+    t = recent_event["t"] - minutes * 60
+
+    rows = select("SELECT * FROM event WHERE t >= ?", [t])
+    return convert(rows, Event)
+
+def get_events(guild):
+    rows = select("SELECT * FROM event WHERE guild_id = ?", [guild.id])
+    return convert(rows, Event)
