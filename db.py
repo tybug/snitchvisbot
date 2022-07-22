@@ -83,10 +83,18 @@ def update_last_indexed(channel, message_id):
 ## events
 
 def add_event(message, event):
+    # use the message's timestmap instead of trying to parse the event.
+    # Some servers might have crazy snitch log formats, and the default format
+    # doesn't even include the day/month/year, so we would be partially relying
+    # on the message's timestamp by default anyway to tell us the calendar date.
+    # Still, this might result in events which are a few seconds off from when
+    # they actually occurred, or potentially more if kira got desynced or
+    # backlogged.
+    t = message.created_at.timestamp()
     execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [message.id, message.channel.id, message.guild.id, event.username,
          event.snitch_name, event.namelayer_group, event.x, event.y, event.z,
-         event.t])
+         t])
 
 def event_exists(message_id):
     rows = select("SELECT * FROM event WHERE message_id = ?", [message_id])
