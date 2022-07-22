@@ -57,7 +57,7 @@ class MyClient(Client):
             db.add_snitch_channel(channel)
 
         channel_str = utils.channel_str(snitch_channels)
-        await message.channel.send("Found the following snitch channels: "
+        await message.channel.send("Identified the following snitch channels: "
             f"{channel_str}. If you expected Snitchvis to find more channels, "
             "make sure it has the \"read message\" and \"read message "
             "history\" permissions for those channels.")
@@ -77,7 +77,7 @@ class MyClient(Client):
 
         new_channels = db.get_snitch_channels(message.guild)
         await message.channel.send(f"Added {utils.channel_str(channels)} to "
-            f"snitch channels.\n{utils.snitch_channels_message(new_channels)}")
+            f"snitch channels.\n{utils.snitch_channels_str(new_channels)}")
 
     async def channel_remove(self, message):
         channels = message.channel_mentions
@@ -87,11 +87,11 @@ class MyClient(Client):
         new_channels = db.get_snitch_channels(message.guild)
         await message.channel.send(f"Removed {utils.channel_str(channels)} "
             "from snitch channels.\n"
-            f"{utils.snitch_channels_message(new_channels)}")
+            f"{utils.snitch_channels_str(new_channels)}")
 
     async def channel_list(self, message):
         channels = db.get_snitch_channels(message.guild)
-        m = utils.snitch_channels_message(channels)
+        m = utils.snitch_channels_str(channels)
         await message.channel.send(m)
 
     async def index(self, message):
