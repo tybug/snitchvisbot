@@ -112,7 +112,7 @@ class MyClient(Client):
             events = []
             # convert to an actual channel object so we can retrieve history
             c = channel.to_discord(message.guild)
-            last_id = channel.last_indexed_message_id
+            last_id = channel.last_indexed_id
             async for message_ in c.history(limit=None):
                 # don't index past the last indexed message id (if we have such
                 # an id stored)

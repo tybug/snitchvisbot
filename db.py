@@ -14,7 +14,7 @@ def create_db():
         CREATE TABLE "snitch_channel" (
             `guild_id` INTEGER NOT NULL,
             `id` INTEGER NOT NULL,
-            `last_indexed_message_id` INTEGER,
+            `last_indexed_id` INTEGER,
             PRIMARY KEY(`id`)
         )
         """)
@@ -74,8 +74,8 @@ def snitch_channel_exists(channel):
     return bool(rows)
 
 def update_last_indexed(channel, message_id):
-    execute("UPDATE snitch_channel SET last_indexed_message_id = ? WHERE "
-        "id = ?", [message_id, channel.id])
+    execute("UPDATE snitch_channel SET last_indexed_id = ? WHERE id = ?",
+        [message_id, channel.id])
 
 ## events
 

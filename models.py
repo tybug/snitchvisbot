@@ -5,7 +5,7 @@ class SnitchChannel:
     guild_id: int
     # discord channel id
     id: int
-    last_indexed_message_id: int
+    last_indexed_id: int
 
     # make compatible with utils.channel_str
     @property
