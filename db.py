@@ -13,9 +13,29 @@ def create_db():
         """
         CREATE TABLE "snitch_channel" (
             `guild_id` INTEGER NOT NULL,
+            `id` INTEGER NOT NULL,
+            `last_indexed_message_id` INTEGER,
+            PRIMARY KEY(`id`)
+        )
+        """)
+    c.execute(
+        """
+        CREATE TABLE "event" (
+            `message_id` INTEGER NOT NULL,
             `channel_id` INTEGER NOT NULL,
-            PRIMARY KEY(`channel_id`)
-        )""")
+            `guild_id` INTEGER NOT NULL,
+            `username` TEXT NOT NULL,
+            `snitch_name` TEXT,
+            `namelayer_group` TEXT NOT NULL,
+            `x` INTEGER NOT NULL,
+            `y` INTEGER NOT NULL,
+            `z` INTEGER NOT NULL,
+            `t` INTEGER NOT NULL,
+            PRIMARY KEY(`message_id`)
+        )
+        """
+    )
+    conn.commit()
     conn.close()
 
 if not db_path.exists():
@@ -42,13 +62,29 @@ def get_snitch_channels(guild):
     return channels
 
 def add_snitch_channel(channel):
-    execute("INSERT INTO snitch_channel VALUES (?, ?)",
+    execute("INSERT INTO snitch_channel (guild_id, id) VALUES (?, ?)",
         [channel.guild.id, channel.id])
 
 def remove_snitch_channel(channel):
-    execute("DELETE FROM snitch_channel WHERE channel_id = ?", [channel.id])
+    execute("DELETE FROM snitch_channel WHERE id = ?", [channel.id])
 
 def snitch_channel_exists(channel):
-    rows = select("SELECT * FROM snitch_channel WHERE channel_id = ?",
+    rows = select("SELECT * FROM snitch_channel WHERE id = ?",
         [channel.id])
+    return bool(rows)
+
+def update_last_indexed(channel, message_id):
+    execute("UPDATE snitch_channel SET last_indexed_message_id = ? WHERE "
+        "id = ?", [message_id, channel.id])
+
+## events
+
+def add_event(message, event):
+    execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        [message.id, message.channel.id, message.guild.id, event.username,
+         event.snitch_name, event.namelayer_group, event.x, event.y, event.z,
+         event.t])
+
+def event_exists(message_id):
+    rows = select("SELECT * FROM event WHERE message_id = ?", [message_id])
     return bool(rows)

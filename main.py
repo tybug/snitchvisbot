@@ -96,13 +96,49 @@ class MyClient(Client):
 
     async def index(self, message):
         channels = db.get_snitch_channels(message.guild)
+
+        if not channels:
+            await message.channel.send("No snitch channels to index. Use "
+                "`.channel add #channel` to add snitch channels.")
+            return
+
         await message.channel.send("Indexing the following snitch channels: "
             f"{utils.channel_str(channels)}. This could take a LONG time if "
             "they have lots of messages in them.")
 
         for channel in channels:
-            await message.channel.send(f"Indexing channel {channel.mention}...")
+            await message.channel.send(f"Indexing {channel.mention}...")
 
+            events = []
+            # convert to an actual channel object so we can retrieve history
+            c = channel.to_discord(message.guild)
+            last_id = channel.last_indexed_message_id
+            async for message_ in c.history(limit=None):
+                # don't index past the last indexed message id (if we have such
+                # an id stored)
+                if last_id and message_.id <= last_id:
+                    break
+
+                content = remove_markdown(message_.content)
+                try:
+                    event = Event.parse(content)
+                except InvalidEventException:
+                    continue
+                events.append([message_, event])
+
+            last_messages = await c.history(limit=1).flatten()
+            # only update if the channel has messages
+            if last_messages:
+                last_message = last_messages[0]
+                db.update_last_indexed(channel, last_message.id)
+
+            # TODO might need a batch commit if this is too slow
+            for (message_, event) in events:
+                db.add_event(message_, event)
+
+            await message.channel.send(f"Finished indexing {channel.mention}")
+
+        await message.channel.send("Finished indexing snitch channels")
 
 client = MyClient()
 client.run(TOKEN)
