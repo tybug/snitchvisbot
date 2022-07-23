@@ -114,6 +114,21 @@ def get_recent_events(guild, minutes):
     rows = select("SELECT * FROM event WHERE t >= ?", [t])
     return convert(rows, Event)
 
-def get_events(guild):
+def get_events(guild, start_date, end_date, users=[]):
+    # XXX be careful no sql injection can happen here
+    qs = '?, ' * len(users)
+    qs = qs[:-2] # remove trailing `, `
+    user_filter = f"username IN ({qs})" if users else "1"
+
+    rows = select(
+        f"""
+        SELECT * FROM event
+        WHERE guild_id = ? AND t > ? AND t < ? AND {user_filter}
+        """,
+        [guild.id, start_date, end_date, *users]
+    )
+    return convert(rows, Event)
+
+def get_all_events(guild):
     rows = select("SELECT * FROM event WHERE guild_id = ?", [guild.id])
     return convert(rows, Event)

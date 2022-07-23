@@ -1,3 +1,5 @@
+from datetime import datetime
+from argparse import ArgumentParser
 from discord import Client, File
 from discord.utils import remove_markdown
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
@@ -22,7 +24,7 @@ class MyClient(Client):
             await self.channel_list(message)
         if message.content == ".index":
             await self.index(message)
-        if message.content == ".v":
+        if message.content.startswith(".v"):
             await self.visualize(message)
 
     async def setup(self, message):
@@ -144,32 +146,83 @@ class MyClient(Client):
         await message.channel.send("Finished indexing snitch channels")
 
     async def visualize(self, message):
-        # everything after the first space
-        # args = " ".join(message.content.split(" ")[1:])
-        recent_events = db.get_recent_events(message.guild, 30)
-        if not recent_events:
-            await message.channel.send("No events to visualize. Try adding "
-                "snitch channels with `.channel add #channel` or indexing with "
-                "`.index` first.")
+        # TODO allow user to set defaults for these options instead of
+        # hardcoding
+        parser = ArgumentParser(exit_on_error=False)
+        parser.add_argument("-a", "--all-snitches", action="store_true",
+            default=False)
+        parser.add_argument("-s", "--size", default=400, type=int)
+        parser.add_argument("-f", "--fps", default=20, type=int)
+        parser.add_argument("-d", "--duration", default=10, type=int)
+        parser.add_argument("-u", "--users", nargs="*")
+        # TODO add converter for human readable timedelta strings (1h30m).
+        # currently `past` is in ms
+        parser.add_argument("-p", "--past")
+        # TODO add converter for human readable datetime strings, eg
+        # 06/05/2022
+        parser.add_argument("--start")
+        parser.add_argument("--end")
+        parser.add_argument("--fade", default=10, type=float)
+
+        # everything after the first space (ie cut off `.v`)
+        args = message.content.split(" ")[1:]
+        args, argv = parser.parse_known_args(args)
+        if argv:
+            if len(argv) == 1:
+                m = f"Unkown argument: `{argv[0]}`"
+            else:
+                m = f"Unknown arguments: `{'`, `'.join(argv)}`"
+            await message.channel.send(m)
             return
 
-        all_events = db.get_events(message.guild)
+        if args.past:
+            end = datetime.utcnow().timestamp()
+            if args.past == "all":
+                # conveniently, start of epoch is 0 ms
+                start = 0
+            else:
+                start = end - int(args.past)
+        else:
+            if args.start and args.end:
+                # TODO
+                pass
+            else:
+                # slightly special behavior: instead of going back in the past
+                # `x` ms, go back to the most recent event (however long ago
+                # that may be) and *then* go back `x` ms and grab all those
+                # events.
+                # TODO
+                pass
+
+        events = db.get_events(message.guild, start, end, args.users)
+        # TODO warn if no events by the specified users are in the events filter
+
+        if not events:
+            await message.channel.send("No events match those criteria. Try "
+                "adding snitch channels with `.channel add #channel`, indexing "
+                "with `.index`, or adjusting your parameters to include more "
+                "snitch events.")
+            return
+
+        all_events = db.get_all_events(message.guild)
         # use all known events to construct snitches
         snitches = snitches_from_events(all_events)
-        users = create_users(recent_events)
-        size = 500
-        fps = 30
-        duration = 5 * 1000
-        show_all_snitches = False
-        event_fade_percentage = 10
+        users = create_users(events)
+        size = args.size
+        fps = args.fps
+        duration = args.duration * 1000
+        show_all_snitches = args.all_snitches
+        event_fade_percentage = args.fade
         output_file = "out.mp4"
 
         def run_snitch_vis():
-            vis = SnitchVisRecord(snitches, recent_events, users, size, fps,
+            vis = SnitchVisRecord(snitches, events, users, size, fps,
                 duration, show_all_snitches, event_fade_percentage, output_file)
             vis.exec()
 
         m = await message.channel.send("rendering video...")
+        # TODO does this incur an overhead compared to running it syncly?
+        # probably not, but worth a check.
         await self.loop.run_in_executor(None, run_snitch_vis)
         vis_file = File(output_file)
         await message.channel.send(file=vis_file)
