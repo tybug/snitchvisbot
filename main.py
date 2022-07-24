@@ -1,8 +1,11 @@
 from datetime import datetime
+from tempfile import NamedTemporaryFile
+import sqlite3
+
 from discord import Client, File
 from discord.utils import remove_markdown
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
-    create_users, snitches_from_events)
+    create_users, snitches_from_events, Snitch)
 
 import db
 import utils
@@ -26,6 +29,8 @@ class MyClient(Client):
             await self.index(message)
         if message.content.startswith(".v"):
             await self.visualize(message)
+        if message.content == ".add-snitches":
+            await self.add_snitches(message)
 
         await self.maybe_index_message(message)
 
@@ -79,6 +84,12 @@ class MyClient(Client):
 
     async def channel_add(self, message):
         channels = message.channel_mentions
+
+        if not channels:
+            await message.channel.send("Please mention (`#channel`) one or "
+                "more snitch channels in your command.")
+            return
+
         for channel in channels:
             db.add_snitch_channel(channel)
 
@@ -88,6 +99,12 @@ class MyClient(Client):
 
     async def channel_remove(self, message):
         channels = message.channel_mentions
+
+        if not channels:
+            await message.channel.send("Please mention (`#channel`) one or "
+                "more snitch channels in your command.")
+            return
+
         for channel in channels:
             db.remove_snitch_channel(channel)
 
@@ -139,11 +156,13 @@ class MyClient(Client):
                 last_message = last_messages[0]
                 db.update_last_indexed(channel, last_message.id)
 
-            # TODO might need a batch commit if this is too slow
             for (message_, event) in events:
-                db.add_event(message_, event)
+                # batch commit for speed
+                db.add_event(message_, event, commit=False)
+            db.commit()
 
-            await message.channel.send(f"Finished indexing {channel.mention}")
+            await message.channel.send(f"Added {len(events)} new events from "
+                f"{channel.mention}")
 
         await message.channel.send("Finished indexing snitch channels")
 
@@ -245,6 +264,32 @@ class MyClient(Client):
         await message.channel.send(file=vis_file)
         await m.delete()
 
+    async def add_snitches(self, message):
+        attachments = message.attachments
+        if not attachments:
+            await message.channel.send("You must upload a snitch.sqlite file "
+                "as part of the `.add-snitches` command")
+            return
+
+        await message.channel.send("Adding snitches from snitchmod database...")
+
+        with NamedTemporaryFile() as f:
+            attachment = attachments[0]
+            await attachment.save(f.name)
+            conn = sqlite3.connect(f.name)
+            cur = conn.cursor()
+            rows = cur.execute("SELECT * FROM snitches_v2").fetchall()
+
+            snitches_added = 0
+            for row in rows:
+                snitch = Snitch.from_snitchmod(row)
+                # batch commit for speed
+                cur = db.add_snitch(message.guild, snitch, commit=False)
+                snitches_added += cur.rowcount
+
+            db.commit()
+
+        await message.channel.send(f"Added {snitches_added} new snitches.")
 
 client = MyClient()
 client.run(TOKEN)

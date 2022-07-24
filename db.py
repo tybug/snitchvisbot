@@ -2,7 +2,7 @@ from pathlib import Path
 import sqlite3
 from sqlite3 import Row
 
-from models import SnitchChannel, Event
+from models import SnitchChannel, Event, Snitch
 
 db_path = Path(__file__).parent / "snitchvis.db"
 
@@ -35,6 +35,34 @@ def create_db():
         )
         """
     )
+    c.execute(
+        # schema matches gjum's snitchmod snitches_v2 table
+        """
+        CREATE TABLE snitches (
+            guild_id INT,
+            world TEXT,
+            x INT,
+            y INT,
+            z INT,
+            group_name TEXT,
+            type TEXT,
+            name TEXT,
+            dormant_ts BIGINT,
+            cull_ts BIGINT,
+            first_seen_ts BIGINT,
+            last_seen_ts BIGINT,
+            created_ts BIGINT,
+            created_by_uuid TEXT,
+            renamed_ts BIGINT,
+            renamed_by_uuid TEXT,
+            lost_jalist_access_ts BIGINT,
+            broken_ts BIGINT,
+            gone_ts BIGINT,
+            tags TEXT,
+            notes TEXT,
+            PRIMARY KEY (world,x,y,z))
+        """
+    )
     conn.commit()
     conn.close()
 
@@ -44,12 +72,17 @@ conn = sqlite3.connect(str(db_path))
 conn.row_factory = Row
 cur = conn.cursor()
 
+def commit():
+    conn.commit()
+
 def select(query, params=[]):
     return cur.execute(query, params).fetchall()
 
-def execute(query, params):
-    cur.execute(query, params)
-    conn.commit()
+def execute(query, params, commit_=True):
+    cur_ = cur.execute(query, params)
+    if commit_:
+        commit()
+    return cur_
 
 def convert(rows, Class):
     intances = []
@@ -58,6 +91,25 @@ def convert(rows, Class):
         intances.append(Class(**kwargs))
     return intances
 
+## snitches
+
+def get_snitches(guild):
+    rows = select("SELECT * FROM snitches WHERE guild_id = ?", [guild.id])
+    return convert(rows, Snitch)
+
+def add_snitch(guild, snitch, commit=True):
+    args = [
+        guild.id, snitch.world, snitch.x, snitch.y, snitch.z, snitch.group_name,
+        snitch.type, snitch.name, snitch.dormat_ts, snitch.cull_ts,
+        snitch.first_seen_ts, snitch.last_seen_ts, snitch.created_ts,
+        snitch.created_by_uuid, snitch.renamde_ts, snitch.renamed_by_uuid,
+        snitch.lost_jalist_access_ts, snitch.broken_ts, snitch.gone_ts,
+        snitch.tags, snitch.notes
+    ]
+    # ignore duplicate snitches
+    return execute("INSERT OR IGNORE INTO snitches VALUES (?, ?, ?, ?, ?, ?, "
+        "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", args, commit)
+
 ## snitch channels
 
 def get_snitch_channels(guild):
@@ -65,11 +117,11 @@ def get_snitch_channels(guild):
     return convert(rows, SnitchChannel)
 
 def add_snitch_channel(channel):
-    execute("INSERT INTO snitch_channel (guild_id, id) VALUES (?, ?)",
+    return execute("INSERT INTO snitch_channel (guild_id, id) VALUES (?, ?)",
         [channel.guild.id, channel.id])
 
 def remove_snitch_channel(channel):
-    execute("DELETE FROM snitch_channel WHERE id = ?", [channel.id])
+    return execute("DELETE FROM snitch_channel WHERE id = ?", [channel.id])
 
 def snitch_channel_exists(channel):
     rows = select("SELECT * FROM snitch_channel WHERE id = ?",
@@ -89,12 +141,12 @@ def get_snitch_channel(channel):
     return convert(rows, SnitchChannel)[0]
 
 def update_last_indexed(channel, message_id):
-    execute("UPDATE snitch_channel SET last_indexed_id = ? WHERE id = ?",
+    return execute("UPDATE snitch_channel SET last_indexed_id = ? WHERE id = ?",
         [message_id, channel.id])
 
 ## events
 
-def add_event(message, event):
+def add_event(message, event, commit=True):
     # use the message's timestmap instead of trying to parse the event.
     # Some servers might have crazy snitch log formats, and the default format
     # doesn't even include the day/month/year, so we would be partially relying
@@ -103,10 +155,10 @@ def add_event(message, event):
     # they actually occurred, or potentially more if kira got desynced or
     # backlogged.
     t = message.created_at.timestamp()
-    execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    return execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [message.id, message.channel.id, message.guild.id, event.username,
          event.snitch_name, event.namelayer_group, event.x, event.y, event.z,
-         t])
+         t], commit)
 
 def event_exists(message_id):
     rows = select("SELECT * FROM event WHERE message_id = ?", [message_id])
