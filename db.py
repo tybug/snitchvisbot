@@ -100,25 +100,26 @@ def event_exists(message_id):
     rows = select("SELECT * FROM event WHERE message_id = ?", [message_id])
     return bool(rows)
 
-def get_recent_events(guild, minutes):
-    # first find the most recent event, then retrieve all events less than
-    # `minutes` minutes older than that event.
+def most_recent_event(guild):
     rows = select("SELECT * FROM event WHERE guild_id = ? ORDER BY t DESC "
         "LIMIT 1", [guild.id])
     if not rows:
-        return []
+        return None
 
-    recent_event = rows[0]
-    t = recent_event["t"] - minutes * 60
+    return convert(rows, Event)[0]
 
-    rows = select("SELECT * FROM event WHERE t >= ?", [t])
-    return convert(rows, Event)
+def get_events(guild, start_date, end_date, users):
+    # compare case insensitive
+    users = [user.lower() for user in users]
 
-def get_events(guild, start_date, end_date, users=[]):
     # XXX be careful no sql injection can happen here
-    qs = '?, ' * len(users)
-    qs = qs[:-2] # remove trailing `, `
-    user_filter = f"username IN ({qs})" if users else "1"
+    if users:
+        qs = '?, ' * len(users)
+        qs = qs[:-2] # remove trailing `, `
+        user_filter = f"LOWER(username) IN ({qs})"
+    else:
+        # always true
+        user_filter = "1"
 
     rows = select(
         f"""

@@ -1,5 +1,4 @@
 from datetime import datetime
-from argparse import ArgumentParser
 from discord import Client, File
 from discord.utils import remove_markdown
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
@@ -7,6 +6,7 @@ from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
 
 import db
 import utils
+from utils import human_timedelta, ArgParser
 from secret import TOKEN
 
 INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
@@ -146,33 +146,25 @@ class MyClient(Client):
         await message.channel.send("Finished indexing snitch channels")
 
     async def visualize(self, message):
-        # TODO allow user to set defaults for these options instead of
-        # hardcoding
-        parser = ArgumentParser(exit_on_error=False)
-        parser.add_argument("-a", "--all-snitches", action="store_true",
+        # TODO make defaults for these parameters configurable
+        parser = ArgParser(message, exit_on_error=False)
+        parser.add_arg("-a", "--all-snitches", action="store_true",
             default=False)
-        parser.add_argument("-s", "--size", default=400, type=int)
-        parser.add_argument("-f", "--fps", default=20, type=int)
-        parser.add_argument("-d", "--duration", default=10, type=int)
-        parser.add_argument("-u", "--users", nargs="*")
-        # TODO add converter for human readable timedelta strings (1h30m).
-        # currently `past` is in ms
-        parser.add_argument("-p", "--past")
+        parser.add_arg("-s", "--size", default=400, type=int)
+        parser.add_arg("-f", "--fps", default=20, type=int)
+        parser.add_arg("-d", "--duration", default=5, type=int)
+        parser.add_arg("-u", "--users", nargs="*", default=[])
+        parser.add_arg("-p", "--past", type=human_timedelta)
         # TODO add converter for human readable datetime strings, eg
         # 06/05/2022
-        parser.add_argument("--start")
-        parser.add_argument("--end")
-        parser.add_argument("--fade", default=10, type=float)
+        parser.add_arg("--start")
+        parser.add_arg("--end")
+        parser.add_arg("--fade", default=10, type=float)
 
-        # everything after the first space (ie cut off `.v`)
         args = message.content.split(" ")[1:]
-        args, argv = parser.parse_known_args(args)
-        if argv:
-            if len(argv) == 1:
-                m = f"Unkown argument: `{argv[0]}`"
-            else:
-                m = f"Unknown arguments: `{'`, `'.join(argv)}`"
-            await message.channel.send(m)
+        args = await parser.parse_args(args)
+        # error handling done by argparser
+        if not args:
             return
 
         if args.past:
@@ -181,7 +173,7 @@ class MyClient(Client):
                 # conveniently, start of epoch is 0 ms
                 start = 0
             else:
-                start = end - int(args.past)
+                start = end - args.past
         else:
             if args.start and args.end:
                 # TODO
@@ -191,8 +183,11 @@ class MyClient(Client):
                 # `x` ms, go back to the most recent event (however long ago
                 # that may be) and *then* go back `x` ms and grab all those
                 # events.
-                # TODO
-                pass
+                event = db.most_recent_event(message.guild)
+                end = event.t.timestamp()
+                # TODO make adjustable instead of hardcoding 30 minutes, not
+                # sure what parameter name to use though
+                start = end - (30 * 60)
 
         events = db.get_events(message.guild, start, end, args.users)
         # TODO warn if no events by the specified users are in the events filter
@@ -237,3 +232,11 @@ client.run(TOKEN)
 # cause us to lose all messages between the last indexed message and the
 # incoming message (messages might have come in while the bot was down that are
 # waiting to be indexed).
+
+# TODO "lines" mode in visualizer which draws colored lines between events
+# instead of highlighted boxes (what to do about single events? probably just a
+# colored square, ie a line between itself and itself) and breaks up events by a
+# time period, ~1hr. Also draws arrows on the lines to indicate directionality.
+
+# TODO add "centered at (x, y)" coordinates to info text, can be confusing where
+# the vis is sometimes
