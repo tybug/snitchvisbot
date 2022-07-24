@@ -76,6 +76,18 @@ def snitch_channel_exists(channel):
         [channel.id])
     return bool(rows)
 
+def is_snitch_channel(channel):
+    rows = select("SELECT * FROM snitch_channel WHERE id = ?",
+        [channel.id])
+    return bool(rows)
+
+def get_snitch_channel(channel):
+    rows = select("SELECT * FROM snitch_channel WHERE id = ?",
+        [channel.id])
+    if not rows:
+        return None
+    return convert(rows, SnitchChannel)[0]
+
 def update_last_indexed(channel, message_id):
     execute("UPDATE snitch_channel SET last_indexed_id = ? WHERE id = ?",
         [message_id, channel.id])

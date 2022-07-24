@@ -27,6 +27,8 @@ class MyClient(Client):
         if message.content.startswith(".v"):
             await self.visualize(message)
 
+        await self.maybe_index_message(message)
+
     async def setup(self, message):
         await message.channel.send("Looking for snitch channels...")
         snitch_channels = set()
@@ -144,6 +146,26 @@ class MyClient(Client):
             await message.channel.send(f"Finished indexing {channel.mention}")
 
         await message.channel.send("Finished indexing snitch channels")
+
+    async def maybe_index_message(self, message):
+        snitch_channel = db.get_snitch_channel(message.channel)
+        # only index messages in snitch channels which have been fully indexed
+        # by `.index` already. If someone adds a snitch channel with
+        # `.channel add #snitches`, and then a snitch ping is immediately sent
+        # in that channel, we don't want to update the last indexed id (or
+        # index the message at all) until the channel has been fully indexed
+        # manually.
+        if not snitch_channel or not snitch_channel.last_indexed_id:
+            return
+
+        content = remove_markdown(message.content)
+        try:
+            event = Event.parse(content)
+        except InvalidEventException:
+            return
+
+        db.add_event(message, event)
+        db.update_last_indexed(message.channel, message.id)
 
     async def visualize(self, message):
         # TODO make defaults for these parameters configurable
