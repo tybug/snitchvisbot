@@ -100,9 +100,9 @@ def get_snitches(guild):
 def add_snitch(guild, snitch, commit=True):
     args = [
         guild.id, snitch.world, snitch.x, snitch.y, snitch.z, snitch.group_name,
-        snitch.type, snitch.name, snitch.dormat_ts, snitch.cull_ts,
+        snitch.type, snitch.name, snitch.dormant_ts, snitch.cull_ts,
         snitch.first_seen_ts, snitch.last_seen_ts, snitch.created_ts,
-        snitch.created_by_uuid, snitch.renamde_ts, snitch.renamed_by_uuid,
+        snitch.created_by_uuid, snitch.renamed_ts, snitch.renamed_by_uuid,
         snitch.lost_jalist_access_ts, snitch.broken_ts, snitch.gone_ts,
         snitch.tags, snitch.notes
     ]

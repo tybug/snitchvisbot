@@ -44,12 +44,13 @@ class Snitch:
     group_name: str
     type: str
     name: str
-    dormat_ts: int
+    dormant_ts: int
     cull_ts: int
+    first_seen_ts: int
     last_seen_ts: int
     created_ts: int
     created_by_uuid: str
-    renamde_ts: int
+    renamed_ts: int
     renamed_by_uuid: str
     lost_jalist_access_ts: int
     broken_ts: int
