@@ -197,7 +197,7 @@ class MyClient(Client):
         parser = ArgParser(message, exit_on_error=False)
         parser.add_arg("-a", "--all-snitches", action="store_true",
             default=False)
-        parser.add_arg("-s", "--size", default=400, type=int)
+        parser.add_arg("-s", "--size", default=500, type=int)
         parser.add_arg("-f", "--fps", default=20, type=int)
         parser.add_arg("-d", "--duration", default=5, type=int)
         parser.add_arg("-u", "--users", nargs="*", default=[])
