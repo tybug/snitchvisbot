@@ -57,3 +57,10 @@ class Snitch:
     gone_ts: int
     tags: str
     notes: str
+
+    def __hash__(self):
+        return hash((self.world, self.x, self.y, self.z))
+
+    def __eq__(self, other):
+        return (self.x == other.x and self.y == other.y and self.z == other.z
+            and self.world == other.world)
