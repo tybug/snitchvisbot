@@ -190,6 +190,9 @@ class MyClient(Client):
         db.update_last_indexed(message.channel, message.id)
 
     async def visualize(self, message):
+        NO_EVENTS = ("No events match those criteria. Try adding snitch "
+            "channels with `.channel add #channel`, indexing with `.index`, or "
+            "adjusting your parameters to include more snitch events.")
         # TODO make defaults for these parameters configurable
         parser = ArgParser(message, exit_on_error=False)
         parser.add_arg("-a", "--all-snitches", action="store_true",
@@ -228,6 +231,11 @@ class MyClient(Client):
                 # that may be) and *then* go back `x` ms and grab all those
                 # events.
                 event = db.most_recent_event(message.guild)
+                # if the guild doesn't have any events at all yet, complain and
+                # exit.
+                if not event:
+                    await message.channel.send(NO_EVENTS)
+                    return
                 end = event.t.timestamp()
                 # TODO make adjustable instead of hardcoding 30 minutes, not
                 # sure what parameter name to use though
@@ -237,10 +245,7 @@ class MyClient(Client):
         # TODO warn if no events by the specified users are in the events filter
 
         if not events:
-            await message.channel.send("No events match those criteria. Try "
-                "adding snitch channels with `.channel add #channel`, indexing "
-                "with `.index`, or adjusting your parameters to include more "
-                "snitch events.")
+            await message.channel.send(NO_EVENTS)
             return
 
         all_events = db.get_all_events(message.guild)
