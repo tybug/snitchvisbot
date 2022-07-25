@@ -29,8 +29,8 @@ class MyClient(Client):
             await self.index(message)
         if message.content.startswith(".v"):
             await self.visualize(message)
-        if message.content == ".add-snitches":
-            await self.add_snitches(message)
+        if message.content == ".import-snitches":
+            await self.import_snitches(message)
 
         await self.maybe_index_message(message)
 
@@ -251,8 +251,8 @@ class MyClient(Client):
         all_events = db.get_all_events(message.guild)
         # use all known events to construct snitches
         snitches = snitches_from_events(all_events)
-        # if the guild has any snitches uploaded (via .add-snitches), use those
-        # as well, even if they've never been pinged
+        # if the guild has any snitches uploaded (via .import-snitches), use
+        # those as well, even if they've never been pinged
         snitches |= set(db.get_snitches(message.guild))
         users = create_users(events)
         size = args.size
@@ -275,14 +275,15 @@ class MyClient(Client):
         await message.channel.send(file=vis_file)
         await m.delete()
 
-    async def add_snitches(self, message):
+    async def import_snitches(self, message):
         attachments = message.attachments
         if not attachments:
             await message.channel.send("You must upload a snitch.sqlite file "
-                "as part of the `.add-snitches` command")
+                "as part of the `.import-snitches` command")
             return
 
-        await message.channel.send("Adding snitches from snitchmod database...")
+        await message.channel.send("Importing snitches from snitchmod "
+            "database...")
 
         with NamedTemporaryFile() as f:
             attachment = attachments[0]
