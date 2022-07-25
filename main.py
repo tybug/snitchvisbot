@@ -251,6 +251,9 @@ class MyClient(Client):
         all_events = db.get_all_events(message.guild)
         # use all known events to construct snitches
         snitches = snitches_from_events(all_events)
+        # if the guild has any snitches uploaded (via .add-snitches), use those
+        # as well, even if they've never been pinged
+        snitches |= set(db.get_snitches(message.guild))
         users = create_users(events)
         size = args.size
         fps = args.fps
