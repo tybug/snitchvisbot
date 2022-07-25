@@ -58,6 +58,9 @@ class MyClient(Client):
                 "Make sure Snitchvis can see the snitch channels you want it "
                 "to have access to, and can read the message history of those "
                 "channels.")
+            await message.channel.send("Try re-running `.setup` after "
+                "adjusting snitchvis' permissions. You can also add channels "
+                "manually with `.channel add #channel`.")
             return
 
         for channel in snitch_channels:
