@@ -172,7 +172,7 @@ def most_recent_event(guild):
 
     return convert(rows, Event)[0]
 
-def get_events(guild, start_date, end_date, users):
+def get_events(guild, start_date, end_date, users, channel_ids):
     # compare case insensitive
     users = [user.lower() for user in users]
 
@@ -182,15 +182,26 @@ def get_events(guild, start_date, end_date, users):
         qs = qs[:-2] # remove trailing `, `
         user_filter = f"LOWER(username) IN ({qs})"
     else:
-        # always true
+        # true by default
         user_filter = "1"
+
+    if channel_ids:
+        qs = '?, ' * len(channel_ids)
+        qs = qs[:-2]
+        channel_filter = f"channel_id IN ({qs})"
+    else:
+        # false by default
+        channel_filter = "0"
 
     rows = select(
         f"""
         SELECT * FROM event
-        WHERE guild_id = ? AND t >= ? AND t <= ? AND {user_filter}
+        WHERE guild_id = ?
+        AND t >= ? AND t <= ?
+        AND {user_filter}
+        AND {channel_filter}
         """,
-        [guild.id, start_date, end_date, *users]
+        [guild.id, start_date, end_date, *users, *channel_ids]
     )
     return convert(rows, Event)
 

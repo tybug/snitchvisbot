@@ -238,10 +238,22 @@ class MyClient(Client):
                     return
                 end = event.t.timestamp()
                 # TODO make adjustable instead of hardcoding 30 minutes, not
-                # sure what parameter name to use though
+                # sure what parameter name to use though (--past-adjusted?)
                 start = end - (30 * 60)
 
-        events = db.get_events(message.guild, start, end, args.users)
+        snitch_channels = db.get_snitch_channels(message.guild)
+        channel_ids = []
+        for channel in snitch_channels:
+            channel = channel.to_discord(message.guild)
+            permissions = channel.permissions_for(message.author)
+            # only retrieve events for channels this user has access to
+            if not permissions.read_messages:
+                continue
+
+            channel_ids.append(channel.id)
+
+        events = db.get_events(message.guild, start, end, args.users,
+            channel_ids)
         # TODO warn if no events by the specified users are in the events filter
 
         if not events:
