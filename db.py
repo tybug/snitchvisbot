@@ -188,7 +188,7 @@ def get_events(guild, start_date, end_date, users):
     rows = select(
         f"""
         SELECT * FROM event
-        WHERE guild_id = ? AND t > ? AND t < ? AND {user_filter}
+        WHERE guild_id = ? AND t >= ? AND t <= ? AND {user_filter}
         """,
         [guild.id, start_date, end_date, *users]
     )
