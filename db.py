@@ -85,11 +85,11 @@ def execute(query, params, commit_=True):
     return cur_
 
 def convert(rows, Class):
-    intances = []
+    instances = []
     for row in rows:
         kwargs = dict(zip(row.keys(), list(row)))
-        intances.append(Class(**kwargs))
-    return intances
+        instances.append(Class(**kwargs))
+    return instances
 
 ## snitches
 
