@@ -2,97 +2,58 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile
 import sqlite3
 
-from discord import Client, File
+from discord import File
 from discord.utils import remove_markdown
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
     create_users, snitches_from_events, Snitch)
 
 import db
 import utils
-from utils import human_timedelta, ArgParser
 from secret import TOKEN
+from command import command, Arg, channel, role, human_timedelta
+from client import Client
 
 INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
     "999808708131426434&permissions=0&scope=bot")
 
-class MyClient(Client):
+class Snitchvis(Client):
     async def on_message(self, message):
-        if message.content == ".setup":
-            await self.setup(message)
-        if message.content.startswith(".channel add"):
-            await self.channel_add(message)
-        if message.content.startswith(".channel remove"):
-            await self.channel_remove(message)
-        if message.content.startswith(".channel list"):
-            await self.channel_list(message)
-        if message.content == ".index":
-            await self.index(message)
-        if message.content.startswith(".v"):
-            await self.visualize(message)
-        if message.content == ".import-snitches":
-            await self.import_snitches(message)
-
+        await super().on_message(message)
         await self.maybe_index_message(message)
 
+    async def maybe_index_message(self, message):
+        snitch_channel = db.get_snitch_channel(message.channel)
+        # only index messages in snitch channels which have been fully indexed
+        # by `.index` already. If someone adds a snitch channel with
+        # `.channel add #snitches`, and then a snitch ping is immediately sent
+        # in that channel, we don't want to update the last indexed id (or
+        # index the message at all) until the channel has been fully indexed
+        # manually.
+        if not snitch_channel or not snitch_channel.last_indexed_id:
+            return
+
+        content = remove_markdown(message.content)
+        try:
+            event = Event.parse(content)
+        except InvalidEventException:
+            return
+
+        db.add_event(message, event)
+        db.update_last_indexed(message.channel, message.id)
+
+
+    @command("setup")
     async def setup(self, message):
-        await message.channel.send("Looking for snitch channels...")
-        snitch_channels = set()
+        await message.channel.send("todo")
 
-        for channel in message.guild.text_channels:
-            # almost all snitch channels will have every message as a snitch
-            # ping, but give us some headroom just in case by searching back 5
-            # messages.
-            async for message in channel.history(limit=5):
-                # remove backticks and bold formatting to avoid confusing our
-                # event parser
-                content = remove_markdown(message.content)
-                try:
-                    Event.parse(content)
-                except InvalidEventException:
-                    continue
 
-                snitch_channels.add(channel)
-
-        if not snitch_channels:
-            await message.channel.send("Couldn't find any snitch channels. "
-                "Make sure Snitchvis can see the snitch channels you want it "
-                "to have access to, and can read the message history of those "
-                "channels.")
-            await message.channel.send("Try re-running `.setup` after "
-                "adjusting snitchvis' permissions. You can also add channels "
-                "manually with `.channel add #channel`.")
-            return
-
-        for channel in snitch_channels:
-            # just ignore duplicate snitch channels if the user runs setup
-            # multiple times, won't hurt anything and they can always remove it
-            # manually
-            if db.snitch_channel_exists(channel):
-                continue
-            db.add_snitch_channel(channel)
-
-        channel_str = utils.channel_str(snitch_channels)
-        await message.channel.send("Identified the following snitch channels: "
-            f"{channel_str}. If you expected Snitchvis to find more channels, "
-            "make sure it has the \"read message\" and \"read message "
-            "history\" permissions for those channels.")
-        await message.channel.send("You can add or remove snitch channels "
-            "monitored by snitchvis with `.channel add #channel` and "
-            "`.channel remove #channel` respectively. Please do so now if "
-            "snitchvis didn't find the right snitch channels. You can list the "
-            "current snitch channels with `.channel list`.")
-        await message.channel.send("Once you're satisfied with the list of "
-            "snitch channels, run `.index` to index the snitch pings in those "
-            "channels.")
-
-    async def channel_add(self, message):
-        channels = message.channel_mentions
-
-        if not channels:
-            await message.channel.send("Please mention (`#channel`) one or "
-                "more snitch channels in your command.")
-            return
-
+    @command("channel add",
+        args=[
+            Arg("channels", nargs="+", convert=channel),
+            Arg("-r", "--roles", nargs="+", convert=role)
+        ]
+    )
+    async def channel_add(self, message, channels, roles):
         for channel in channels:
             db.add_snitch_channel(channel)
 
@@ -100,14 +61,13 @@ class MyClient(Client):
         await message.channel.send(f"Added {utils.channel_str(channels)} to "
             f"snitch channels.\n{utils.snitch_channels_str(new_channels)}")
 
-    async def channel_remove(self, message):
-        channels = message.channel_mentions
 
-        if not channels:
-            await message.channel.send("Please mention (`#channel`) one or "
-                "more snitch channels in your command.")
-            return
-
+    @command("channel remove",
+        args=[
+            Arg("channels", nargs="+", convert=channel)
+        ]
+    )
+    async def channel_remove(self, message, channels):
         for channel in channels:
             db.remove_snitch_channel(channel)
 
@@ -116,11 +76,15 @@ class MyClient(Client):
             "from snitch channels.\n"
             f"{utils.snitch_channels_str(new_channels)}")
 
+
+    @command("channel list")
     async def channel_list(self, message):
         channels = db.get_snitch_channels(message.guild)
         m = utils.snitch_channels_str(channels)
         await message.channel.send(m)
 
+
+    @command("index")
     async def index(self, message):
         channels = db.get_snitch_channels(message.guild)
 
@@ -169,60 +133,37 @@ class MyClient(Client):
 
         await message.channel.send("Finished indexing snitch channels")
 
-    async def maybe_index_message(self, message):
-        snitch_channel = db.get_snitch_channel(message.channel)
-        # only index messages in snitch channels which have been fully indexed
-        # by `.index` already. If someone adds a snitch channel with
-        # `.channel add #snitches`, and then a snitch ping is immediately sent
-        # in that channel, we don't want to update the last indexed id (or
-        # index the message at all) until the channel has been fully indexed
-        # manually.
-        if not snitch_channel or not snitch_channel.last_indexed_id:
-            return
 
-        content = remove_markdown(message.content)
-        try:
-            event = Event.parse(content)
-        except InvalidEventException:
-            return
-
-        db.add_event(message, event)
-        db.update_last_indexed(message.channel, message.id)
-
-    async def visualize(self, message):
+    @command("v",
+        # TODO make defaults for these parameters configurable
+        args=[
+            Arg("-a", "--all-snitches", default=False, store_boolean=True),
+            Arg("-s", "--size", default=500, convert=int),
+            Arg("-f", "--fps", default=20, convert=int),
+            Arg("-d", "--duration", default=5, convert=int),
+            Arg("-u", "--users", nargs="*", default=[]),
+            Arg("-p", "--past", convert=human_timedelta),
+            Arg("--start"),
+            Arg("--end"),
+            Arg("--fade", default=10, convert=float)
+        ]
+    )
+    async def visualize(self, message, all_snitches, size, fps, duration, users,
+        past, start, end, fade
+    ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
             "adjusting your parameters to include more snitch events.")
-        # TODO make defaults for these parameters configurable
-        parser = ArgParser(message, exit_on_error=False)
-        parser.add_arg("-a", "--all-snitches", action="store_true",
-            default=False)
-        parser.add_arg("-s", "--size", default=500, type=int)
-        parser.add_arg("-f", "--fps", default=20, type=int)
-        parser.add_arg("-d", "--duration", default=5, type=int)
-        parser.add_arg("-u", "--users", nargs="*", default=[])
-        parser.add_arg("-p", "--past", type=human_timedelta)
-        # TODO add converter for human readable datetime strings, eg
-        # 06/05/2022
-        parser.add_arg("--start")
-        parser.add_arg("--end")
-        parser.add_arg("--fade", default=10, type=float)
 
-        args = message.content.split(" ")[1:]
-        args = await parser.parse_args(args)
-        # error handling done by argparser
-        if not args:
-            return
-
-        if args.past:
+        if past:
             end = datetime.utcnow().timestamp()
-            if args.past == "all":
+            if past == "all":
                 # conveniently, start of epoch is 0 ms
                 start = 0
             else:
-                start = end - args.past
+                start = end - past
         else:
-            if args.start and args.end:
+            if start and end:
                 # TODO
                 pass
             else:
@@ -252,7 +193,7 @@ class MyClient(Client):
 
             channel_ids.append(channel.id)
 
-        events = db.get_events(message.guild, start, end, args.users,
+        events = db.get_events(message.guild, start, end, users,
             channel_ids)
         # TODO warn if no events by the specified users are in the events filter
 
@@ -267,16 +208,13 @@ class MyClient(Client):
         # those as well, even if they've never been pinged
         snitches |= set(db.get_snitches(message.guild))
         users = create_users(events)
-        size = args.size
-        fps = args.fps
-        duration = args.duration * 1000
-        show_all_snitches = args.all_snitches
-        event_fade_percentage = args.fade
+        # duration to ms
+        duration *= 1000
         output_file = "out.mp4"
 
         def run_snitch_vis():
             vis = SnitchVisRecord(snitches, events, users, size, fps,
-                duration, show_all_snitches, event_fade_percentage, output_file)
+                duration, all_snitches, fade, output_file)
             vis.exec()
 
         m = await message.channel.send("rendering video...")
@@ -287,6 +225,7 @@ class MyClient(Client):
         await message.channel.send(file=vis_file)
         await m.delete()
 
+    @command("import-snitches")
     async def import_snitches(self, message):
         attachments = message.attachments
         if not attachments:
@@ -315,7 +254,7 @@ class MyClient(Client):
 
         await message.channel.send(f"Added {snitches_added} new snitches.")
 
-client = MyClient()
+client = Snitchvis()
 client.run(TOKEN)
 
 # TODO reindex known snitch channels on bot restart, careful to immediately

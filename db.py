@@ -63,6 +63,15 @@ def create_db():
             PRIMARY KEY (world,x,y,z))
         """
     )
+    # junction table between snitch_channel and roles
+    c.execute(
+        """
+        CREATE TABLE snitch_channel_allowed_roles (
+            snitch_channel_id INTEGER,
+            role_id INTEGER
+        )
+        """
+    )
     conn.commit()
     conn.close()
 
