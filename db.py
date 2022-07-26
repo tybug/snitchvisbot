@@ -1,6 +1,7 @@
 from pathlib import Path
 import sqlite3
 from sqlite3 import Row
+from collections import defaultdict
 
 from models import SnitchChannel, Event, Snitch
 
@@ -225,7 +226,7 @@ def most_recent_event(guild):
 
     return convert(rows, Event)[0]
 
-def get_events(guild, start_date, end_date, users, channel_ids):
+def get_events(guild, author, start_date, end_date, users):
     # compare case insensitive
     users = [user.lower() for user in users]
 
@@ -235,15 +236,35 @@ def get_events(guild, start_date, end_date, users, channel_ids):
         qs = qs[:-2] # remove trailing `, `
         user_filter = f"LOWER(username) IN ({qs})"
     else:
-        # true by default
+        # if no users are passed, all events are fair game
         user_filter = "1"
+
+    snitch_channels = get_snitch_channels(guild)
+    channel_ids = set()
+
+    # TODO can we do this filtering based on allowed roles entirely in sql?
+    # Probably not worth it until/if it becomes a performance concern.
+
+    # build a dict to avoid potentially cubic behavior. This is still quadratic,
+    # but hopefully no more than a few hundred iterations at worst.
+    role_to_channels = defaultdict(set)
+    for channel in snitch_channels:
+        for role in channel.allowed_roles:
+            role_to_channels[role].add(channel.id)
+
+    # for each role, add any snitch channels that role gives them permission to
+    # view.
+    for role in author.roles:
+        channels = role_to_channels[role.id]
+        channel_ids |= (channels)
 
     if channel_ids:
         qs = '?, ' * len(channel_ids)
         qs = qs[:-2]
         channel_filter = f"channel_id IN ({qs})"
     else:
-        # false by default
+        # if the author doesn't have permission to view any channels, don't
+        # return any events
         channel_filter = "0"
 
     rows = select(

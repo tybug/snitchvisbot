@@ -201,9 +201,8 @@ class Snitchvis(Client):
 
             channel_ids.append(channel.id)
 
-        events = db.get_events(message.guild, start, end, users,
-            channel_ids)
         # TODO warn if no events by the specified users are in the events filter
+        events = db.get_events(message.guild, message.author, start, end, users)
 
         if not events:
             await message.channel.send(NO_EVENTS)
