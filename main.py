@@ -3,7 +3,6 @@ from tempfile import NamedTemporaryFile
 import sqlite3
 
 from discord import File
-from discord.utils import remove_markdown
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
     create_users, snitches_from_events, Snitch)
 
@@ -32,9 +31,8 @@ class Snitchvis(Client):
         if not snitch_channel or not snitch_channel.last_indexed_id:
             return
 
-        content = remove_markdown(message.content)
         try:
-            event = Event.parse(content)
+            event = Event.parse(message.content)
         except InvalidEventException:
             return
 
@@ -121,9 +119,8 @@ class Snitchvis(Client):
                 if last_id and message_.id <= last_id:
                     break
 
-                content = remove_markdown(message_.content)
                 try:
-                    event = Event.parse(content)
+                    event = Event.parse(message_.content)
                 except InvalidEventException:
                     continue
                 events.append([message_, event])
