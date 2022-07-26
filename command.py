@@ -78,16 +78,35 @@ class Command:
                 val = arg.process(message, arg_strings[i])
                 i += 1
             elif arg.nargs == "*":
-                pass
+                val = []
+                while i < len(arg_strings) and not is_flag(arg_strings[i]):
+                    val.append(arg.process(message, arg_strings[i]))
+                    i += 1
+            elif arg.nargs == "+":
+                val = []
+                # always process at least one val
+                if i == len(arg_strings) or is_flag(arg_strings[i]):
+                    raise ParseError(f"`{arg}` requires at least one "
+                        "parameter.")
+                val.append(arg.process(message, arg_strings[i]))
+                i += 1
+                # then process like *
+                while i < len(arg_strings) and not is_flag(arg_strings[i]):
+                    val.append(arg.process(message, arg_strings[i]))
+                    i += 1
+            # TODO implement ? and n (1/2/3/etc) nargs, I'm not sure I'll ever
+            # use them
+            else:
+                raise Exception(f"unimplemented nargs option {arg.nargs}")
 
             kwargs[arg.dest] = val
 
         # check if any parameters are missing, and assign default values if
         # appropriate
         for arg in flag_args:
-            # if there's no default, it's required, and we haven't assigned a
-            # value yet, error
-            if arg.default is None and arg.required and arg.dest not in kwargs:
+            # check for required arguments which haven't been assigned a value
+            # yet
+            if arg.dest not in kwargs and arg.default is None and arg.required:
                 raise ParseError(f"`{arg}` is required.")
 
             # assign default values if not present
@@ -118,9 +137,12 @@ class Arg:
             positional = False
             dest = long
 
-        # * nargs implies a default of an empty list
+        # nargs of * implies a default of an empty list
         if default is None and nargs == "*":
             default = []
+        # nargs of + implies a required argument
+        if nargs == "+":
+            required = True
 
         self.positional = positional
         # remove prefix twice to remove both - and -- prefixes
