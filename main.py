@@ -278,3 +278,5 @@ client.run(TOKEN)
 
 # TODO add "centered at (x, y)" coordinates to info text, can be confusing where
 # the vis is sometimes
+
+# TODO support custom kira message formats
