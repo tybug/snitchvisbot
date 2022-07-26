@@ -158,11 +158,22 @@ def channel(message, val):
     return message.guild.get_channel(channel_id)
 
 def role(message, val):
+    # allow a special value of "everyone" to refer to the default role without
+    # pinging it. Won't be caught by our role name handling below because the
+    # default guild role actually has a name of @everyone, not just everyone.
+    if val == "everyone":
+        return message.guild.default_role
+
     match = re.match(r"<@&([0-9]+)>", val)
     if not match:
+        # people don't want to ping roles when specifying them as arguments, so
+        # also allow specifying the role's name instead of mentioning it.
+        for role in message.guild.roles:
+            if role.name == val:
+                return role
         raise ParseError(f"Invalid role `{val}`")
-    channel_id = int(match.group(1))
-    return message.guild.get_role(channel_id)
+    role_id = int(match.group(1))
+    return message.guild.get_role(role_id)
 
 
 # a command converter from a human-readable timedelta string representation
