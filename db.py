@@ -67,6 +67,7 @@ def create_db():
     c.execute(
         """
         CREATE TABLE snitch_channel_allowed_roles (
+            guild_id INTEGER,
             snitch_channel_id INTEGER,
             role_id INTEGER
         )
@@ -96,7 +97,12 @@ def execute(query, params, commit_=True):
 def convert(rows, Class):
     instances = []
     for row in rows:
-        kwargs = dict(zip(row.keys(), list(row)))
+        if isinstance(row, Row):
+            values = list(row)
+        else:
+            values = row.values()
+
+        kwargs = dict(zip(row.keys(), values))
         instances.append(Class(**kwargs))
     return instances
 
@@ -122,12 +128,43 @@ def add_snitch(guild, snitch, commit=True):
 ## snitch channels
 
 def get_snitch_channels(guild):
-    rows = select("SELECT * FROM snitch_channel WHERE guild_id = ?", [guild.id])
-    return convert(rows, SnitchChannel)
+    rows = select("""
+        SELECT * FROM snitch_channel
+        JOIN snitch_channel_allowed_roles
+        ON snitch_channel.guild_id = snitch_channel_allowed_roles.guild_id AND
+           snitch_channel.id = snitch_channel_allowed_roles.snitch_channel_id
+        WHERE snitch_channel.guild_id = ?
+        """,
+        [guild.id]
+    )
+    # manually aggregate allowed role ids into a list for our convert function
+    # channel id to list of dictionaries (channel k/v dicts).
+    new_rows = {}
+    for row in rows:
+        if row["guild_id"] not in new_rows:
+            new_row = dict(zip(row.keys(), list(row)))
+            # get rid of unused parameters from the join
+            del new_row["snitch_channel_id"]
+            del new_row["role_id"]
+            new_row["allowed_roles"] = []
+        else:
+            new_row = new_rows[guild.id]
+        new_row["allowed_roles"].append(int(row["role_id"]))
+        new_rows[row["snitch_channel_id"]] = new_row
 
-def add_snitch_channel(channel):
-    return execute("INSERT INTO snitch_channel (guild_id, id) VALUES (?, ?)",
-        [channel.guild.id, channel.id])
+    return convert(new_rows.values(), SnitchChannel)
+
+def add_snitch_channel(channel, roles):
+    execute("INSERT INTO snitch_channel (guild_id, id) VALUES (?, ?)",
+        [channel.guild.id, channel.id], commit_=False)
+
+    for role in roles:
+        execute("INSERT INTO snitch_channel_allowed_roles VALUES (?, ?, ?)",
+            [channel.guild.id, channel.id, role.id], commit_=False)
+
+    # batch commit in case we're adding a ton of roles/channels, probably not
+    # necessary
+    commit()
 
 def remove_snitch_channel(channel):
     return execute("DELETE FROM snitch_channel WHERE id = ?", [channel.id])
@@ -142,11 +179,18 @@ def is_snitch_channel(channel):
         [channel.id])
     return bool(rows)
 
+def allowed_roles(snitch_channel):
+    rows = select("SELECT * FROM snitch_channel_allowed_roles WHERE "
+        "channel_id = ?", [snitch_channel.id])
+    return [row.role_id for row in rows]
+
 def get_snitch_channel(channel):
     rows = select("SELECT * FROM snitch_channel WHERE id = ?",
         [channel.id])
     if not rows:
         return None
+
+    rows[0].allowed_roles = allowed_roles(channel)
     return convert(rows, SnitchChannel)[0]
 
 def update_last_indexed(channel, message_id):

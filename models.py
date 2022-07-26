@@ -7,6 +7,7 @@ class SnitchChannel:
     # discord channel id
     id: int
     last_indexed_id: int
+    allowed_roles: list[int]
 
     # make compatible with utils.channel_str
     @property
@@ -15,6 +16,9 @@ class SnitchChannel:
 
     def to_discord(self, guild):
         return guild.get_channel(self.id)
+
+    def allowed_roles_to_discord(self, guild):
+        return [guild.get_role(role) for role in self.allowed_roles]
 
 @dataclass
 class Event:

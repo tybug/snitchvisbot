@@ -55,11 +55,17 @@ class Snitchvis(Client):
     )
     async def channel_add(self, message, channels, roles):
         for channel in channels:
-            db.add_snitch_channel(channel)
+            if db.snitch_channel_exists(channel):
+                await message.channel.send(f"{channel.mention} is already a "
+                    "snitch channel. If you would like to change which roles "
+                    f"have access to {channel.mention}, first remove it "
+                    "(`.channel remove`) then re-add it (`.channel add`) with "
+                    "the desired roles.")
+                return
+            db.add_snitch_channel(channel, roles)
 
-        new_channels = db.get_snitch_channels(message.guild)
         await message.channel.send(f"Added {utils.channel_str(channels)} to "
-            f"snitch channels.\n{utils.snitch_channels_str(new_channels)}")
+            f"snitch channels.")
 
 
     @command("channel remove",
@@ -71,16 +77,21 @@ class Snitchvis(Client):
         for channel in channels:
             db.remove_snitch_channel(channel)
 
-        new_channels = db.get_snitch_channels(message.guild)
         await message.channel.send(f"Removed {utils.channel_str(channels)} "
-            "from snitch channels.\n"
-            f"{utils.snitch_channels_str(new_channels)}")
+            "from snitch channels.")
 
 
     @command("channel list")
     async def channel_list(self, message):
         channels = db.get_snitch_channels(message.guild)
-        m = utils.snitch_channels_str(channels)
+        if not channels:
+            await message.channel.send("No snitch channels set. You can add "
+                "snitch channels with `.channel add`.")
+            return
+
+        m = "Current snitch channels:\n"
+        for channel in channels:
+            m += f"\n{utils.channel_accessible(message.guild, channel)}"
         await message.channel.send(m)
 
 

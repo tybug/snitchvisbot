@@ -1,7 +1,10 @@
 def channel_str(channels):
     return ", ".join(channel.mention for channel in channels)
 
-def snitch_channels_str(channels):
-    if not channels:
-        return "No snitch channels set"
-    return f"Current snitch channels: {channel_str(channels)}"
+def role_str(roles):
+    return "`" + "`, `".join(role.name for role in roles) + "`"
+
+def channel_accessible(guild, channel):
+    roles = channel.allowed_roles_to_discord(guild)
+    roles_str = role_str(roles)
+    return f"{channel.mention} (accessible by {roles_str})"
