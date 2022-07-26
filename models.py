@@ -20,6 +20,12 @@ class SnitchChannel:
     def allowed_roles_to_discord(self, guild):
         return [guild.get_role(role) for role in self.allowed_roles]
 
+    def __hash__(self):
+        return hash((self.id))
+
+    def __eq__(self, other):
+        return self.id == other.id
+
 @dataclass
 class Event:
     message_id: int
