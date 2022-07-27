@@ -166,6 +166,11 @@ class Arg:
             # some converters don't need access to the `message` context and so
             # only accept a single variable. Support these converters (which
             # include useful converters like just `int` or `float`).
+
+            # these converters aren't strictly speaking functions and so don't
+            # have a signature. avoid erroring with a inspect.signature call.
+            if self.convert in [int, float]:
+                return self.convert(val)
             sig = inspect.signature(self.convert)
             if len(sig.parameters) == 1:
                 return self.convert(val)
