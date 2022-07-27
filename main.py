@@ -290,6 +290,20 @@ class Snitchvis(Client):
 
         await message.channel.send(f"Added {snitches_added} new snitches.")
 
+    @command("permissions")
+    async def permissions(self, message):
+        # tells the command author what snitch channels they can view.
+        snitch_channels = db.get_snitch_channels(message.guild)
+
+        channels = set()
+        for role in message.author.roles:
+            for channel in snitch_channels:
+                if role.id in channel.allowed_roles:
+                    channels.add(channel)
+
+        await message.channel.send("You can visualize events from the "
+            f"following channels: {utils.channel_str(channels)}")
+
 client = Snitchvis()
 client.run(TOKEN)
 
