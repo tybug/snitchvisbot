@@ -129,27 +129,30 @@ def add_snitch(guild, snitch, commit=True):
 ## snitch channels
 
 def get_snitch_channels(guild):
-    rows = select("""
+    # if guild is none then ALL snitch channels will be returned
+
+    guild_filter = "WHERE snitch_channel.guild_id = ?" if guild else ""
+    rows = select(f"""
         SELECT * FROM snitch_channel
         JOIN snitch_channel_allowed_roles
         ON snitch_channel.guild_id = snitch_channel_allowed_roles.guild_id AND
            snitch_channel.id = snitch_channel_allowed_roles.snitch_channel_id
-        WHERE snitch_channel.guild_id = ?
+        {guild_filter}
         """,
-        [guild.id]
+        [guild.id] if guild else []
     )
     # manually aggregate allowed role ids into a list for our convert function
     # channel id to list of dictionaries (channel k/v dicts).
     new_rows = {}
     for row in rows:
-        if row["guild_id"] not in new_rows:
+        if row["snitch_channel_id"] not in new_rows:
             new_row = dict(zip(row.keys(), list(row)))
             # get rid of unused parameters from the join
             del new_row["snitch_channel_id"]
             del new_row["role_id"]
             new_row["allowed_roles"] = []
         else:
-            new_row = new_rows[guild.id]
+            new_row = new_rows[row["snitch_channel_id"]]
         new_row["allowed_roles"].append(int(row["role_id"]))
         new_rows[row["snitch_channel_id"]] = new_row
 
