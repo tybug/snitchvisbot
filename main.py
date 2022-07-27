@@ -6,6 +6,7 @@ from pathlib import Path
 from discord import File
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
     create_users, snitches_from_events, Snitch)
+from PyQt6.QtWidgets import QApplication
 
 import db
 import utils
@@ -17,6 +18,19 @@ INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
     "999808708131426434&permissions=0&scope=bot")
 
 class Snitchvis(Client):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        # we can only have one qapp active at a time, but we want to be able to
+        # be rendering multiple snitch logs at the same time (ie multiple .v
+        # commands, potentially in different servers). We'll keep a master qapp
+        # active at the top level, but never exec it, which is enough to let us
+        # draw on qimages and generate videos with SnitchVisRecord and
+        # FrameRenderer.
+
+        # https://stackoverflow.com/q/13215120 for platform/minimal args
+        self.qapp = QApplication(['-platform', 'minimal'])
+
     async def on_ready(self):
         # index any messages sent while we were down
         for channel in db.get_snitch_channels(None):
@@ -254,7 +268,7 @@ class Snitchvis(Client):
             def run_snitch_vis():
                 vis = SnitchVisRecord(snitches, events, users, size, fps,
                     duration, all_snitches, fade, output_file)
-                vis.exec()
+                vis.render()
 
             m = await message.channel.send("rendering video...")
             # TODO does this incur an overhead compared to running it syncly?
