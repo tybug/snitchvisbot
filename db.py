@@ -186,7 +186,7 @@ def is_snitch_channel(channel):
 def allowed_roles(snitch_channel):
     rows = select("SELECT * FROM snitch_channel_allowed_roles WHERE "
         "channel_id = ?", [snitch_channel.id])
-    return [row.role_id for row in rows]
+    return [row["role_id"] for row in rows]
 
 def get_snitch_channel(channel):
     rows = select("SELECT * FROM snitch_channel WHERE id = ?",
@@ -194,8 +194,12 @@ def get_snitch_channel(channel):
     if not rows:
         return None
 
-    rows[0].allowed_roles = allowed_roles(channel)
-    return convert(rows, SnitchChannel)[0]
+    # jump through some hoops because "sqlite3.Row doesn't support item
+    # assignment"
+    row = rows[0]
+    row = dict(zip(row.keys(), list(row)))
+    row["allowed_roles"] = allowed_roles(channel)
+    return convert([row], SnitchChannel)[0]
 
 def update_last_indexed(channel, message_id, commit=True):
     return execute("UPDATE snitch_channel SET last_indexed_id = ? WHERE id = ?",
