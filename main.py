@@ -16,6 +16,13 @@ INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
     "999808708131426434&permissions=0&scope=bot")
 
 class Snitchvis(Client):
+    async def on_ready(self):
+        # index any messages sent while we were down
+        for channel in db.get_snitch_channels(None):
+            c = self.get_channel(channel.id)
+            await self.index_channel(channel, c)
+        db.commit()
+
     async def on_message(self, message):
         await super().on_message(message)
         await self.maybe_index_message(message)
@@ -39,6 +46,32 @@ class Snitchvis(Client):
         db.add_event(message, event)
         db.update_last_indexed(message.channel, message.id)
 
+    async def index_channel(self, channel, discord_channel):
+        events = []
+        last_id = channel.last_indexed_id
+        async for message_ in discord_channel.history(limit=None):
+            # don't index past the last indexed message id (if we have such
+            # an id stored)
+            if last_id and message_.id <= last_id:
+                break
+
+            try:
+                event = Event.parse(message_.content)
+            except InvalidEventException:
+                continue
+            events.append([message_, event])
+
+        last_messages = await discord_channel.history(limit=1).flatten()
+        # only update if the channel has messages
+        if last_messages:
+            last_message = last_messages[0]
+            db.update_last_indexed(channel, last_message.id, commit=False)
+
+        for (message_, event) in events:
+            # caller is responsible for committing
+            db.add_event(message_, event, commit=False)
+
+        return events
 
     @command("setup")
     async def setup(self, message):
@@ -120,32 +153,8 @@ class Snitchvis(Client):
 
         for channel in channels:
             await message.channel.send(f"Indexing {channel.mention}...")
-
-            events = []
-            # convert to an actual channel object so we can retrieve history
             c = channel.to_discord(message.guild)
-            last_id = channel.last_indexed_id
-            async for message_ in c.history(limit=None):
-                # don't index past the last indexed message id (if we have such
-                # an id stored)
-                if last_id and message_.id <= last_id:
-                    break
-
-                try:
-                    event = Event.parse(message_.content)
-                except InvalidEventException:
-                    continue
-                events.append([message_, event])
-
-            last_messages = await c.history(limit=1).flatten()
-            # only update if the channel has messages
-            if last_messages:
-                last_message = last_messages[0]
-                db.update_last_indexed(channel, last_message.id)
-
-            for (message_, event) in events:
-                # batch commit for speed
-                db.add_event(message_, event, commit=False)
+            events = await self.index_channel(channel, c)
             db.commit()
 
             await message.channel.send(f"Added {len(events)} new events from "
