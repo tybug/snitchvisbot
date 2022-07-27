@@ -302,8 +302,9 @@ class Snitchvis(Client):
         # use all known events to construct snitches
         snitches = snitches_from_events(all_events)
         # if the guild has any snitches uploaded (via .import-snitches), use
-        # those as well, even if they've never been pinged
-        snitches |= set(db.get_snitches(message.guild))
+        # those as well, even if they've never been pinged.
+        # Only retrieve snitches which the author has access to via their roles
+        snitches |= set(db.get_snitches(message.guild, message.author.roles))
         users = create_users(events)
         # duration to ms
         duration *= 1000
@@ -324,30 +325,58 @@ class Snitchvis(Client):
             await message.channel.send(file=vis_file)
             await m.delete()
 
-    @command("import-snitches")
-    async def import_snitches(self, message):
+    @command("import-snitches",
+        args=[
+            Arg("-g", "--groups", nargs="+"),
+            Arg("-r", "--roles", nargs="+", convert=role)
+        ]
+    )
+    async def import_snitches(self, message, groups, roles):
         attachments = message.attachments
         if not attachments:
-            await message.channel.send("You must upload a snitch.sqlite file "
-                "as part of the `.import-snitches` command")
+            await message.channel.send("You must upload a `snitch.sqlite` file "
+                "in the same message as the `.import-snitches` command.")
             return
-
-        await message.channel.send("Importing snitches from snitchmod "
-            "database...")
 
         with NamedTemporaryFile() as f:
             attachment = attachments[0]
             await attachment.save(f.name)
             conn = sqlite3.connect(f.name)
             cur = conn.cursor()
-            rows = cur.execute("SELECT * FROM snitches_v2").fetchall()
+
+            for group in groups:
+                if group == "all":
+                    continue
+                row = cur.execute("SELECT COUNT(*) FROM snitches_v2 WHERE "
+                    "group_name = ?", [group]).fetchone()
+                if row[0] == 0:
+                    await message.channel.send("No snitches on namelayer "
+                        f"group `{group}` found in this database. If the "
+                        "group name is correct, omit it and re-run to "
+                        "avoid this error.")
+                    await message.channel.send("Import aborted. You may "
+                        "safely re-run this import with different "
+                        "parameters.")
+                    return
+
+            await message.channel.send("Importing snitches from snitchmod "
+                "database...")
 
             snitches_added = 0
+            if any(group == "all" for group in groups):
+                group_filter = "1"
+            else:
+                group_filter = f"group_name IN ({('?, ' * len(groups))[:-2]}"
+
+            rows = cur.execute("SELECT * FROM snitches_v2 WHERE "
+                f"{group_filter}").fetchall()
+
             for row in rows:
                 snitch = Snitch.from_snitchmod(row)
                 # batch commit for speed
-                cur = db.add_snitch(message.guild, snitch, commit=False)
-                snitches_added += cur.rowcount
+                rowcount = db.add_snitch(message.guild, snitch, roles,
+                    commit=False)
+                snitches_added += rowcount
 
             db.commit()
 

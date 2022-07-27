@@ -38,9 +38,10 @@ def create_db():
         """
     )
     c.execute(
-        # schema matches gjum's snitchmod snitches_v2 table
+        # schema matches gjum's snitchmod snitches_v2 table, with a few of our
+        # own rows added
         """
-        CREATE TABLE snitches (
+        CREATE TABLE snitch (
             guild_id INT,
             world TEXT,
             x INT,
@@ -61,16 +62,29 @@ def create_db():
             broken_ts BIGINT,
             gone_ts BIGINT,
             tags TEXT,
-            notes TEXT,
-            PRIMARY KEY (world,x,y,z))
+            notes TEXT
+        )
         """
     )
+    c.execute("""
+        CREATE UNIQUE INDEX snitch_world_x_y_z_unique
+        ON snitch(world, x, y, z);
+    """)
     # junction table between snitch_channel and roles
     c.execute(
         """
         CREATE TABLE snitch_channel_allowed_roles (
             guild_id INTEGER,
             channel_id INTEGER,
+            role_id INTEGER
+        )
+        """
+    )
+    # junction table between snitches and roles
+    c.execute(
+        """
+        CREATE TABLE snitch_allowed_roles (
+            snitch_id INTEGER,
             role_id INTEGER
         )
         """
@@ -114,16 +128,26 @@ def convert(rows, Class):
             if k in parameters:
                 kwargs_[k] = v
 
-        instances.append(Class(**kwargs))
+        instances.append(Class(**kwargs_))
     return instances
 
 ## snitches
 
-def get_snitches(guild):
-    rows = select("SELECT * FROM snitches WHERE guild_id = ?", [guild.id])
+def get_snitches(guild, roles):
+    role_filter = ("?, " * len(roles))[:-2]
+    role_ids = [role.id for role in roles]
+    rows = select(f"""
+        SELECT * FROM snitch
+        JOIN snitch_allowed_roles
+        ON snitch.rowid = snitch_allowed_roles.snitch_id
+        WHERE snitch.guild_id = ? AND
+        snitch_allowed_roles.role_id IN ({role_filter})
+        """,
+        [guild.id, *role_ids]
+    )
     return convert(rows, Snitch)
 
-def add_snitch(guild, snitch, commit=True):
+def add_snitch(guild, snitch, allowed_roles, commit=True):
     args = [
         guild.id, snitch.world, snitch.x, snitch.y, snitch.z, snitch.group_name,
         snitch.type, snitch.name, snitch.dormant_ts, snitch.cull_ts,
@@ -133,8 +157,15 @@ def add_snitch(guild, snitch, commit=True):
         snitch.tags, snitch.notes
     ]
     # ignore duplicate snitches
-    return execute("INSERT OR IGNORE INTO snitches VALUES (?, ?, ?, ?, ?, ?, "
+    cur = execute("INSERT OR IGNORE INTO snitch VALUES (?, ?, ?, ?, ?, ?, "
         "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", args, commit)
+    rowcount = cur.rowcount
+
+    for role in allowed_roles:
+        execute("INSERT OR IGNORE INTO snitch_allowed_roles VALUES (?, ?)",
+        [cur.lastrowid, role.id], commit)
+
+    return rowcount
 
 ## snitch channels
 
