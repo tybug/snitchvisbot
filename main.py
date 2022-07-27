@@ -13,7 +13,7 @@ from asyncio import Queue
 import db
 import utils
 from secret import TOKEN
-from command import command, Arg, channel, role, human_timedelta
+from command import command, Arg, channel, role, human_timedelta, human_datetime
 from client import Client
 
 INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
@@ -238,8 +238,8 @@ class Snitchvis(Client):
             Arg("-d", "--duration", default=5, convert=int),
             Arg("-u", "--users", nargs="*", default=[]),
             Arg("-p", "--past", convert=human_timedelta),
-            Arg("--start"),
-            Arg("--end"),
+            Arg("--start", convert=human_datetime),
+            Arg("--end", convert=human_datetime),
             Arg("--fade", default=10, convert=float)
         ]
     )
@@ -256,12 +256,10 @@ class Snitchvis(Client):
                 # conveniently, start of epoch is 0 ms
                 start = 0
             else:
-                start = end - past
+                start = end - past.total_seconds()
         else:
-            if start and end:
-                # TODO
-                pass
-            else:
+            if not start and not end:
+                # neither set
                 # slightly special behavior: instead of going back in the past
                 # `x` ms, go back to the most recent event (however long ago
                 # that may be) and *then* go back `x` ms and grab all those
@@ -276,6 +274,22 @@ class Snitchvis(Client):
                 # TODO make adjustable instead of hardcoding 30 minutes, not
                 # sure what parameter name to use though (--past-adjusted?)
                 start = end - (30 * 60)
+            elif start and not end:
+                # only start set. Set end to current date
+                start = start.timestamp()
+                end = datetime.utcnow().timestamp()
+            elif end and not start:
+                # only end set. Set start to beginning of time
+                start = 0
+                end = end.timestamp()
+            else:
+                # both set
+                start = start.timestamp()
+                end = end.timestamp()
+
+        if end < start:
+            await message.channel.send("End date can't be before start date.")
+            return
 
         # TODO warn if no events by the specified users are in the events filter
         events = db.get_events(message.guild, message.author, start, end, users)

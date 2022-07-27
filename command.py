@@ -1,6 +1,6 @@
 import re
 import shlex
-from datetime import timedelta
+from datetime import timedelta, datetime
 import inspect
 
 class ParseError(Exception):
@@ -273,5 +273,57 @@ def human_timedelta(val):
 
     # is this accurate? no. will it be good enough? probably.
     weeks = (y * 52) + (mo * 4) + w
-    td = timedelta(weeks=weeks, days=d, hours=h, minutes=m, seconds=s)
-    return td.total_seconds()
+    return timedelta(weeks=weeks, days=d, hours=h, minutes=m, seconds=s)
+
+# TODO eg 07/27/2022 10:02:30PM
+def human_datetime(val):
+
+    # month, day, year
+    parts = ["", "", ""]
+    parsing_i = 0
+    for char in val:
+        if char == "/":
+            parsing_i += 1
+            continue
+        if parsing_i > 2:
+            raise ParseError(f"Invalid date `{val}`. Expected format "
+                "`mm/dd/yyy`.")
+        if char == " ":
+            break
+        parts[parsing_i] = parts[parsing_i] + char
+
+    # make sure we've parsed at least one char for all of month/day/year
+    if parsing_i != 2:
+        raise ParseError(f"Invalid date `{val}`. Expected format `mm/dd/yyyy`.")
+
+    try:
+        month = int(parts[0])
+    except ValueError:
+        raise ParseError(f"Invalid month `{parts[0]}`")
+
+    try:
+        day = int(parts[1])
+    except ValueError:
+        raise ParseError(f"Invalid day `{parts[1]}`")
+
+    try:
+        year = int(parts[2])
+        # allow users to specify short years with just two digits. Yes, this
+        # will break in a century. I'm not worried about it.
+        if len(parts[2]) == 2:
+            year += 2000
+        if len(parts[2]) not in [2, 4]:
+            raise ParseError(f"Invalid year `{year}`. Must be either 2 or 4 "
+                "digits.")
+    except ValueError:
+        raise ParseError(f"Invalid year `{parts[2]}`")
+
+    if not 1 <= month <= 12:
+        raise ParseError(f"Invalid month `{month}`. Must be between `1` and "
+            "`12` inclusive.")
+
+    if not 1 <= day <= 31:
+        raise ParseError(f"Invalid day `{day}`. Must be between `1` and `31` "
+            "inclusive.")
+
+    return datetime(year=year, month=month, day=day)
