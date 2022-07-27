@@ -2,6 +2,7 @@ from pathlib import Path
 import sqlite3
 from sqlite3 import Row
 from collections import defaultdict
+import inspect
 
 from models import SnitchChannel, Event, Snitch
 
@@ -104,6 +105,15 @@ def convert(rows, Class):
             values = row.values()
 
         kwargs = dict(zip(row.keys(), values))
+
+        # Extraneous parameters not relevant to `Class` can sneak in via sql
+        # joins. Filter this out to avoid errors on instantation.
+        parameters = list(inspect.signature(Class.__init__).parameters)
+        kwargs_ = {}
+        for k, v in kwargs.items():
+            if k in parameters:
+                kwargs_[k] = v
+
         instances.append(Class(**kwargs))
     return instances
 
@@ -146,9 +156,6 @@ def get_snitch_channels(guild):
     for row in rows:
         if row["channel_id"] not in new_rows:
             new_row = dict(zip(row.keys(), list(row)))
-            # get rid of unused parameters from the join
-            del new_row["channel_id"]
-            del new_row["role_id"]
             new_row["allowed_roles"] = []
         else:
             new_row = new_rows[row["channel_id"]]
