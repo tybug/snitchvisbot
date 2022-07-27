@@ -153,6 +153,25 @@ class Snitchvis(Client):
 
         await message.channel.send("Finished indexing snitch channels")
 
+    @command("full-reindex", args=[Arg("-y", store_boolean=True)])
+    async def full_reindex(self, message, y):
+        if not y:
+            await message.channel.send("This command will delete all currently "
+                "indexed snitches and will re-index from scratch. This can "
+                "help with some rare issues. You probably don't want to do "
+                "this unless you know what you're doing, or have been advised "
+                "to do so by tybug. If you're sure you would like to reindex, "
+                "run `.full-reindex -y`.")
+            return
+        await message.channel.send("Dropping all events and resetting last "
+            "indexed ids")
+        # drop all events
+        db.execute("DELETE FROM event WHERE guild_id = ?", [message.guild.id])
+        # reset last indexed id so indexing works from scratch again
+        db.execute("UPDATE snitch_channel SET last_indexed_id = null "
+            "WHERE guild_id = ?", [message.guild.id])
+        # finally, reindex.
+        await self.index(message)
 
     @command("v",
         # TODO make defaults for these parameters configurable
