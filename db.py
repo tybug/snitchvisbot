@@ -69,7 +69,7 @@ def create_db():
         """
         CREATE TABLE snitch_channel_allowed_roles (
             guild_id INTEGER,
-            snitch_channel_id INTEGER,
+            channel_id INTEGER,
             role_id INTEGER
         )
         """
@@ -136,7 +136,7 @@ def get_snitch_channels(guild):
         SELECT * FROM snitch_channel
         JOIN snitch_channel_allowed_roles
         ON snitch_channel.guild_id = snitch_channel_allowed_roles.guild_id AND
-           snitch_channel.id = snitch_channel_allowed_roles.snitch_channel_id
+           snitch_channel.id = snitch_channel_allowed_roles.channel_id
         {guild_filter}
         """,
         [guild.id] if guild else []
@@ -145,16 +145,16 @@ def get_snitch_channels(guild):
     # channel id to list of dictionaries (channel k/v dicts).
     new_rows = {}
     for row in rows:
-        if row["snitch_channel_id"] not in new_rows:
+        if row["channel_id"] not in new_rows:
             new_row = dict(zip(row.keys(), list(row)))
             # get rid of unused parameters from the join
-            del new_row["snitch_channel_id"]
+            del new_row["channel_id"]
             del new_row["role_id"]
             new_row["allowed_roles"] = []
         else:
-            new_row = new_rows[row["snitch_channel_id"]]
+            new_row = new_rows[row["channel_id"]]
         new_row["allowed_roles"].append(int(row["role_id"]))
-        new_rows[row["snitch_channel_id"]] = new_row
+        new_rows[row["channel_id"]] = new_row
 
     return convert(new_rows.values(), SnitchChannel)
 
