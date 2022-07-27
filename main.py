@@ -350,6 +350,10 @@ class Snitchvis(Client):
                 if role.id in channel.allowed_roles:
                     channels.add(channel)
 
+        if not channels:
+            await message.channel.send("You can't visualize any events.")
+            return
+
         await message.channel.send("You can visualize events from the "
             f"following channels: {utils.channel_str(channels)}")
 
