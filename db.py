@@ -194,9 +194,9 @@ def get_snitch_channel(channel):
     rows[0].allowed_roles = allowed_roles(channel)
     return convert(rows, SnitchChannel)[0]
 
-def update_last_indexed(channel, message_id):
+def update_last_indexed(channel, message_id, commit=True):
     return execute("UPDATE snitch_channel SET last_indexed_id = ? WHERE id = ?",
-        [message_id, channel.id])
+        [message_id, channel.id], commit_=commit)
 
 ## events
 
