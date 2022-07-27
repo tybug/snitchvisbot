@@ -135,8 +135,7 @@ def get_snitch_channels(guild):
     rows = select(f"""
         SELECT * FROM snitch_channel
         JOIN snitch_channel_allowed_roles
-        ON snitch_channel.guild_id = snitch_channel_allowed_roles.guild_id AND
-           snitch_channel.id = snitch_channel_allowed_roles.channel_id
+        ON snitch_channel.id = snitch_channel_allowed_roles.channel_id
         {guild_filter}
         """,
         [guild.id] if guild else []
