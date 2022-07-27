@@ -75,6 +75,9 @@ class Command:
             # process a variable number of arg_strings depending on nargs.
             elif arg.nargs is None:
                 # process just once
+                if i == len(arg_strings):
+                    raise ParseError(f"`{arg}` requires at least one "
+                        "parameter.")
                 val = arg.process(message, arg_strings[i])
                 i += 1
             elif arg.nargs == "*":
