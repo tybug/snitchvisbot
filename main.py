@@ -8,6 +8,8 @@ from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
     create_users, snitches_from_events, Snitch)
 from PyQt6.QtWidgets import QApplication
 
+from asyncio import Queue
+
 import db
 import utils
 from secret import TOKEN
@@ -20,6 +22,19 @@ INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
 class Snitchvis(Client):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # there's a potential race condition when indexing messages on startup,
+        # where we spend x seconds indexing channels before some channel c,
+        # but than at y < x seconds a new message comes in to channel c which
+        # gets processed and causes the last indexed id to be set to a very high
+        # id, causing us not to index the messages we didn't see while we were
+        # down when self.index_channel gets called on c.
+        # To prevent this, we'll stop indexing new messages at all while
+        # indexing channels on startup, and instead stick the new messages into
+        # a queue. This queue will be processed in the order the messages were
+        # received once we're done indexing the channels and can be assured we
+        # won't mess up our last_indexed_id.
+        self.defer_indexing = False
+        self.indexing_queue = Queue()
 
         # we can only have one qapp active at a time, but we want to be able to
         # be rendering multiple snitch logs at the same time (ie multiple .v
@@ -27,20 +42,37 @@ class Snitchvis(Client):
         # active at the top level, but never exec it, which is enough to let us
         # draw on qimages and generate videos with SnitchVisRecord and
         # FrameRenderer.
-
         # https://stackoverflow.com/q/13215120 for platform/minimal args
         self.qapp = QApplication(['-platform', 'minimal'])
 
     async def on_ready(self):
+        # avoid last_indexed_id getting set to a wrong value by incoming
+        # messages while we index channels
+        self.defer_indexing = True
         # index any messages sent while we were down
         for channel in db.get_snitch_channels(None):
             c = self.get_channel(channel.id)
             await self.index_channel(channel, c)
         db.commit()
 
+        # index messages in the order we received them now that it's safe to do
+        # so. New messages might get added to the queue while we're in the
+        # middle of processing these, so it's important to continuously poll the
+        # queue.
+        while not self.indexing_queue.empty():
+            message = await self.indexing_queue.get()
+            await self.maybe_index_message(message)
+
+        # now that we've indexed the channels and fully processed the queue, we
+        # can go back to indexing new messages normally.
+        self.defer_indexing = False
+
     async def on_message(self, message):
         await super().on_message(message)
-        await self.maybe_index_message(message)
+        if not self.defer_indexing:
+            await self.maybe_index_message(message)
+        else:
+            self.indexing_queue.put_nowait(message)
 
     async def maybe_index_message(self, message):
         snitch_channel = db.get_snitch_channel(message.channel)
@@ -323,12 +355,6 @@ class Snitchvis(Client):
 
 client = Snitchvis()
 client.run(TOKEN)
-
-# TODO reindex known snitch channels on bot restart, careful to immediately
-# retrieve last_indexed_id so it doesn't get updated by an incoming message and
-# cause us to lose all messages between the last indexed message and the
-# incoming message (messages might have come in while the bot was down that are
-# waiting to be indexed).
 
 # TODO "lines" mode in visualizer which draws colored lines between events
 # instead of highlighted boxes (what to do about single events? probably just a
