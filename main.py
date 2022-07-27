@@ -1,6 +1,7 @@
 from datetime import datetime
-from tempfile import NamedTemporaryFile
+from tempfile import NamedTemporaryFile, TemporaryDirectory
 import sqlite3
+from pathlib import Path
 
 from discord import File
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
@@ -246,20 +247,22 @@ class Snitchvis(Client):
         users = create_users(events)
         # duration to ms
         duration *= 1000
-        output_file = "out.mp4"
 
-        def run_snitch_vis():
-            vis = SnitchVisRecord(snitches, events, users, size, fps,
-                duration, all_snitches, fade, output_file)
-            vis.exec()
+        with TemporaryDirectory() as d:
+            output_file = str(Path(d) / "out.mp4")
 
-        m = await message.channel.send("rendering video...")
-        # TODO does this incur an overhead compared to running it syncly?
-        # probably not, but worth a check.
-        await self.loop.run_in_executor(None, run_snitch_vis)
-        vis_file = File(output_file)
-        await message.channel.send(file=vis_file)
-        await m.delete()
+            def run_snitch_vis():
+                vis = SnitchVisRecord(snitches, events, users, size, fps,
+                    duration, all_snitches, fade, output_file)
+                vis.exec()
+
+            m = await message.channel.send("rendering video...")
+            # TODO does this incur an overhead compared to running it syncly?
+            # probably not, but worth a check.
+            await self.loop.run_in_executor(None, run_snitch_vis)
+            vis_file = File(output_file)
+            await message.channel.send(file=vis_file)
+            await m.delete()
 
     @command("import-snitches")
     async def import_snitches(self, message):
