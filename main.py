@@ -2,13 +2,12 @@ from datetime import datetime
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import sqlite3
 from pathlib import Path
+from asyncio import Queue
 
 from discord import File
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
     create_users, snitches_from_events, Snitch)
 from PyQt6.QtWidgets import QApplication
-
-from asyncio import Queue
 
 import db
 import utils
@@ -413,3 +412,5 @@ client.run(TOKEN)
 # the vis is sometimes
 
 # TODO support custom kira message formats
+
+# TODO help output
