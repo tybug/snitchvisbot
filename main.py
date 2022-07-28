@@ -240,11 +240,12 @@ class Snitchvis(Client):
             Arg("-p", "--past", convert=human_timedelta),
             Arg("--start", convert=human_datetime),
             Arg("--end", convert=human_datetime),
-            Arg("--fade", default=10, convert=float)
+            Arg("--fade", default=10, convert=float),
+            Arg("-l", "--line", store_boolean=True)
         ]
     )
     async def visualize(self, message, all_snitches, size, fps, duration, users,
-        past, start, end, fade
+        past, start, end, fade, line
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
@@ -298,6 +299,7 @@ class Snitchvis(Client):
             await message.channel.send(NO_EVENTS)
             return
 
+        event_mode = "line" if line else "square"
         all_events = db.get_all_events(message.guild)
         # use all known events to construct snitches
         snitches = snitches_from_events(all_events)
@@ -314,7 +316,7 @@ class Snitchvis(Client):
 
             def run_snitch_vis():
                 vis = SnitchVisRecord(snitches, events, users, size, fps,
-                    duration, all_snitches, fade, output_file)
+                    duration, all_snitches, fade, event_mode, output_file)
                 vis.render()
 
             m = await message.channel.send("rendering video...")
