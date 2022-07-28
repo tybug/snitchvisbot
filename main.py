@@ -319,8 +319,6 @@ class Snitchvis(Client):
                 vis.render()
 
             m = await message.channel.send("rendering video...")
-            # TODO does this incur an overhead compared to running it syncly?
-            # probably not, but worth a check.
             await self.loop.run_in_executor(None, run_snitch_vis)
             vis_file = File(output_file)
             await message.channel.send(file=vis_file)
