@@ -405,10 +405,9 @@ class Snitchvis(Client):
 client = Snitchvis()
 client.run(TOKEN)
 
-# TODO "lines" mode in visualizer which draws colored lines between events
-# instead of highlighted boxes (what to do about single events? probably just a
-# colored square, ie a line between itself and itself) and breaks up events by a
-# time period, ~1hr. Also draws arrows on the lines to indicate directionality.
+# TODO make lines mode in visualizer actually worth using - highlight single
+# events, distinguish actual events and the lines, add arrows to indicate
+# directionality
 
 # TODO add "centered at (x, y)" coordinates to info text, can be confusing where
 # the vis is sometimes
