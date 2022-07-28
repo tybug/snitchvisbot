@@ -128,17 +128,17 @@ def command(name, args=[]):
 
 class Arg:
     def __init__(self, short, long=None, *, default=None, convert=None,
-        nargs=None, store_boolean=False, required=False
+        nargs=None, store_boolean=False, required=False, dest=None
     ):
         if not short.startswith("-"):
             positional = True
-            dest = short
+            dest_ = short
         elif not long:
             positional = False
-            dest = short
+            dest_ = short
         else:
             positional = False
-            dest = long
+            dest_ = long
 
         # nargs of * implies a default of an empty list
         if default is None and nargs == "*":
@@ -147,6 +147,7 @@ class Arg:
         if nargs == "+":
             required = True
 
+        dest = dest or dest_
         self.positional = positional
         # remove prefix twice to remove both - and -- prefixes
         self.dest = dest.removeprefix("-").removeprefix("-").replace("-", "_")
