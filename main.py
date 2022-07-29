@@ -126,7 +126,9 @@ class Snitchvis(Client):
 
     @command("channel add",
         args=[
-            Arg("channels", nargs="+", convert=channel, help=""),
+            Arg("channels", nargs="+", convert=channel, help="The "
+                "channels to add. Use a proper channel mention "
+                "(eg #snitches) to specify a channel."),
             Arg("-r", "--roles", nargs="+", convert=role)
         ], help="Add a snitch channel, viewable by the specified roles."
     )
@@ -147,8 +149,12 @@ class Snitchvis(Client):
 
     @command("channel remove",
         args=[
-            Arg("channels", nargs="+", convert=channel)
-        ]
+            Arg("channels", nargs="+", convert=channel, help="The "
+                "channels to remove. Use a proper channel mention "
+                "(eg #snitches) to specify a channel.")
+        ],
+        help="Removes a snitch channel, or multiple channels, from the list of "
+            "snitch channels."
     )
     async def channel_remove(self, message, channels):
         for channel in channels:
@@ -158,7 +164,8 @@ class Snitchvis(Client):
             "from snitch channels.")
 
 
-    @command("channel list")
+    @command("channel list", help="Lists the current snitch channels and what "
+        "roles can view them.")
     async def channel_list(self, message):
         channels = db.get_snitch_channels(message.guild)
         if not channels:
@@ -172,7 +179,7 @@ class Snitchvis(Client):
         await message.channel.send(m)
 
 
-    @command("index")
+    @command("index", help="Indexes messages in the current snitch channels.")
     async def index(self, message):
         channels = db.get_snitch_channels(message.guild)
 
@@ -208,7 +215,17 @@ class Snitchvis(Client):
 
         await message.channel.send("Finished indexing snitch channels")
 
-    @command("full-reindex", args=[Arg("-y", store_boolean=True)])
+    @command("full-reindex",
+        args=[
+            Arg("-y", store_boolean=True, help="Pass to confirm you would like "
+            "to reindex the server.")
+        ],
+        help="Fully reindexes this server. This command drops all currently "
+            "indexed snitches and will re-index from scratch. This can help "
+            "with some rare issues. You probably don't want to do this unless "
+            "you know what you're doing, or have been advised to do so by "
+            "tybug."
+    )
     async def full_reindex(self, message, y):
         if not y:
             await message.channel.send("This command will delete all currently "
@@ -251,16 +268,16 @@ class Snitchvis(Client):
                 "events by these users will be rendered."),
             Arg("-p", "--past", convert=human_timedelta, help="How far in the "
                 "past to look for events. Specify in human-readable form, ie "
-                "`1y2mo5w2d3h5m2s` (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
+                "-p 1y2mo5w2d3h5m2s (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
                 "minutes 2 seconds ago\"), or any combination thereof, ie "
-                "`1h30m` (\"1 hour 30 minutes ago\")."),
+                "-p 1h30m (\"1 hour 30 minutes ago\")."),
             Arg("--start", convert=human_datetime),
             Arg("--end", convert=human_datetime),
             Arg("--fade", default=10, convert=float),
             Arg("-l", "--line", store_boolean=True)
         ],
-        help="Visualizes snitch events. Provides options to adjust render "
-        "look and feel, events included, duration, quality, etc."
+        help="Visualizes (renders) snitch events. Provides options to adjust "
+            "render look and feel, events included, duration, quality, etc."
     )
     async def visualize(self, message, all_snitches, size, fps, duration, users,
         past, start, end, fade, line
@@ -350,7 +367,7 @@ class Snitchvis(Client):
                 "imported. If you really want to import all snitches in the "
                 "database, pass `-g all`."),
             Arg("-r", "--roles", nargs="+", convert=role, help="Users with at "
-                "least one of these roles will be able to visualize the "
+                "least one of these roles will be able to render the "
                 "imported snitches. Roles are passed by name (don't ping the "
                 "role). Use the value `everyone` to grant everyone access to "
                 "the snitches.")
@@ -363,9 +380,9 @@ class Snitchvis(Client):
             "You will likely have to use this command multiple times on the "
             "same database if you have a tiered hierarchy of snitch groups; "
             "for instance, you might run `.import-snitches -g mta-citizens "
-            "mta-shops -r citizen` to import snitches citizens can visualize, "
+            "mta-shops -r citizen` to import snitches citizens can render, "
             "and then `.import-snitches -g mta-cabinet -r cabinet` to import "
-            "snitches only cabinet members can visualize.")
+            "snitches only cabinet members can render.")
     )
     async def import_snitches(self, message, groups, roles):
         attachments = message.attachments
@@ -418,7 +435,9 @@ class Snitchvis(Client):
 
         await message.channel.send(f"Added {snitches_added} new snitches.")
 
-    @command("permissions")
+    @command("permissions", help="Lists what snitch channels you have "
+        "have permission to render events from. This is based on your discord "
+        "roles and how you set up the snitch channels (see `.channel list`).")
     async def permissions(self, message):
         # tells the command author what snitch channels they can view.
         snitch_channels = db.get_snitch_channels(message.guild)
@@ -430,10 +449,10 @@ class Snitchvis(Client):
                     channels.add(channel)
 
         if not channels:
-            await message.channel.send("You can't visualize any events.")
+            await message.channel.send("You can't render any events.")
             return
 
-        await message.channel.send("You can visualize events from the "
+        await message.channel.send("You can render events from the "
             f"following channels: {utils.channel_str(channels)}")
 
 client = Snitchvis()
