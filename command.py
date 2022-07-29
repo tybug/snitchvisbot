@@ -17,19 +17,19 @@ class Command:
         positional_args = [arg for arg in self.args if arg.positional]
         flag_args = [arg for arg in self.args if not arg.positional]
 
-        text = f"{self.help}\n\n"
+        text = f"{self.help}\n"
 
-        if positional_args:
-            text += "Positional Arguments:"
+        arg_text = ""
         for arg in positional_args:
-            text += f"\n`{arg}`: {arg.help}"
+            arg_text += f"\n  {arg}: {arg.help}"
         if positional_args:
-            text += "\n\n"
+            text += f"\nPositional Arguments:\n```{arg_text}\n```"
 
-        if flag_args:
-            text += "Options:"
+        arg_text = ""
         for arg in flag_args:
-            text += f"\n`{arg}`: {arg.help}"
+            arg_text += f"\n  {arg}: {arg.help}"
+        if flag_args:
+            text += f"\nOptions:\n```{arg_text}\n```"
 
         return text
 
