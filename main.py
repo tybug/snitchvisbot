@@ -55,8 +55,11 @@ class Snitchvis(Client):
         # index any messages sent while we were down
         for channel in db.get_snitch_channels(None):
             c = self.get_channel(channel.id)
-            print(f"Indexing channel {c} / {c.id}, guild {c.guild} / "
-                f"{c.guild.id}")
+            permissions = c.permissions_for(c.guild.me)
+            if not permissions.read_messages:
+                print(f"Couldn't index {c} / {c.id} (guild {c.guild} / "
+                    f"{c.guild.id}) without read_messages permission")
+                continue
             await self.index_channel(channel, c)
         db.commit()
 
@@ -99,6 +102,8 @@ class Snitchvis(Client):
         db.update_last_indexed(message.channel, message.id)
 
     async def index_channel(self, channel, discord_channel):
+        print(f"Indexing channel {discord_channel} / {discord_channel.id}, "
+            f"guild {discord_channel.guild} / {discord_channel.guild.id}")
         events = []
         last_id = channel.last_indexed_id
         async for message_ in discord_channel.history(limit=None):
