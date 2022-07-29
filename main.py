@@ -214,9 +214,9 @@ class Snitchvis(Client):
             if not permissions.read_messages:
                 await message.channel.send("Snitchvis doesn't have permission "
                     f"to read messages in {channel.mention}. Either give "
-                    "snitchvis enough permissions to read messages in "
-                    f"{channel.mention}, or remove it from the list of snitch "
-                    "channels (with `.channel remove`).")
+                    "snitchvis enough permissions to read messages there, or "
+                    "remove it from the list of snitch channels (with "
+                    "`.channel remove`).")
                 return
 
         for channel in channels:
