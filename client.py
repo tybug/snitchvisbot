@@ -16,7 +16,8 @@ class Client(_Client):
             if not hasattr(func, "_is_command"):
                 continue
 
-            command = Command(func, func._name, func._args, func._help)
+            command = Command(func, func._name, func._args, func._help,
+                func._permissions)
             self.commands.append(command)
 
     async def on_message(self, message):

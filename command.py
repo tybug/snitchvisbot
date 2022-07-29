@@ -7,11 +7,12 @@ class ParseError(Exception):
     pass
 
 class Command:
-    def __init__(self, function, name, args, help):
+    def __init__(self, function, name, args, help, permissions):
         self.name = name
         self.args = args
         self.function = function
         self.help = help
+        self.permissions = permissions
 
     def help_message(self):
         positional_args = [arg for arg in self.args if arg.positional]
@@ -34,6 +35,13 @@ class Command:
         return text
 
     async def invoke(self, message, arg_string):
+        for permission in self.permissions:
+            permissions = message.author.permissions_in(message.channel)
+            if not getattr(permissions, permission):
+                await message.channel.send("You do not have permission to do "
+                    f"that (requires `{permission}`).")
+                return
+
         # preserve quoted arguments with spaces as a single argument
         arg_strings = shlex.split(arg_string)
         if any(arg_string in ["--help", "-h"] for arg_string in arg_strings):
@@ -144,15 +152,16 @@ class Command:
 
         await self.function(message, **kwargs)
 
-def command(name, args=[], help=None):
-    # if not help:
-    #     raise Exception("Help text is required for all commands.")
+def command(name, args=[], help=None, permissions=[]):
+    if not help:
+        raise Exception("Help text is required for all commands.")
 
     def decorator(f):
         f._is_command = True
         f._name = name
         f._args = args
         f._help = help
+        f._permissions = permissions
         return f
     return decorator
 

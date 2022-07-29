@@ -45,6 +45,7 @@ class Snitchvis(Client):
         self.qapp = QApplication(['-platform', 'minimal'])
 
     async def on_ready(self):
+        print("connected to discord")
         # avoid last_indexed_id getting set to a wrong value by incoming
         # messages while we index channels
         self.defer_indexing = True
@@ -119,7 +120,10 @@ class Snitchvis(Client):
 
         return events
 
-    @command("setup", help="Helps you with initial setup of snitchvis.")
+    @command("setup",
+        help="Helps you with initial setup of snitchvis.",
+        permissions=["manage_guild"]
+    )
     async def setup(self, message):
         await message.channel.send("todo")
 
@@ -130,7 +134,9 @@ class Snitchvis(Client):
                 "channels to add. Use a proper channel mention "
                 "(eg #snitches) to specify a channel."),
             Arg("-r", "--roles", nargs="+", convert=role)
-        ], help="Add a snitch channel, viewable by the specified roles."
+        ],
+        help="Add a snitch channel, viewable by the specified roles.",
+        permissions=["manage_guild"]
     )
     async def channel_add(self, message, channels, roles):
         for channel in channels:
@@ -154,7 +160,8 @@ class Snitchvis(Client):
                 "(eg #snitches) to specify a channel.")
         ],
         help="Removes a snitch channel, or multiple channels, from the list of "
-            "snitch channels."
+            "snitch channels.",
+        permissions=["manage_guild"]
     )
     async def channel_remove(self, message, channels):
         for channel in channels:
@@ -164,8 +171,10 @@ class Snitchvis(Client):
             "from snitch channels.")
 
 
-    @command("channel list", help="Lists the current snitch channels and what "
-        "roles can view them.")
+    @command("channel list",
+        help="Lists the current snitch channels and what roles can view them.",
+        permissions=["manage_guild"]
+    )
     async def channel_list(self, message):
         channels = db.get_snitch_channels(message.guild)
         if not channels:
@@ -179,7 +188,10 @@ class Snitchvis(Client):
         await message.channel.send(m)
 
 
-    @command("index", help="Indexes messages in the current snitch channels.")
+    @command("index",
+        help="Indexes messages in the current snitch channels.",
+        permissions=["manage_guild"]
+    )
     async def index(self, message):
         channels = db.get_snitch_channels(message.guild)
 
@@ -224,7 +236,8 @@ class Snitchvis(Client):
             "indexed snitches and will re-index from scratch. This can help "
             "with some rare issues. You probably don't want to do this unless "
             "you know what you're doing, or have been advised to do so by "
-            "tybug."
+            "tybug.",
+        permissions=["manage_guild"]
     )
     async def full_reindex(self, message, y):
         if not y:
@@ -382,7 +395,8 @@ class Snitchvis(Client):
             "for instance, you might run `.import-snitches -g mta-citizens "
             "mta-shops -r citizen` to import snitches citizens can render, "
             "and then `.import-snitches -g mta-cabinet -r cabinet` to import "
-            "snitches only cabinet members can render.")
+            "snitches only cabinet members can render."),
+        permissions=["manage_guild"]
     )
     async def import_snitches(self, message, groups, roles):
         attachments = message.attachments
