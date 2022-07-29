@@ -133,7 +133,10 @@ class Snitchvis(Client):
             Arg("channels", nargs="+", convert=channel, help="The "
                 "channels to add. Use a proper channel mention "
                 "(eg #snitches) to specify a channel."),
-            Arg("-r", "--roles", nargs="+", convert=role)
+            Arg("-r", "--roles", nargs="+", convert=role, help="The roles "
+                "which will be able to render events in this channel. Use the "
+                "name of the role (don't ping the role). Use the name "
+                "`everyone` to grant all users access to the snitches.")
         ],
         help="Add a snitch channel, viewable by the specified roles.",
         permissions=["manage_guild"]
@@ -381,8 +384,8 @@ class Snitchvis(Client):
                 "database, pass `-g all`."),
             Arg("-r", "--roles", nargs="+", convert=role, help="Users with at "
                 "least one of these roles will be able to render the "
-                "imported snitches. Roles are passed by name (don't ping the "
-                "role). Use the value `everyone` to grant all users access to "
+                "imported snitches. Use the name of the role (don't ping the "
+                "role). Use the name `everyone` to grant all users access to "
                 "the snitches.")
         ],
         help=("Imports snitches from a a SnitchMod database. When importing, "

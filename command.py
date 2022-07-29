@@ -227,7 +227,7 @@ class Arg:
 def channel(message, val):
     match = re.match(r"<#([0-9]+)>", val)
     if not match:
-        raise ParseError(f"Invalid channel `{val}`")
+        raise ParseError(f"Invalid channel `{val}`.")
     channel_id = int(match.group(1))
     return message.guild.get_channel(channel_id)
 
@@ -245,7 +245,7 @@ def role(message, val):
         for role in message.guild.roles:
             if role.name == val:
                 return role
-        raise ParseError(f"Invalid role `{val}`")
+        raise ParseError(f"Invalid role `{val}`.")
     role_id = int(match.group(1))
     return message.guild.get_role(role_id)
 
@@ -343,12 +343,12 @@ def human_datetime(val):
     try:
         month = int(parts[0])
     except ValueError:
-        raise ParseError(f"Invalid month `{parts[0]}`")
+        raise ParseError(f"Invalid month `{parts[0]}`.")
 
     try:
         day = int(parts[1])
     except ValueError:
-        raise ParseError(f"Invalid day `{parts[1]}`")
+        raise ParseError(f"Invalid day `{parts[1]}`.")
 
     try:
         year = int(parts[2])
@@ -360,7 +360,7 @@ def human_datetime(val):
             raise ParseError(f"Invalid year `{year}`. Must be either 2 or 4 "
                 "digits.")
     except ValueError:
-        raise ParseError(f"Invalid year `{parts[2]}`")
+        raise ParseError(f"Invalid year `{parts[2]}`.")
 
     if not 1 <= month <= 12:
         raise ParseError(f"Invalid month `{month}`. Must be between `1` and "
