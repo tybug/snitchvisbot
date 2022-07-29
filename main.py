@@ -369,7 +369,7 @@ class Snitchvis(Client):
             Arg("-r", "--roles", nargs="+", convert=role, help="Users with at "
                 "least one of these roles will be able to render the "
                 "imported snitches. Roles are passed by name (don't ping the "
-                "role). Use the value `everyone` to grant everyone access to "
+                "role). Use the value `everyone` to grant all users access to "
                 "the snitches.")
         ],
         help=("Imports snitches from a a SnitchMod database. When importing, "
