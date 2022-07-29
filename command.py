@@ -22,14 +22,14 @@ class Command:
         if positional_args:
             text += "Positional Arguments:"
         for arg in positional_args:
-            text += f"`{arg}`: {arg.help}"
+            text += f"\n`{arg}`: {arg.help}"
         if positional_args:
             text += "\n\n"
 
         if flag_args:
             text += "Options:"
         for arg in flag_args:
-            text += f"\t\n`{arg}`: {arg.help}"
+            text += f"\n`{arg}`: {arg.help}"
 
         return text
 
