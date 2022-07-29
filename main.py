@@ -55,6 +55,8 @@ class Snitchvis(Client):
         # index any messages sent while we were down
         for channel in db.get_snitch_channels(None):
             c = self.get_channel(channel.id)
+            print(f"Indexing channel {c} / {c.id}, guild {c.guild} / "
+                f"{c.guild.id}")
             await self.index_channel(channel, c)
         db.commit()
 
