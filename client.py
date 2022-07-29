@@ -13,9 +13,11 @@ class Client(_Client):
         # collect all registered commands
         for func in inspect.getmembers(self, predicate=inspect.ismethod):
             (_func_name, func) = func
-            if hasattr(func, "_is_command"):
-                command = Command(func._name, func._args, func)
-                self.commands.append(command)
+            if not hasattr(func, "_is_command"):
+                continue
+
+            command = Command(func, func._name, func._args, func._help)
+            self.commands.append(command)
 
     async def on_message(self, message):
         content = message.content
