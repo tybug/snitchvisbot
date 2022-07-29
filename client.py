@@ -41,5 +41,5 @@ class Client(_Client):
             if author.id in [216008405758771200, 257336122676477952]:
                 continue
 
-            await self.log_channel.send(f"{author.mention} (`{author.name}` / "
-                f"`{author.id}`): `{content}`")
+            await self.log_channel.send(f"[{author.mention} / `{author.name}` "
+                f"/ `{author.id}`] `{content}`")
