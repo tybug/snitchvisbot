@@ -17,10 +17,12 @@ from client import Client
 
 INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
     "999808708131426434&permissions=0&scope=bot")
+LOG_CHANNEL = 1002607241586823270
+PREFIX = "."
 
 class Snitchvis(Client):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__(PREFIX, LOG_CHANNEL, *args, **kwargs)
         # there's a potential race condition when indexing messages on startup,
         # where we spend x seconds indexing channels before some channel c,
         # but than at y < x seconds a new message comes in to channel c which
@@ -45,6 +47,7 @@ class Snitchvis(Client):
         self.qapp = QApplication(['-platform', 'minimal'])
 
     async def on_ready(self):
+        await super().on_ready()
         print("connected to discord")
         # avoid last_indexed_id getting set to a wrong value by incoming
         # messages while we index channels
