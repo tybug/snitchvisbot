@@ -144,7 +144,7 @@ class Snitchvis(Client):
                 "channels to add. Use a proper channel mention "
                 "(eg #snitches) to specify a channel."),
             Arg("-r", "--roles", nargs="+", convert=role, help="The roles "
-                "which will be able to render events in this channel. Use the "
+                "which will be able to render events from this channel. Use the "
                 "name of the role (don't ping the role). Use the name "
                 "`everyone` to grant all users access to the snitches.")
         ],
