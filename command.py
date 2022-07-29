@@ -7,21 +7,47 @@ class ParseError(Exception):
     pass
 
 class Command:
-    def __init__(self, name, args, function):
+    def __init__(self, function, name, args, help):
         self.name = name
         self.args = args
         self.function = function
+        self.help = help
+
+    def help_message(self):
+        positional_args = [arg for arg in self.args if arg.positional]
+        flag_args = [arg for arg in self.args if not arg.positional]
+
+        text = f"{self.help}\n\n"
+
+        if positional_args:
+            text += "Positional Arguments:"
+        for arg in positional_args:
+            text += f"`{arg}`: {arg.help}"
+        if positional_args:
+            text += "\n\n"
+
+        if flag_args:
+            text += "Options:"
+        for arg in flag_args:
+            text += f"\t\n`{arg}`: {arg.help}"
+
+        return text
 
     async def invoke(self, message, arg_string):
-        try:
-            await self._invoke(message, arg_string)
-        except ParseError as e:
-            await message.channel.send(str(e))
-
-    async def _invoke(self, message, arg_string):
-        kwargs = {}
         # preserve quoted arguments with spaces as a single argument
         arg_strings = shlex.split(arg_string)
+        if any(arg_string in ["--help", "-h"] for arg_string in arg_strings):
+            await message.channel.send(self.help_message())
+            return
+
+        try:
+            await self._invoke(message, arg_strings)
+        except ParseError as e:
+            await message.channel.send(f"{e}\nRun `.{self.name} --help` for "
+                "more information.")
+
+    async def _invoke(self, message, arg_strings):
+        kwargs = {}
         # index into arg_strings
         i = 0
         positional_args = [arg for arg in self.args if arg.positional]
@@ -118,17 +144,21 @@ class Command:
 
         await self.function(message, **kwargs)
 
-def command(name, args=[]):
+def command(name, args=[], help=None):
+    # if not help:
+    #     raise Exception("Help text is required for all commands.")
+
     def decorator(f):
         f._is_command = True
         f._name = name
         f._args = args
+        f._help = help
         return f
     return decorator
 
 class Arg:
     def __init__(self, short, long=None, *, default=None, convert=None,
-        nargs=None, store_boolean=False, required=False, dest=None
+        nargs=None, store_boolean=False, required=False, dest=None, help=None
     ):
         if not short.startswith("-"):
             positional = True
@@ -159,6 +189,10 @@ class Arg:
         self.nargs = nargs
         self.store_boolean = store_boolean
         self.required = required
+        self.help = help
+
+        # if help is None:
+        #     raise Exception("Help text is required for all arguments.")
 
     def __str__(self):
         if self.short and self.long:

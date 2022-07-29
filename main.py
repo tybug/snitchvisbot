@@ -119,16 +119,16 @@ class Snitchvis(Client):
 
         return events
 
-    @command("setup")
+    @command("setup", help="Helps you with initial setup of snitchvis.")
     async def setup(self, message):
         await message.channel.send("todo")
 
 
     @command("channel add",
         args=[
-            Arg("channels", nargs="+", convert=channel),
+            Arg("channels", nargs="+", convert=channel, help=""),
             Arg("-r", "--roles", nargs="+", convert=role)
-        ]
+        ], help="Add a snitch channel, viewable by the specified roles."
     )
     async def channel_add(self, message, channels, roles):
         for channel in channels:
@@ -231,17 +231,36 @@ class Snitchvis(Client):
     @command("v",
         # TODO make defaults for these parameters configurable
         args=[
-            Arg("-a", "--all-snitches", default=False, store_boolean=True),
-            Arg("-s", "--size", default=500, convert=int),
-            Arg("-f", "--fps", default=20, convert=int),
-            Arg("-d", "--duration", default=5, convert=int),
-            Arg("-u", "--users", nargs="*", default=[]),
-            Arg("-p", "--past", convert=human_timedelta),
+            Arg("-a", "--all-snitches", default=False, store_boolean=True,
+                help="If passed, all known snitches will be rendered, not "
+                "just the snitches pinged by the relevant events. Warning: "
+                "this can result in very small or unreadable event fields."),
+            Arg("-s", "--size", default=800, convert=int, help="The resolution "
+                "of the render, in pixels. Defaults to 800. Decrease if "
+                "you want faster renders, increase if you want higher quality "
+                "renders."),
+            Arg("-f", "--fps", default=30, convert=int, help="The frames per "
+                "second of the render. Defaults to 30. Decrease if you want "
+                "faster renders, increase if you want smoother renders."),
+            Arg("-d", "--duration", default=5, convert=int, help="The duration "
+                "of the render, in seconds. If you want to take a slower, more "
+                "careful look at events, specify a higher value. If you just "
+                "want a quick glance, specify a lower value. Higher values "
+                "take longer to render."),
+            Arg("-u", "--users", nargs="*", default=[], help="If passed, only "
+                "events by these users will be rendered."),
+            Arg("-p", "--past", convert=human_timedelta, help="How far in the "
+                "past to look for events. Specify in human-readable form, ie "
+                "`1y2mo5w2d3h5m2s` (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
+                "minutes 2 seconds ago\"), or any combination thereof, ie "
+                "`1h30m` (\"1 hour 30 minutes ago\")."),
             Arg("--start", convert=human_datetime),
             Arg("--end", convert=human_datetime),
             Arg("--fade", default=10, convert=float),
             Arg("-l", "--line", store_boolean=True)
-        ]
+        ],
+        help="Visualizes snitch events. Provides options to adjust render "
+        "look and feel, events included, duration, quality, etc."
     )
     async def visualize(self, message, all_snitches, size, fps, duration, users,
         past, start, end, fade, line
@@ -326,9 +345,27 @@ class Snitchvis(Client):
 
     @command("import-snitches",
         args=[
-            Arg("-g", "--groups", nargs="+"),
-            Arg("-r", "--roles", nargs="+", convert=role)
-        ]
+            Arg("-g", "--groups", nargs="+", help="Only snitches in the "
+                "database which are reinforced to one of these groups will be "
+                "imported. If you really want to import all snitches in the "
+                "database, pass `-g all`."),
+            Arg("-r", "--roles", nargs="+", convert=role, help="Users with at "
+                "least one of these roles will be able to visualize the "
+                "imported snitches. Roles are passed by name (don't ping the "
+                "role). Use the value `everyone` to grant everyone access to "
+                "the snitches.")
+        ],
+        help=("Imports snitches from a a SnitchMod database. When importing, "
+            "specify a list of namelayer groups to filter the snitches by, and "
+            "a list of discord roles which will be able to access those "
+            "snitches. Also upload a snitches.sqlite file in the same message."
+            "\n"
+            "You will likely have to use this command multiple times on the "
+            "same database if you have a tiered hierarchy of snitch groups; "
+            "for instance, you might run `.import-snitches -g mta-citizens "
+            "mta-shops -r citizen` to import snitches citizens can visualize, "
+            "and then `.import-snitches -g mta-cabinet -r cabinet` to import "
+            "snitches only cabinet members can visualize.")
     )
     async def import_snitches(self, message, groups, roles):
         attachments = message.attachments
