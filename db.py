@@ -13,7 +13,7 @@ def create_db():
     c = conn.cursor()
     c.execute(
         """
-        CREATE TABLE "snitch_channel" (
+        CREATE TABLE snitch_channel (
             `guild_id` INTEGER NOT NULL,
             `id` INTEGER NOT NULL,
             `last_indexed_id` INTEGER,
@@ -22,7 +22,7 @@ def create_db():
         """)
     c.execute(
         """
-        CREATE TABLE "event" (
+        CREATE TABLE event (
             `message_id` INTEGER NOT NULL,
             `channel_id` INTEGER NOT NULL,
             `guild_id` INTEGER NOT NULL,
