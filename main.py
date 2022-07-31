@@ -606,6 +606,14 @@ class Snitchvis(Client):
         await message.channel.send("10 most recent events matching those "
             "criteria:\n" + "\n".join(messages))
 
+    @command("help", help="Displays available commands.")
+    async def help(self, message):
+        command_texts = []
+        for command in self.commands:
+            command_texts.append(f"  .{command.name}: {command.help_short}")
+
+        await message.channel.send("```\n" + "\n".join(command_texts) + "```\n")
+
 client = Snitchvis()
 client.run(TOKEN)
 
