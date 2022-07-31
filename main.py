@@ -482,6 +482,95 @@ class Snitchvis(Client):
         await message.channel.send("You can render events from the "
             f"following channels: {utils.channel_str(channels)}")
 
+    @command("events", help="Lists the most recent events for the specified "
+        "snitch or snitches.",
+        args=[
+            Arg("-n", "--name", help="List events for snitches with the "
+                "specified name."),
+            Arg("-l", "--location", help="List events for snitches at this "
+                "location. Format is `-l/--location x y z` or "
+                "`-l/--location x z`. The two parameter version is a "
+                "convenience to avoid having to specify a y level; snitches at "
+                "all y levels at that (x, z) location will be searched for "
+                "events.", nargs="*")
+        ]
+    )
+    async def events(self, message, name, location):
+        if not bool(name) ^ bool(location):
+            await message.channel.send("Exactly one of `-n/--name` or "
+                "`-l/--location` must be passed.\nRun `.events --help` for "
+                "more information.")
+            return
+
+        if name:
+            events = db.select("""
+                SELECT * FROM event
+                WHERE guild_id = ? AND snitch_name = ?
+                LIMIT 10
+            """, [message.guild.id, name])
+        elif location:
+            if len(location) == 2:
+                x, z = location
+                y = None
+            elif len(location) == 3:
+                x, y, z = location
+            else:
+                await message.channel.send(f"Invalid location "
+                    f"`{' '.join(location)}`. Must be in the form "
+                    "`-l/--location x y z` or `-l/--location x z`")
+                return
+
+            try:
+                x = int(x)
+            except ValueError:
+                await message.channel.send(f"Invalid x coordinate `{x}`")
+                return
+
+            try:
+                y = int(y) if y else None
+            except ValueError:
+                await message.channel.send(f"Invalid y cooridnate `{y}`")
+                return
+
+            try:
+                z = int(z)
+            except ValueError:
+                await message.channel.send(f"Invalid z coordinate `{z}`")
+                return
+
+            # swap y and z because that's what the db expects
+            if y is not None:
+                events = db.select("""
+                    SELECT * FROM event
+                    WHERE guild_id = ? AND x = ? AND y = ? AND z = ?
+                    LIMIT 10
+                """, [message.guild.id, x, z, y])
+            else:
+                events = db.select("""
+                    SELECT * FROM event
+                    WHERE guild_id = ? AND x = ? AND y = ?
+                    LIMIT 10
+                """, [message.guild.id, x, z])
+
+        if not events:
+            await message.channel.send("No events match those criteria.")
+            return
+
+        messages = []
+        for event in events:
+            t = datetime.fromtimestamp(event["t"]).strftime('%Y-%m-%d %H:%M:%S')
+            group = event["namelayer_group"]
+            username = event["username"]
+            snitch_name = event["snitch_name"]
+            x = event["x"]
+            y = event["y"]
+            z = event["z"]
+
+            messages.append(f"`[{t}]` `[{group}]` **{username}** is at "
+                f"{snitch_name} ({x},{z},{y})")
+        await message.channel.send("10 most recent events matching those "
+            "criteria:\n" + "\n".join(messages))
+
 client = Snitchvis()
 client.run(TOKEN)
 
