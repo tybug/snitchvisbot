@@ -7,11 +7,12 @@ class ParseError(Exception):
     pass
 
 class Command:
-    def __init__(self, function, name, args, help, permissions):
+    def __init__(self, function, name, args, help, help_short, permissions):
         self.name = name
         self.args = args
         self.function = function
         self.help = help
+        self.help_short = help_short or help
         self.permissions = permissions
 
     def help_message(self):
@@ -62,7 +63,9 @@ class Command:
         flag_args = [arg for arg in self.args if not arg.positional]
 
         def is_flag(arg_string):
-            return arg_string.startswith("-")
+            if len(arg_string) == 1:
+                return False
+            return arg_string[0] == "-" and not arg_string[1].isdigit()
 
         # deal with positional arguments first.
         for arg in positional_args:
@@ -152,7 +155,7 @@ class Command:
 
         await self.function(message, **kwargs)
 
-def command(name, args=[], help=None, permissions=[]):
+def command(name, *, args=[], help=None, help_short=None, permissions=[]):
     if not help:
         raise Exception("Help text is required for all commands.")
 
@@ -161,6 +164,7 @@ def command(name, args=[], help=None, permissions=[]):
         f._name = name
         f._args = args
         f._help = help
+        f._help_short = help_short
         f._permissions = permissions
         return f
     return decorator

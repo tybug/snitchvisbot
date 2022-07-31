@@ -18,7 +18,7 @@ class Client(_Client):
                 continue
 
             command = Command(func, func._name, func._args, func._help,
-                func._permissions)
+                func._help_short, func._permissions)
             self.commands.append(command)
 
     async def on_ready(self):
