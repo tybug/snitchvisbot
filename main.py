@@ -183,7 +183,7 @@ class Snitchvis(Client):
                 "name of the role (don't ping the role). Use the name "
                 "`everyone` to grant all users access to the snitches.")
         ],
-        help="Add a snitch channel, viewable by the specified roles.",
+        help="Adds a snitch channel(es), viewable by the specified roles.",
         permissions=["manage_guild"]
     )
     async def channel_add(self, message, channels, roles):
@@ -207,8 +207,7 @@ class Snitchvis(Client):
                 "channels to remove. Use a proper channel mention "
                 "(eg #snitches) to specify a channel.")
         ],
-        help="Removes a snitch channel, or multiple channels, from the list of "
-            "snitch channels.",
+        help="Removes a snitch channel(es) from the list of snitch channels.",
         permissions=["manage_guild"]
     )
     async def channel_remove(self, message, channels):
@@ -280,11 +279,12 @@ class Snitchvis(Client):
             Arg("-y", store_boolean=True, help="Pass to confirm you would like "
             "to reindex the server.")
         ],
-        help="Fully reindexes this server. This command drops all currently "
-            "indexed snitches and will re-index from scratch. This can help "
-            "with some rare issues. You probably don't want to do this unless "
-            "you know what you're doing, or have been advised to do so by "
-            "tybug.",
+        help="Drops all currently indexed snitches and re-indexes from "
+            "scratch. This can help with some rare issues. You probably don't "
+            "want to do this unless you know what you're doing, or have been "
+            "advised to do so by tybug.",
+        help_short="Drops all currently indexed snitches and re-indexes from "
+            "scratch.",
         permissions=["manage_guild"]
     )
     async def full_reindex(self, message, y):
@@ -433,17 +433,14 @@ class Snitchvis(Client):
                 "role). Use the name `everyone` to grant all users access to "
                 "the snitches.")
         ],
-        help=("Imports snitches from a a SnitchMod database. When importing, "
-            "specify a list of namelayer groups to filter the snitches by, and "
-            "a list of discord roles which will be able to access those "
-            "snitches. Also upload a snitches.sqlite file in the same message."
-            "\n"
+        help="Imports snitches from a SnitchMod database.\n"
             "You will likely have to use this command multiple times on the "
             "same database if you have a tiered hierarchy of snitch groups; "
             "for instance, you might run `.import-snitches -g mta-citizens "
             "mta-shops -r citizen` to import snitches citizens can render, "
             "and then `.import-snitches -g mta-cabinet -r cabinet` to import "
-            "snitches only cabinet members can render."),
+            "snitches only cabinet members can render.",
+        help_short="Imports snitches from a SnitchMod database.",
         permissions=["manage_guild"]
     )
     async def import_snitches(self, message, groups, roles):
@@ -497,9 +494,12 @@ class Snitchvis(Client):
 
         await message.channel.send(f"Added {snitches_added} new snitches.")
 
-    @command("permissions", help="Lists what snitch channels you have "
+    @command("permissions",
+        help="Lists what snitch channels you have "
         "have permission to render events from. This is based on your discord "
-        "roles and how you set up the snitch channels (see `.channel list`).")
+        "roles and how you set up the snitch channels (see `.channel list`).",
+        help_short="Lists what snitch channels you have permission to render "
+            "events from.")
     async def permissions(self, message):
         # tells the command author what snitch channels they can view.
         snitch_channels = db.get_snitch_channels(message.guild)
