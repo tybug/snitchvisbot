@@ -626,4 +626,12 @@ client.run(TOKEN)
 
 # TODO support custom kira message formats
 
-# TODO help output
+# TODO snitchvissetprefix
+# TODO sanity checking on duration / size / fps, maybe also limit minutes spent
+# generating per server per day
+# TODO fix permissions on .events, currently returns results for all events,
+# need to limit to just the events the user has access to
+
+# TODO need padding for visible snitches, we care about the *snitch field*
+# being visible, not the snitch itself being visible
+# https://discord.com/channels/993250058801774632/993536931189244045/1002667797907775598
