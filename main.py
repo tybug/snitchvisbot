@@ -130,12 +130,47 @@ class Snitchvis(Client):
 
         return events
 
-    @command("setup",
-        help="Helps you with initial setup of snitchvis.",
-        permissions=["manage_guild"]
+    @command("tutorial",
+        help="Walks you through an initial setup of snitchvis."
     )
-    async def setup(self, message):
-        await message.channel.send("todo")
+    async def tutorial(self, message):
+        await message.channel.send("To set up snitchvis, you'll need to do two "
+            "things:\n* add snitch channels, so snitchvis knows where to look "
+            "for snitch events (pings/logins/logouts)"
+            "\n* index snitch channels so snitchvis actually has the events "
+            "stored. This is a separate command because it can take a long "
+            "time to retrieve all the snitch messages from discord due to "
+            "ratelimiting.")
+        await message.channel.send("To add a snitch channel, use the "
+            "`.channel add` command (see also `.channel add --help`). Adding a "
+            "snitch channel requires that you specify which discord roles "
+            "should be able to render events from this snitch channel. This "
+            "usually will be the same roles you've given permission to view "
+            "the channel on discord, but it doesn't have to be.\n"
+            "If you mess up the roles when adding a "
+            "snitch channel, you can use `.channel remove` to remove it, then "
+            "re-add it with the correct roles.")
+        await message.channel.send("Once you've added all your snitch channels "
+            "with the desired role access, it's time to tell snitchvis to "
+            "index all the events in those channels. Run `.index` to do so."
+            "Running this command is only necessary whenever you add a new "
+            "snitch channel - snitchvis will automatically index new messages "
+            "in snitch channels after this command has been run.")
+        await message.channel.send("Once `.index` finishes, you're ready to "
+            "render some snitches! The command to visualize/render is `.v`. "
+            "When run with no arguments, it looks for the most recent event "
+            "in any snitch channel, then renders the past 30 minutes of events "
+            "before that event. This is meant to be a quick way to take a look "
+            "at the most recent snitch pings on your network.")
+        await message.channel.send("`.v` supports a wide variety of different "
+            "options, however, and you should take some time to read through "
+            "them and try them out - this is the most powerful part (and "
+            "primary feature) of snitchvis. For instance, to render all events "
+            "from the past day and a half, run `.v --past 1d12h` (or "
+            "equivalently `.v -p 1d12h`). You can also filter events by users, "
+            "make the video longer, higher or lower quality, and more. Run "
+            "`.v --help` to see all available options. Feel free to play "
+            "around with it!")
 
 
     @command("channel add",
