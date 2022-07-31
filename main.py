@@ -142,7 +142,8 @@ class Snitchvis(Client):
             "time to retrieve all the snitch messages from discord due to "
             "ratelimiting.")
         await message.channel.send("To add a snitch channel, use the "
-            "`.channel add` command (see also `.channel add --help`). Adding a "
+            "`.channel add` command (see also `.channel add --help`). This "
+            "should be the same channel you set up a kira relay to. Adding a "
             "snitch channel requires that you specify which discord roles "
             "should be able to render events from this snitch channel. This "
             "usually will be the same roles you've given permission to view "
