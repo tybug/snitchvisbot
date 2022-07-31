@@ -143,7 +143,7 @@ class Snitchvis(Client):
             "ratelimiting.")
         await message.channel.send("To add a snitch channel, use the "
             "`.channel add` command (see also `.channel add --help`). This "
-            "should be the same channel you set up a kira relay to. Adding a "
+            "should be the same channel you set up a kira relay for. Adding a "
             "snitch channel requires that you specify which discord roles "
             "should be able to render events from this snitch channel. This "
             "usually will be the same roles you've given permission to view "
@@ -314,12 +314,12 @@ class Snitchvis(Client):
                 help="If passed, all known snitches will be rendered, not "
                 "just the snitches pinged by the relevant events. Warning: "
                 "this can result in very small or unreadable event fields."),
-            Arg("-s", "--size", default=800, convert=int, help="The resolution "
-                "of the render, in pixels. Defaults to 800. Decrease if "
+            Arg("-s", "--size", default=700, convert=int, help="The resolution "
+                "of the render, in pixels. Defaults to 700. Decrease if "
                 "you want faster renders, increase if you want higher quality "
                 "renders."),
-            Arg("-f", "--fps", default=30, convert=int, help="The frames per "
-                "second of the render. Defaults to 30. Decrease if you want "
+            Arg("-f", "--fps", default=20, convert=int, help="The frames per "
+                "second of the render. Defaults to 20. Decrease if you want "
                 "faster renders, increase if you want smoother renders."),
             Arg("-d", "--duration", default=5, convert=int, help="The duration "
                 "of the render, in seconds. If you want to take a slower, more "
