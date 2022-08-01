@@ -231,7 +231,8 @@ class Arg:
 def channel(message, val):
     match = re.match(r"<#([0-9]+)>", val)
     if not match:
-        raise ParseError(f"Invalid channel `{val}`.")
+        raise ParseError(f"Invalid channel `{val}`. Make sure to use a proper "
+            "channel mention (ie `#channel`) instead of just the channel name.")
     channel_id = int(match.group(1))
     return message.guild.get_channel(channel_id)
 
