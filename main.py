@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 from asyncio import Queue
 from concurrent.futures import ProcessPoolExecutor
+from functools import partial
 
 from discord import File
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
@@ -412,7 +413,31 @@ class Snitchvis(Client):
 
             m = await message.channel.send("rendering video...")
 
-            from functools import partial
+            # if we run this in the default executor (ThreadPoolExecutor), we
+            # get a pretty bad memory leak. We spike to ~700mb on a default
+            # settings visualization (5 seconds / 20 fps / 700 pixels), which is
+            # normal enough, but then
+            # instead of returning to the baseline 70mb, we return to 350mb or
+            # so after rendering. It's not a true memory leak though because
+            # subsequent renders don't always increase memory: if you continue
+            # to render at default settings, it'll return to 350mb pretty much
+            # every time. If you then render something larger (-s 1000 or so),
+            # it'll spike to 1200mb (again, normal) but then return to 500mb or
+            # so instead of 350mb. It's like it sticks to a high water mark or
+            # something. But it's not just that because memory usage does also
+            # go up non insignificant amounts at random intervals when you
+            # visualize.
+            # I'm not sure what's leaking - the obvious culprits are the ffmpeg
+            # pipe, the images, qbuffers, or the world pixmap. But all of those
+            # should be getting cleaned up when `SnitchVisRecord` gets gc'd, so
+            # I dunno.
+            # This memory leak is something I definitely should look into and
+            # fix at some point, but I don't want to right now, so the temporary
+            # fix is sticking the visualization into a separate process and
+            # letting 100% of its memory get returned to the OS when it exits,
+            # since its only job is writing to an output mp4.
+            # We are taking a slight hit on the event pickling, but hopefully
+            # it's not too bad.
             f = partial(run_snitch_vis, snitches, events, users, size, fps,
                 duration, all_snitches, fade, event_mode, output_file)
             with ProcessPoolExecutor() as pool:
