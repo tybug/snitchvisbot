@@ -3,6 +3,7 @@ from tempfile import NamedTemporaryFile, TemporaryDirectory
 import sqlite3
 from pathlib import Path
 from asyncio import Queue
+from concurrent.futures import ProcessPoolExecutor
 
 from discord import File
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
@@ -20,6 +21,13 @@ INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
 LOG_CHANNEL = 1002607241586823270
 PREFIX = "."
 
+def run_snitch_vis(snitches, events, users, size, fps, duration, all_snitches,
+    fade, event_mode, output_file
+):
+    vis = SnitchVisRecord(snitches, events, users, size, fps,
+        duration, all_snitches, fade, event_mode, output_file)
+    vis.render()
+
 class Snitchvis(Client):
     def __init__(self, *args, **kwargs):
         super().__init__(PREFIX, LOG_CHANNEL, *args, **kwargs)
@@ -36,15 +44,6 @@ class Snitchvis(Client):
         # won't mess up our last_indexed_id.
         self.defer_indexing = False
         self.indexing_queue = Queue()
-
-        # we can only have one qapp active at a time, but we want to be able to
-        # be rendering multiple snitch logs at the same time (ie multiple .v
-        # commands, potentially in different servers). We'll keep a master qapp
-        # active at the top level, but never exec it, which is enough to let us
-        # draw on qimages and generate videos with SnitchVisRecord and
-        # FrameRenderer.
-        # https://stackoverflow.com/q/13215120 for platform/minimal args
-        self.qapp = QApplication(['-platform', 'minimal'])
 
     async def on_ready(self):
         await super().on_ready()
@@ -411,13 +410,14 @@ class Snitchvis(Client):
         with TemporaryDirectory() as d:
             output_file = str(Path(d) / "out.mp4")
 
-            def run_snitch_vis():
-                vis = SnitchVisRecord(snitches, events, users, size, fps,
-                    duration, all_snitches, fade, event_mode, output_file)
-                vis.render()
-
             m = await message.channel.send("rendering video...")
-            await self.loop.run_in_executor(None, run_snitch_vis)
+
+            from functools import partial
+            f = partial(run_snitch_vis, snitches, events, users, size, fps,
+                duration, all_snitches, fade, event_mode, output_file)
+            with ProcessPoolExecutor() as pool:
+                await self.loop.run_in_executor(pool, f)
+
             vis_file = File(output_file)
             await message.channel.send(file=vis_file)
             await m.delete()
@@ -615,8 +615,18 @@ class Snitchvis(Client):
 
         await message.channel.send("```\n" + "\n".join(command_texts) + "```\n")
 
-client = Snitchvis()
-client.run(TOKEN)
+# we can only have one qapp active at a time, but we want to be able to
+# be rendering multiple snitch logs at the same time (ie multiple .v
+# commands, potentially in different servers). We'll keep a master qapp
+# active at the top level, but never exec it, which is enough to let us
+# draw on qimages and generate videos with SnitchVisRecord and
+# FrameRenderer.
+# https://stackoverflow.com/q/13215120 for platform/minimal args
+qapp = QApplication(['-platform', 'minimal'])
+
+if __name__ == "__main__":
+    client = Snitchvis()
+    client.run(TOKEN)
 
 # TODO make lines mode in visualizer actually worth using - highlight single
 # events, distinguish actual events and the lines, add arrows to indicate
