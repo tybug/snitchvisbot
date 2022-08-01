@@ -333,7 +333,8 @@ class Snitchvis(Client):
                 "past to look for events. Specify in human-readable form, ie "
                 "-p 1y2mo5w2d3h5m2s (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
                 "minutes 2 seconds ago\"), or any combination thereof, ie "
-                "-p 1h30m (\"1 hour 30 minutes ago\")."),
+                "-p 1h30m (\"1 hour 30 minutes ago\"). Use the special value "
+                "\"all\" to visualize all events."),
             Arg("--start", convert=human_datetime),
             Arg("--end", convert=human_datetime),
             Arg("--fade", default=10, convert=float),
