@@ -559,13 +559,14 @@ class Snitchvis(Client):
         ]
     )
     async def events(self, message, name, location):
-        if not bool(name) ^ bool(location):
+        # explicitly allow empty name, useful for searching for unnamed snitches
+        if not (bool(name) or name == "") ^ bool(location):
             await message.channel.send("Exactly one of `-n/--name` or "
                 "`-l/--location` must be passed.\nRun `.events --help` for "
                 "more information.")
             return
 
-        if name:
+        if name is not None:
             events = db.select("""
                 SELECT * FROM event
                 WHERE guild_id = ? AND snitch_name = ?
