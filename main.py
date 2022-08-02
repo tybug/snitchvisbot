@@ -569,7 +569,7 @@ class Snitchvis(Client):
             events = db.select("""
                 SELECT * FROM event
                 WHERE guild_id = ? AND snitch_name = ?
-                LIMIT 10
+                ORDER BY t DESC LIMIT 10
             """, [message.guild.id, name])
         elif location:
             if len(location) == 2:
@@ -606,13 +606,13 @@ class Snitchvis(Client):
                 events = db.select("""
                     SELECT * FROM event
                     WHERE guild_id = ? AND x = ? AND y = ? AND z = ?
-                    LIMIT 10
+                    ORDER BY t DESC LIMIT 10
                 """, [message.guild.id, x, z, y])
             else:
                 events = db.select("""
                     SELECT * FROM event
                     WHERE guild_id = ? AND x = ? AND y = ?
-                    LIMIT 10
+                    ORDER BY t DESC LIMIT 10
                 """, [message.guild.id, x, z])
 
         if not events:
@@ -632,7 +632,7 @@ class Snitchvis(Client):
             messages.append(f"`[{t}]` `[{group}]` **{username}** is at "
                 f"{snitch_name} ({x},{z},{y})")
         await message.channel.send("10 most recent events matching those "
-            "criteria:\n" + "\n".join(messages))
+            "criteria (most recent first):\n" + "\n".join(messages))
 
     @command("help", help="Displays available commands.")
     async def help(self, message):
