@@ -183,7 +183,7 @@ class Snitchvis(Client):
             Arg("-r", "--roles", nargs="+", convert=role, help="The roles "
                 "which will be able to render events from this channel. Use the "
                 "name of the role (don't ping the role). Use the name "
-                "`everyone` to grant all users access to the snitches.")
+                "`everyone` to grant all users access to render the snitches.")
         ],
         help="Adds a snitch channel(es), viewable by the specified roles.",
         permissions=["manage_guild"]
