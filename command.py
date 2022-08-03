@@ -340,7 +340,8 @@ def human_timedelta(val):
     weeks = (y * 52) + (mo * 4) + w
     return timedelta(weeks=weeks, days=d, hours=h, minutes=m, seconds=s)
 
-# TODO eg 07/27/2022 10:02:30PM
+# TODO parse time as well, not just date (eg 7/12/2022 8:02:20 PM, or probably
+# 24 hour clock, or support both)
 def human_datetime(val):
 
     # month, day, year
