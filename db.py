@@ -3,6 +3,7 @@ import sqlite3
 from sqlite3 import Row
 from collections import defaultdict
 import inspect
+import time
 
 from models import SnitchChannel, Event, Snitch
 
@@ -102,10 +103,15 @@ def commit():
     conn.commit()
 
 def select(query, params=[]):
-    return cur.execute(query, params).fetchall()
+    return execute(query, params, commit_=False).fetchall()
 
 def execute(query, params, commit_=True):
+    t1 = time.time()
     cur_ = cur.execute(query, params)
+    t2 = time.time()
+    # performance logging for sql queries
+    print(f"[db] {t2 - t1} {query} {params}")
+
     if commit_:
         commit()
     return cur_
