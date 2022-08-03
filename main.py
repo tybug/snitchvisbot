@@ -352,9 +352,9 @@ class Snitchvis(Client):
                 "the render. Fade duration is limited to a minimum of 1.5 "
                 "seconds regardless of what you specify for --fade. Defaults "
                 "to 10% of video duration (equivalent to --fade 10)."),
-            Arg("-l", "--line", store_boolean=True, help="Pass -l/--line if "
-                "you want to render lines between snitch events, instead of "
-                "boxes around each individual snitch event. This option is "
+            Arg("-l", "--line", store_boolean=True, help="Draw lines "
+                "between snitch events instead of the default boxes around "
+                "individual snitch events. This option is "
                 "experimental and may not look good. It is intended to "
                 "provide an easier way to see directionality and travel "
                 "patterns than the default mode, and may eventually become the "
