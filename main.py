@@ -335,10 +335,30 @@ class Snitchvis(Client):
                 "minutes 2 seconds ago\"), or any combination thereof, ie "
                 "-p 1h30m (\"1 hour 30 minutes ago\"). Use the special value "
                 "\"all\" to visualize all events."),
-            Arg("--start", convert=human_datetime),
-            Arg("--end", convert=human_datetime),
-            Arg("--fade", default=10, convert=float),
-            Arg("-l", "--line", store_boolean=True)
+            Arg("--start", convert=human_datetime, help="The start date of "
+                "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
+                "eg 7/18/2022 or 12/31/21. If --start is passed but not "
+                "--end, *all* events after the passed start date will be "
+                "rendered."),
+            Arg("--end", convert=human_datetime, help="The end date of "
+                "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
+                "eg 7/18/2022 or 12/31/21. If --end is passed but not "
+                "--start, *all* events before the passed end date will be "
+                "rendered."),
+            Arg("--fade", default=10, convert=float, help="What percentage of "
+                "the video duration event highlighting will be visible for. At "
+                "--fade 100, every event will remain on screen for the entire "
+                "render. At --fade 50, events will remain on screen for half "
+                "the render. Fade duration is limited to a minimum of 1.5 "
+                "seconds regardless of what you specify for --fade. Defaults "
+                "to 10% of video duration (equivalent to --fade 10)."),
+            Arg("-l", "--line", store_boolean=True, help="Pass -l/--line if "
+                "you want to render lines between snitch events, instead of "
+                "boxes around each individual snitch event. This option is "
+                "experimental and may not look good. It is intended to "
+                "provide an easier way to see directionality and travel "
+                "patterns than the default mode, and may eventually become the "
+                "default mode.")
         ],
         help="Visualizes (renders) snitch events. Provides options to adjust "
             "render look and feel, events included, duration, quality, etc."
