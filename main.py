@@ -358,7 +358,11 @@ class Snitchvis(Client):
                 "experimental and may not look good. It is intended to "
                 "provide an easier way to see directionality and travel "
                 "patterns than the default mode, and may eventually become the "
-                "default mode.")
+                "default mode."),
+            # TODO work on desktop app and svis file format
+            # Arg("--export", store_boolean=True, help="Export the events "
+            #     "matching the specified criteria to a .svis file, for use in "
+            #     "the Snitch Vis desktop application.")
         ],
         help="Visualizes (renders) snitch events. Provides options to adjust "
             "render look and feel, events included, duration, quality, etc."
