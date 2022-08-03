@@ -46,6 +46,19 @@ class Command:
         # preserve quoted arguments with spaces as a single argument
         arg_strings = shlex.split(arg_string)
         if any(arg_string in ["--help", "-h"] for arg_string in arg_strings):
+            help_message = self.help_message()
+            # ugly hardcode hack. Hopefully we never seriously need >4000 chars.
+            # things will get messy if we ever split somewhere other than in
+            # the middle of a code block, but only `.v -h` invokes this edge
+            # case for now.
+            if len(help_message) >= 2000:
+                # 100 chars of buffer
+                message1 = help_message[:1900] + "\n```"
+                message2 = "```\n" + help_message[1900:]
+                await message.channel.send(message1)
+                await message.channel.send(message2)
+                return
+
             await message.channel.send(self.help_message())
             return
 
