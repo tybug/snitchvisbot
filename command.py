@@ -220,8 +220,8 @@ class Arg:
         self.required = required
         self.help = help
 
-        # if help is None:
-        #     raise Exception("Help text is required for all arguments.")
+        if help is None:
+            raise Exception("Help text is required for all arguments.")
 
     def __str__(self):
         if self.short and self.long:
