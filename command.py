@@ -64,7 +64,10 @@ class Command:
 
         try:
             await self._invoke(message, arg_strings)
-        except ParseError as e:
+        # ideally we'll raise ParseErrors with nice error messages, but in the
+        # worst case of a python-level error, catch anyway so we don't just
+        # silently fail.
+        except (ParseError, ValueError) as e:
             await message.channel.send(f"{e}\nRun `.{self.name} --help` for "
                 "more information.")
 
