@@ -418,6 +418,17 @@ class Snitchvis(Client):
             await message.channel.send(NO_EVENTS)
             return
 
+        # for reference, a 5 second video of 700 pixels at 30 fps is 70
+        # million pixels. A 60 second video of 1000 pixels at 30 fps is 1.8
+        # billion pixels.
+        num_pixels = duration * fps * (size * size)
+        if num_pixels > 2_000_000_000:
+            await message.channel.send("The requested render would require too "
+                "many server resources to generate. Decrease either the render "
+                "size (`-s/--size`), fps (`-f/--fps`), or duration "
+                "(`-d/--duration`).")
+            return
+
         event_mode = "line" if line else "square"
         all_events = db.get_all_events(message.guild)
         # use all known events to construct snitches
