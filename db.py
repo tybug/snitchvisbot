@@ -75,9 +75,9 @@ def create_db():
     c.execute(
         """
         CREATE TABLE snitch_channel_allowed_roles (
-            guild_id INTEGER,
-            channel_id INTEGER,
-            role_id INTEGER
+            guild_id INTEGER NOT NULL,
+            channel_id INTEGER NOT NULL,
+            role_id INTEGER NOT NULL
         )
         """
     )
@@ -85,8 +85,8 @@ def create_db():
     c.execute(
         """
         CREATE TABLE snitch_allowed_roles (
-            snitch_id INTEGER,
-            role_id INTEGER
+            snitch_id INTEGER NOT NULL,
+            role_id INTEGER NOT NULL
         )
         """
     )
