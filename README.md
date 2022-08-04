@@ -28,12 +28,12 @@ Renders snitch events to a video. Provides options to adjust render look and fee
 
 Examples:
 
-`.render`
-`.render --past 1d`
-`.render --past 1w1d2h --user gregy165`
-`.render --start 07/18/2022` (end and start default to current time if not specified)
-`.render --start 07/18/2022 --end 07/29/2022`
-`.render --size 1200 --duration 30 --fps 30` (high quality, long render)
+* `.render`
+* `.render --past 1d`
+* `.render --past 1w1d2h --user gregy165`
+* `.render --start 07/18/2022` (end and start default to current time if not specified)
+* `.render --start 07/18/2022 --end 07/29/2022`
+* `.render --size 1200 --duration 30 --fps 30` (high quality, long render)
 
 #### Arguments
 
