@@ -7,8 +7,8 @@ A discord bot for visualizing snitch events. Uses [SnitchVis](https://github.com
 
 | Command          | Description                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| .tutorial        | Walks you through an initial setup of snitchvis.                                                                               |
 | .render          | Renders snitch events to a video. Provides options to adjust render look and feel, events included, duration, quality, etc.    |
+| .tutorial        | Walks you through an initial setup of snitchvis.                                                                               |
 | .channel add     | Adds a snitch channel(es), viewable by the specified roles.                                                                    |
 | .channel list    | Lists the current snitch channels and what roles can view them.                                                                |
 | .channel remove  | Removes a snitch channel(es) from the list of snitch channels.                                                                 |
@@ -20,8 +20,22 @@ A discord bot for visualizing snitch events. Uses [SnitchVis](https://github.com
 | .help            | Displays available commands.                                                                                                   |
 
 
-## Render Options
+## Command Options
 
+### Render
+
+Renders snitch events to a video. Provides options to adjust render look and feel, events included, duration, quality, etc.
+
+Examples:
+
+`.render`
+`.render --past 1d`
+`.render --past 1w1d2h --user gregy165`
+`.render --start 07/18/2022` (end and start default to current time if not specified)
+`.render --start 07/18/2022 --end 07/29/2022`
+`.render --size 1200 --duration 30 --fps 30` (high quality, long render)
+
+#### Arguments
 
 | Argument          | Description
 | ----------------  | ------------------------------------------------------------------------------------------------------------------------
@@ -35,8 +49,6 @@ A discord bot for visualizing snitch events. Uses [SnitchVis](https://github.com
 | --end  |  The end date of events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, eg 7/18/2022 or 12/31/21. If --end is passed but not --start, *all* events before the passed end date will be rendered. |
 | --fade            | What percentage of the video duration event highlighting will be visible for. At --fade 100, every event will remain on screen for the entire render. At --fade 50, events will remain on screen for half the render. Fade duration is limited to a minimum of 1.5 seconds regardless of what you specify for --fade. Defaults to 10% of video duration (equivalent to --fade 10). |
 | -l/--line      | Draw lines between snitch events instead of the default boxes around individual snitch events. This option is experimental and may not look good. It is intended to provide an easier way to see directionality and travel patterns than the default mode, and may eventually become the default mode. |
-
-## Other Command Options
 
 ### Tutorial
 
@@ -77,3 +89,73 @@ Takes no arguments.
 Removes a snitch channel(es) from the list of snitch channels.
 
 Example: `.channel remove #snitches-citizens`
+
+#### Positional Arguments
+
+| Name | Description |
+| ---      | ---         |
+| channels | The channels to remove. Use a proper channel mention (eg #snitches) to specify a channel. |
+
+### Events
+
+Lists the most recent events for the specified snitch or snitches.
+
+Example: `.events --name "shop entrance"`
+
+### Arguments
+
+| Argument | Description |
+| ---      | ---         |
+| -n/--name | List events for snitches with the specified name. |
+| -l/--location | List events for snitches at this location. Format is `-l/--location x y z` or `-l/--location x z`. The two parameter version is a convenience to avoid having to specify a y level; snitches at all y levels at that (x, z) location will be searched for events. |
+
+### Full Reindex
+
+Drops all currently indexed snitches and re-indexes from scratch. This can help with some rare issues. You probably don't want to do this unless you know what you're doing, or have been advised to do so by tybug.
+
+Example: `.full-reindex`
+
+#### Arguments
+
+| Argument | Description |
+| ---      | ---         |
+| -y | Pass to confirm you would like to reindex the server. |
+
+### Import Snitches
+
+Imports snitches from a SnitchMod database.
+
+You will likely have to use this command multiple times on the same database if you have a tiered hierarchy of snitch groups; for instance, you might run `.import-snitches -g mta-citizens mta-shops -r citizen` to import snitches citizens can render, and then `.import-snitches -g mta-cabinet -r cabinet` to import snitches only cabinet members can render.
+
+Example: `.import-snitches -g mta-citizens mta-shops -r citizen` (include a snitchvis database file upload in the same message)
+
+#### Arguments
+
+| Argument | Description |
+| ---      | ---         |
+| -g/--groups | Only snitches in the database which are reinforced to one of these groups will be imported. If you really want to import all snitches in the database, pass `-g all`. |
+| -r/--roles | Users with at least one of these roles will be able to render the imported snitches. Use the name of the role (don't ping the role). Use the name `everyone` to grant all users access to the snitches. |
+
+### Index
+
+Indexes messages in the current snitch channels.
+
+Example: `.index`
+
+Takes no arguments.
+
+### Permissions
+
+Lists what snitch channels you have have permission to render events from. This is based on your discord roles and how you set up the snitch channels (see `.channel list`).
+
+Example: `.permissions`
+
+Takes no arguments.
+
+### Help
+
+Displays available commands.
+
+Example: `.help`
+
+Takes no arguments.
