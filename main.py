@@ -20,7 +20,7 @@ from client import Client
 INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
     "999808708131426434&permissions=0&scope=bot")
 LOG_CHANNEL = 1002607241586823270
-PREFIX = "."
+DEFAULT_PREFIX = "."
 
 def run_snitch_vis(snitches, events, users, size, fps, duration, all_snitches,
     fade, event_mode, output_file
@@ -39,7 +39,7 @@ class Snitchvis(Client):
     PIXEL_LIMIT_DAY =   100_000_000_000
 
     def __init__(self, *args, **kwargs):
-        super().__init__(PREFIX, LOG_CHANNEL, *args, **kwargs)
+        super().__init__(DEFAULT_PREFIX, LOG_CHANNEL, *args, **kwargs)
         # there's a potential race condition when indexing messages on startup,
         # where we spend x seconds indexing channels before some channel c,
         # but than at y < x seconds a new message comes in to channel c which
@@ -701,9 +701,31 @@ class Snitchvis(Client):
             # section or different display method for them)
             if command.alias:
                 continue
-            command_texts.append(f"  .{command.name}: {command.help_short}")
+            # TODO display custom prefixes if set
+            prefix = self.default_prefix if command.use_prefix else ""
+            command_texts.append(f"  {prefix}{command.name}: "
+                f"{command.help_short}")
 
         await message.channel.send("```\n" + "\n".join(command_texts) + "```\n")
+
+    @command("snitchvissetprefix",
+        help="Sets a new prefix for snitchvis. The default prefix is `.`.",
+        args=[
+            Arg("prefix", help="The new prefix to use. Must be a single "
+            "character.")
+        ],
+        use_prefix=False
+    )
+    async def set_prefix(self, message, prefix):
+        if len(prefix) != 1:
+            await message.channel.send("New prefix must be a single character.")
+            return
+
+        db.set_guild_prefix(message.guild, prefix)
+        # update cached prefix immediately, this updates on bot restart normally
+        self.prefixes[message.guild.id] = prefix
+
+        await message.channel.send(f"Successfully set prefix to `{prefix}`.")
 
 # we can only have one qapp active at a time, but we want to be able to
 # be rendering multiple snitch logs at the same time (ie multiple .v

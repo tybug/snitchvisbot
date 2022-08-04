@@ -97,6 +97,13 @@ def create_db():
             timestamp INTEGER NOT NULL
         )
     """)
+    c.execute("""
+        CREATE TABLE guild (
+            guild_id INTEGER NOT NULL,
+            prefix TEXT,
+            PRIMARY KEY(guild_id)
+        )
+    """)
 
     conn.commit()
     conn.close()
@@ -358,3 +365,24 @@ def get_pixel_usage(guild, start, end):
 def add_render_history(guild, pixel_usage, timestamp):
     execute("INSERT INTO render_history VALUES (?, ?, ?)",
         [guild.id, pixel_usage, timestamp])
+
+## guilds
+
+def create_new_guild(guild):
+    # default to null prefix. ignore error on guilds we're rejoining for a
+    # second time, they already have a proper row
+    execute("INSERT OR IGNORE INTO guild VALUES (?, null)", [guild.id])
+
+def get_snitch_prefix(guild):
+    rows = select("SELECT * FROM guild WHERE guild_id = ?", [guild.id])
+
+    if not rows:
+        print("attempted to retrieve the prefix of a guild that doesn't exist. "
+            "This should never happen")
+        return None
+
+    return rows[0]["prefix"]
+
+def set_guild_prefix(guild, prefix):
+    execute("UPDATE guild SET prefix = ? WHERE guild_id = ?",
+        [prefix, guild.id])

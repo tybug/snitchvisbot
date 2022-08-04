@@ -8,7 +8,7 @@ class ParseError(Exception):
 
 class Command:
     def __init__(self, function, name, args, help, help_short, permissions,
-        *, alias=False
+        use_prefix, *, alias=False
     ):
         self.name = name
         self.args = args
@@ -16,6 +16,7 @@ class Command:
         self.help = help
         self.help_short = help_short or help
         self.permissions = permissions
+        self.use_prefix = use_prefix
         self.alias = alias
 
     def help_message(self):
@@ -177,7 +178,7 @@ class Command:
         await self.function(message, **kwargs)
 
 def command(name, *, args=[], help=None, help_short=None, permissions=[],
-    aliases=[]
+    aliases=[], use_prefix=True
 ):
     if not help:
         raise Exception("Help text is required for all commands.")
@@ -190,6 +191,7 @@ def command(name, *, args=[], help=None, help_short=None, permissions=[],
         f._help_short = help_short
         f._permissions = permissions
         f._aliases = aliases
+        f._use_prefix = use_prefix
         return f
     return decorator
 
