@@ -49,7 +49,7 @@ class Command:
             help_message = self.help_message()
             # ugly hardcode hack. Hopefully we never seriously need >4000 chars.
             # things will get messy if we ever split somewhere other than in
-            # the middle of a code block, but only `.v -h` invokes this edge
+            # the middle of a code block, but only `.r -h` invokes this edge
             # case for now.
             if len(help_message) >= 2000:
                 # 100 chars of buffer

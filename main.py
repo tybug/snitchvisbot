@@ -167,19 +167,19 @@ class Snitchvis(Client):
             "snitch channel - snitchvis will automatically index new messages "
             "in snitch channels after this command has been run.")
         await message.channel.send("Once `.index` finishes, you're ready to "
-            "render some snitches! The command to visualize/render is `.v`. "
+            "render some snitches! The command to render is `.render` or `.r`. "
             "When run with no arguments, it looks for the most recent event "
             "in any snitch channel, then renders the past 30 minutes of events "
             "before that event. This is meant to be a quick way to take a look "
             "at the most recent snitch pings on your network.")
-        await message.channel.send("`.v` supports a wide variety of different "
+        await message.channel.send("`.r` supports a wide variety of different "
             "options, however, and you should take some time to read through "
             "them and try them out - this is the most powerful part (and "
             "primary feature) of snitchvis. For instance, to render all events "
-            "from the past day and a half, run `.v --past 1d12h` (or "
-            "equivalently `.v -p 1d12h`). You can also filter events by users, "
+            "from the past day and a half, run `.r --past 1d12h` (or "
+            "equivalently `.r -p 1d12h`). You can also filter events by users, "
             "make the video longer, higher or lower quality, and more. Run "
-            "`.v --help` to see all available options. Feel free to play "
+            "`.r --help` to see all available options. Feel free to play "
             "around with it!")
 
 
