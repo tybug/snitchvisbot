@@ -38,7 +38,7 @@ class Client(_Client):
             await command.invoke(message, args)
 
             # hardcode some ids (eg me) to not send log mesages for
-            if author.id in [216008405758771200, 257336122676477952]:
+            if author.id in [216008405758771200]:
                 continue
 
             await self.log_channel.send(f"[{author.mention} / `{author.name}` "
