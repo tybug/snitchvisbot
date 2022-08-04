@@ -7,13 +7,16 @@ class ParseError(Exception):
     pass
 
 class Command:
-    def __init__(self, function, name, args, help, help_short, permissions):
+    def __init__(self, function, name, args, help, help_short, permissions,
+        *, alias=False
+    ):
         self.name = name
         self.args = args
         self.function = function
         self.help = help
         self.help_short = help_short or help
         self.permissions = permissions
+        self.alias = alias
 
     def help_message(self):
         positional_args = [arg for arg in self.args if arg.positional]

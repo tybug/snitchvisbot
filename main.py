@@ -697,6 +697,10 @@ class Snitchvis(Client):
     async def help(self, message):
         command_texts = []
         for command in self.commands:
+            # don't show aliases in help (yet, we probably want a separate
+            # section or different display method for them)
+            if command.alias:
+                continue
             command_texts.append(f"  .{command.name}: {command.help_short}")
 
         await message.channel.send("```\n" + "\n".join(command_texts) + "```\n")

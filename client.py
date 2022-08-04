@@ -17,10 +17,13 @@ class Client(_Client):
             if not hasattr(func, "_is_command"):
                 continue
 
-            # generate a new command per alias
-            for name in [func._name] + func._aliases:
+            command = Command(func, func._name, func._args, func._help,
+                func._help_short, func._permissions)
+            self.commands.append(command)
+
+            for name in func._aliases:
                 command = Command(func, name, func._args, func._help,
-                    func._help_short, func._permissions)
+                    func._help_short, func._permissions, alias=True)
                 self.commands.append(command)
 
     async def on_ready(self):
