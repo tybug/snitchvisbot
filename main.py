@@ -738,3 +738,5 @@ if __name__ == "__main__":
 # TODO -c/--context n render option to expand the bounding box by n blocks, for
 # when you want to see more context. MIN_BOUNDING_BOX_SIZE helps with this but
 # isn't a perfect solution
+
+# TODO add regex filtering to .events --name, seems useful (--name-regex?)
