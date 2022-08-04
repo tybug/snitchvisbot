@@ -171,7 +171,9 @@ class Command:
 
         await self.function(message, **kwargs)
 
-def command(name, *, args=[], help=None, help_short=None, permissions=[]):
+def command(name, *, args=[], help=None, help_short=None, permissions=[],
+    aliases=[]
+):
     if not help:
         raise Exception("Help text is required for all commands.")
 
@@ -182,6 +184,7 @@ def command(name, *, args=[], help=None, help_short=None, permissions=[]):
         f._help = help
         f._help_short = help_short
         f._permissions = permissions
+        f._aliases = aliases
         return f
     return decorator
 

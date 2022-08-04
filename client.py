@@ -17,9 +17,11 @@ class Client(_Client):
             if not hasattr(func, "_is_command"):
                 continue
 
-            command = Command(func, func._name, func._args, func._help,
-                func._help_short, func._permissions)
-            self.commands.append(command)
+            # generate a new command per alias
+            for name in [func._name] + func._aliases:
+                command = Command(func, name, func._args, func._help,
+                    func._help_short, func._permissions)
+                self.commands.append(command)
 
     async def on_ready(self):
         # convert to discord object once we're connected to discord
@@ -30,9 +32,15 @@ class Client(_Client):
         author = message.author
         for command in self.commands:
             command_name = self.prefix + command.name
-            # TODO avoid accidental collisions, eg .v and .v2
-            if not content.startswith(command_name):
+
+            # avoid .r matching .render by requiring the input to either match
+            # exactly, or match the command name with a space.
+            if not (
+                content.startswith(command_name + " ") or
+                content == command_name
+            ):
                 continue
+
             # also strip any whitespace, particularly after the command name
             args = content.removeprefix(command_name).strip()
             await command.invoke(message, args)

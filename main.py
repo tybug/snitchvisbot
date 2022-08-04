@@ -373,7 +373,8 @@ class Snitchvis(Client):
             #     "the Snitch Vis desktop application.")
         ],
         help="Visualizes (renders) snitch events. Provides options to adjust "
-            "render look and feel, events included, duration, quality, etc."
+            "render look and feel, events included, duration, quality, etc.",
+        aliases=["visualize", "render", "r"]
     )
     async def visualize(self, message, all_snitches, size, fps, duration, users,
         past, start, end, fade, line
