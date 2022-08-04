@@ -159,3 +159,35 @@ Displays available commands.
 Example: `.help`
 
 Takes no arguments.
+
+
+## Setup Guide
+
+```
+git clone https://github.com/tybug/snitchvisbot
+cd snitchvisbot
+pip install -r requirements.txt
+touch secret.py
+```
+
+Open `secret.py` and add your discord bot token:
+
+```python
+TOKEN = "LONG_STRING"
+```
+
+Now:
+
+```
+python main.py
+```
+
+Database is created on first run. There's currently no way to deal with database migrations.
+
+### Headless
+
+If you're running on a headless server, or somewhere without an X server, you'll need to wrap the call in a virtual X server:
+
+`xvfb-run python main.py`
+
+SnitchVis doesn't actually use an X server to render, but we do need to trick Qt into thinking an X server is available, or it will complain and crash.
