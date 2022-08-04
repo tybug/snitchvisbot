@@ -316,7 +316,7 @@ class Snitchvis(Client):
         # finally, reindex.
         await self.index(message)
 
-    @command("v",
+    @command("render",
         # TODO make defaults for these parameters configurable
         args=[
             Arg("-a", "--all-snitches", default=False, store_boolean=True,
@@ -375,7 +375,7 @@ class Snitchvis(Client):
         ],
         help="Visualizes (renders) snitch events. Provides options to adjust "
             "render look and feel, events included, duration, quality, etc.",
-        aliases=["visualize", "render", "r"]
+        aliases=["r"]
     )
     async def visualize(self, message, all_snitches, size, fps, duration, users,
         past, start, end, fade, line
