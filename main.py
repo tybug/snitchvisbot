@@ -331,7 +331,8 @@ class Snitchvis(Client):
                 "second of the render. Defaults to 20. Decrease if you want "
                 "faster renders, increase if you want smoother renders."),
             Arg("-d", "--duration", default=5, convert=int, help="The duration "
-                "of the render, in seconds. If you want to take a slower, more "
+                "of the render, in seconds. Defaults to 5 seconds. If you want "
+                "to take a slower, more "
                 "careful look at events, specify a higher value. If you just "
                 "want a quick glance, specify a lower value. Higher values "
                 "take longer to render."),
