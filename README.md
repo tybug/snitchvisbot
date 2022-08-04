@@ -1,23 +1,23 @@
 # SnitchVisBot
 
-A discord bot for visualizing snitch events. Uses [SnitchVis](https://github.com/tybug/snitchvis) to render the videos.
+A discord bot for visualizing [snitch](https://civwiki.org/wiki/Snitch) events for [Civ Servers](https://civwiki.org/wiki/Main_Page). Written for [CivMC](https://old.reddit.com/r/CivMC). Uses [SnitchVis](https://github.com/tybug/snitchvis) to render the videos.
 
 
 ## Commands
 
 | Command          | Description                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
-| .render          | Renders snitch events to a video. Provides options to adjust render look and feel, events included, duration, quality, etc.    |
-| .tutorial        | Walks you through an initial setup of snitchvis.                                                                               |
-| .channel add     | Adds a snitch channel(es), viewable by the specified roles.                                                                    |
-| .channel list    | Lists the current snitch channels and what roles can view them.                                                                |
-| .channel remove  | Removes a snitch channel(es) from the list of snitch channels.                                                                 |
-| .events          | Lists the most recent events for the specified snitch or snitches.                                                             |
-| .full-reindex    | Drops all currently indexed snitches and re-indexes from scratch.                                                              |
-| .import-snitches | Imports snitches from a SnitchMod database.                                                                                    |
-| .index           | Indexes messages in the current snitch channels.                                                                               |
-| .permissions     | Lists what snitch channels you have permission to render events from.                                                          |
-| .help            | Displays available commands.                                                                                                   |
+| [.render](#render)          | Renders snitch events to a video. Provides options to adjust render look and feel, events included, duration, quality, etc.    |
+| [.tutorial](#tutorial)        | Walks you through an initial setup of snitchvis.                                                                               |
+| [.channel add](#channel-add)     | Adds a snitch channel(es), viewable by the specified roles.                                                                    |
+| [.channel list](#channel-list)    | Lists the current snitch channels and what roles can view them.                                                                |
+| [.channel remove](#channel-remove) | Removes a snitch channel(es) from the list of snitch channels.                                                                 |
+| [.events](#events)          | Lists the most recent events for the specified snitch or snitches.                                                             |
+| [.full-reindex](#full-reindex)    | Drops all currently indexed snitches and re-indexes from scratch.                                                              |
+| [.import-snitches](#import-snitches) | Imports snitches from a SnitchMod database.                                                                                    |
+| [.index](#index)          | Indexes messages in the current snitch channels.                                                                               |
+| [.permissions](#permissions)     | Lists what snitch channels you have permission to render events from.                                                          |
+| [.help](#help)            | Displays available commands.                                                                                                   |
 
 
 ## Command Options
