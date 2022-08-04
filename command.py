@@ -45,7 +45,8 @@ class Command:
 
         # preserve quoted arguments with spaces as a single argument
         arg_strings = shlex.split(arg_string)
-        if any(arg_string in ["--help", "-h"] for arg_string in arg_strings):
+        # inlude em dash special case for phones
+        if any(arg_string in ["--help", "-h", "—help"] for arg_string in arg_strings):
             help_message = self.help_message()
             # ugly hardcode hack. Hopefully we never seriously need >4000 chars.
             # things will get messy if we ever split somewhere other than in
@@ -81,7 +82,8 @@ class Command:
         def is_flag(arg_string):
             if len(arg_string) == 1:
                 return False
-            return arg_string[0] == "-" and not arg_string[1].isdigit()
+            # include em dash case
+            return arg_string[0] in ["-", "—"] and not arg_string[1].isdigit()
 
         # deal with positional arguments first.
         for arg in positional_args:
@@ -213,7 +215,9 @@ class Arg:
         self.positional = positional
         # remove prefix twice to remove both - and -- prefixes
         self.dest = dest.removeprefix("-").removeprefix("-").replace("-", "_")
-        self.flags = [short, long] if long else [short]
+        # some (all? at least ios) phones replace two dashes with an em dash, so
+        # also add an em dash flag to account for this.
+        self.flags = [short, long, long.replace("--", "—")] if long else [short]
         self.short = short
         self.long = long
         self.default = default
