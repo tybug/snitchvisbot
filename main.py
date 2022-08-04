@@ -582,7 +582,8 @@ class Snitchvis(Client):
         "have permission to render events from. This is based on your discord "
         "roles and how you set up the snitch channels (see `.channel list`).",
         help_short="Lists what snitch channels you have permission to render "
-            "events from.")
+            "events from."
+    )
     async def permissions(self, message):
         # tells the command author what snitch channels they can view.
         snitch_channels = db.get_snitch_channels(message.guild)
