@@ -343,7 +343,7 @@ class Snitchvis(Client):
                 "-p 1y2mo5w2d3h5m2s (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
                 "minutes 2 seconds ago\"), or any combination thereof, ie "
                 "-p 1h30m (\"1 hour 30 minutes ago\"). Use the special value "
-                "\"all\" to visualize all events."),
+                "\"all\" to render all events."),
             Arg("--start", convert=human_datetime, help="The start date of "
                 "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
                 "eg 7/18/2022 or 12/31/21. If --start is passed but not "
@@ -373,11 +373,11 @@ class Snitchvis(Client):
             #     "matching the specified criteria to a .svis file, for use in "
             #     "the Snitch Vis desktop application.")
         ],
-        help="Visualizes (renders) snitch events. Provides options to adjust "
+        help="Renders snitch events to a vidoe. Provides options to adjust "
             "render look and feel, events included, duration, quality, etc.",
         aliases=["r"]
     )
-    async def visualize(self, message, all_snitches, size, fps, duration, users,
+    async def render(self, message, all_snitches, size, fps, duration, users,
         past, start, end, fade, line
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
@@ -482,7 +482,7 @@ class Snitchvis(Client):
             # so instead of 350mb. It's like it sticks to a high water mark or
             # something. But it's not just that because memory usage does also
             # go up non insignificant amounts at random intervals when you
-            # visualize.
+            # render.
             # I'm not sure what's leaking - the obvious culprits are the ffmpeg
             # pipe, the images, qbuffers, or the world pixmap. But all of those
             # should be getting cleaned up when `SnitchVisRecord` gets gc'd, so
