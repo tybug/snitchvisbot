@@ -90,6 +90,14 @@ def create_db():
         )
         """
     )
+    c.execute("""
+        CREATE TABLE render_history (
+            guild_id INTEGER NOT NULL,
+            pixel_usage INTEGER NOT NULL,
+            timestamp INTEGER NOT NULL
+        )
+    """)
+
     conn.commit()
     conn.close()
 
@@ -332,3 +340,21 @@ def get_events(guild, author, start_date, end_date, users):
 def get_all_events(guild):
     rows = select("SELECT * FROM event WHERE guild_id = ?", [guild.id])
     return convert(rows, Event)
+
+## render history
+
+def get_pixel_usage(guild, start, end):
+    rows = select("""
+        SELECT * FROM render_history
+        WHERE guild_id = ? AND timestamp > ? AND timestamp < ?
+    """, [guild.id, start, end])
+
+    pixel_usage = 0
+    for row in rows:
+        pixel_usage += row["pixel_usage"]
+
+    return pixel_usage
+
+def add_render_history(guild, pixel_usage, timestamp):
+    execute("INSERT INTO render_history VALUES (?, ?, ?)",
+        [guild.id, pixel_usage, timestamp])

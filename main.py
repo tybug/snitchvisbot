@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from tempfile import NamedTemporaryFile, TemporaryDirectory
 import sqlite3
 from pathlib import Path
@@ -30,6 +30,14 @@ def run_snitch_vis(snitches, events, users, size, fps, duration, all_snitches,
     vis.render()
 
 class Snitchvis(Client):
+    # for reference, a 5 second video of 700 pixels at 30 fps is 70 million
+    # pixels. A 60 second video of 1000 pixels at 30 fps is 1.8 billion pixels.
+    PIXEL_LIMIT_VIDEO =   2_000_000_000
+    # 100 billion pixels is roughly 13 minutes of 1080p @ 60fps
+    # (1920*1080*60*60*13 = 97_044_480_000). This is excessively high, and
+    # nobody who is not trying to abuse the bot will hit this limit.
+    PIXEL_LIMIT_DAY =   100_000_000_000
+
     def __init__(self, *args, **kwargs):
         super().__init__(PREFIX, LOG_CHANNEL, *args, **kwargs)
         # there's a potential race condition when indexing messages on startup,
@@ -422,15 +430,24 @@ class Snitchvis(Client):
             await message.channel.send(NO_EVENTS)
             return
 
-        # for reference, a 5 second video of 700 pixels at 30 fps is 70
-        # million pixels. A 60 second video of 1000 pixels at 30 fps is 1.8
-        # billion pixels.
         num_pixels = duration * fps * (size * size)
-        if num_pixels > 2_000_000_000:
+        if num_pixels > self.PIXEL_LIMIT_VIDEO:
             await message.channel.send("The requested render would require too "
                 "many server resources to generate. Decrease either the render "
                 "size (`-s/--size`), fps (`-f/--fps`), or duration "
                 "(`-d/--duration`).")
+            return
+
+        start = (datetime.now() - timedelta(days=1)).timestamp()
+        end = datetime.now().timestamp()
+        usage = db.get_pixel_usage(message.guild, start, end)
+        if usage > self.PIXEL_LIMIT_DAY:
+            await message.channel.send("You've rendered more than 100 billion "
+                "pixels in the past 24 hours. I have limited server resources "
+                "and cannot allow servers to render more than this (already "
+                "extremely high) limit per day. You will have to wait up to "
+                "24 hours for your usage to decrease before being able to "
+                "render again.")
             return
 
         event_mode = "line" if line else "square"
@@ -483,6 +500,9 @@ class Snitchvis(Client):
             vis_file = File(output_file)
             await message.channel.send(file=vis_file)
             await m.delete()
+
+        db.add_render_history(message.guild, num_pixels,
+            datetime.now().timestamp())
 
     @command("import-snitches",
         args=[
