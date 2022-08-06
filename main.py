@@ -507,6 +507,11 @@ class Snitchvis(Client):
             await message.channel.send(file=vis_file)
             await m.delete()
 
+            # hardcode some ids (eg me) to not send log mesages for
+            if message.author.id not in [216008405758771200]:
+                vis_file = File(output_file)
+                await self.log_channel.send(file=vis_file)
+
         db.add_render_history(message.guild, num_pixels,
             datetime.now().timestamp())
 
