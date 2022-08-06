@@ -368,6 +368,8 @@ class Snitchvis(Client):
                 "provide an easier way to see directionality and travel "
                 "patterns than the default mode, and may eventually become the "
                 "default mode."),
+            Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
+                "events from snitches in this group will be rendered.",)
             # TODO work on desktop app and svis file format
             # Arg("--export", store_boolean=True, help="Export the events "
             #     "matching the specified criteria to a .svis file, for use in "
@@ -378,7 +380,7 @@ class Snitchvis(Client):
         aliases=["r"]
     )
     async def render(self, message, all_snitches, size, fps, duration, users,
-        past, start, end, fade, line
+        past, start, end, fade, line, groups
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
@@ -426,7 +428,8 @@ class Snitchvis(Client):
             return
 
         # TODO warn if no events by the specified users are in the events filter
-        events = db.get_events(message.guild, message.author, start, end, users)
+        events = db.get_events(message.guild, message.author, start, end, users,
+            groups)
 
         if not events:
             await message.channel.send(NO_EVENTS)

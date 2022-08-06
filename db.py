@@ -291,7 +291,7 @@ def most_recent_event(guild):
 
     return convert(rows, Event)[0]
 
-def get_events(guild, author, start_date, end_date, users):
+def get_events(guild, author, start_date, end_date, users, groups):
     # compare case insensitive
     users = [user.lower() for user in users]
 
@@ -303,6 +303,15 @@ def get_events(guild, author, start_date, end_date, users):
     else:
         # if no users are passed, all events are fair game
         user_filter = "1"
+
+    if groups:
+        qs = '?, ' * len(groups)
+        qs = qs[:-2]
+        group_filter = f"LOWER(namelayer_group) IN ({qs})"
+    else:
+        # if no users are passed, all events are fair game
+        group_filter = "1"
+
 
     snitch_channels = get_snitch_channels(guild)
     channel_ids = set()
@@ -339,8 +348,9 @@ def get_events(guild, author, start_date, end_date, users):
         AND t >= ? AND t <= ?
         AND {user_filter}
         AND {channel_filter}
+        AND {group_filter}
         """,
-        [guild.id, start_date, end_date, *users, *channel_ids]
+        [guild.id, start_date, end_date, *users, *channel_ids, *groups]
     )
     return convert(rows, Event)
 
