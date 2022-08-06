@@ -614,7 +614,9 @@ class Snitchvis(Client):
                 "convenience to avoid having to specify a y level; snitches at "
                 "all y levels at that (x, z) location will be searched for "
                 "events.", nargs="*")
-        ]
+        ],
+        # TODO temporary until fix permissions
+        permissions=["manage_guild"]
     )
     async def events(self, message, name, location):
         # explicitly allow empty name, useful for searching for unnamed snitches
@@ -714,7 +716,8 @@ class Snitchvis(Client):
             Arg("prefix", help="The new prefix to use. Must be a single "
             "character.")
         ],
-        use_prefix=False
+        use_prefix=False,
+        permissions=["manage_guild"]
     )
     async def set_prefix(self, message, prefix):
         if len(prefix) != 1:
