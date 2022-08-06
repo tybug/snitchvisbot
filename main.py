@@ -749,7 +749,6 @@ if __name__ == "__main__":
 
 # TODO support custom kira message formats
 
-# TODO snitchvissetprefix
 # TODO fix permissions on .events, currently returns results for all events,
 # need to limit to just the events the user has access to
 
