@@ -369,7 +369,8 @@ class Snitchvis(Client):
                 "patterns than the default mode, and may eventually become the "
                 "default mode."),
             Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
-                "events from snitches in this group will be rendered.",)
+                "events from snitches on these namelayer groups will be "
+                "rendered.",)
             # TODO work on desktop app and svis file format
             # Arg("--export", store_boolean=True, help="Export the events "
             #     "matching the specified criteria to a .svis file, for use in "
