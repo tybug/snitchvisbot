@@ -24,10 +24,10 @@ LOG_CHANNEL = 1002607241586823270
 DEFAULT_PREFIX = "."
 
 def run_snitch_vis(snitches, events, users, size, fps, duration, all_snitches,
-    fade, event_mode, output_file
+    fade, mode, output_file
 ):
     vis = SnitchVisRecord(snitches, events, users, size, fps,
-        duration, all_snitches, fade, event_mode, output_file)
+        duration, all_snitches, fade, mode, output_file)
     vis.render()
 
 class Snitchvis(Client):
@@ -436,13 +436,16 @@ class Snitchvis(Client):
                 "the render. Fade duration is limited to a minimum of 1.5 "
                 "seconds regardless of what you specify for --fade. Defaults "
                 "to 10% of video duration (equivalent to --fade 10)."),
-            Arg("-l", "--line", store_boolean=True, help="Draw lines "
+            Arg("-m", "--mode", default="square", help="What mode to render "
+                "in. The line mode (`-m/--mode line`) draws lines "
                 "between snitch events instead of the default boxes around "
                 "individual snitch events. This option is "
                 "experimental and may not look good. It is intended to "
                 "provide an easier way to see directionality and travel "
                 "patterns than the default mode, and may eventually become the "
-                "default mode."),
+                "default mode.\n"
+                "The heatmap mode (`-m/--mode heatmap`) renders an aggregate "
+                "heatmap of events instead of drawing individual users."),
             Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
                 "events from snitches on these namelayer groups will be "
                 "rendered."),
@@ -457,7 +460,7 @@ class Snitchvis(Client):
         aliases=["r"]
     )
     async def render(self, message, all_snitches, size, fps, duration, users,
-        past, start, end, fade, line, groups, export
+        past, start, end, fade, mode, groups, export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
@@ -465,8 +468,12 @@ class Snitchvis(Client):
 
         # TODO do this validation in argparse
         if export and export not in ["sql", "svis"]:
-            await message.channel.send("`--export` must be one of `sql`, "
+            await message.channel.send("`--export` must be one of `sql` or "
                 "`svis`")
+            return
+        if mode not in ["line", "square", "heatmap"]:
+            await message.channel.send("`-m/--mode` must be one of `line`, "
+                "`square`, or `heatmap`")
             return
 
         if past:
@@ -572,7 +579,6 @@ class Snitchvis(Client):
 
             # seconds to ms
             duration *= 1000
-            event_mode = "line" if line else "square"
 
             # if we run this in the default executor (ThreadPoolExecutor), we
             # get a pretty bad memory leak. We spike to ~700mb on a default
@@ -600,7 +606,7 @@ class Snitchvis(Client):
             # We are taking a slight hit on the event pickling, but hopefully
             # it's not too bad.
             f = partial(run_snitch_vis, snitches, events, users, size, fps,
-                duration, all_snitches, fade, event_mode, output_file)
+                duration, all_snitches, fade, mode, output_file)
             with ProcessPoolExecutor() as pool:
                 await self.loop.run_in_executor(pool, f)
 
