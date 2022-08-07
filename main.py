@@ -140,6 +140,83 @@ class Snitchvis(Client):
 
         return events
 
+    async def export_to_sql(self, path, snitches, events):
+        conn = sqlite3.connect(str(path))
+        c = conn.cursor()
+
+        c.execute(
+            """
+            CREATE TABLE event (
+                `message_id` INTEGER NOT NULL,
+                `channel_id` INTEGER NOT NULL,
+                `username` TEXT NOT NULL,
+                `snitch_name` TEXT,
+                `namelayer_group` TEXT NOT NULL,
+                `x` INTEGER NOT NULL,
+                `y` INTEGER NOT NULL,
+                `z` INTEGER NOT NULL,
+                `t` INTEGER NOT NULL,
+                PRIMARY KEY(`message_id`)
+            )
+            """
+        )
+        c.execute(
+            """
+            CREATE TABLE snitch (
+                world TEXT,
+                x INT,
+                y INT,
+                z INT,
+                group_name TEXT,
+                type TEXT,
+                name TEXT,
+                dormant_ts BIGINT,
+                cull_ts BIGINT,
+                first_seen_ts BIGINT,
+                last_seen_ts BIGINT,
+                created_ts BIGINT,
+                created_by_uuid TEXT,
+                renamed_ts BIGINT,
+                renamed_by_uuid TEXT,
+                lost_jalist_access_ts BIGINT,
+                broken_ts BIGINT,
+                gone_ts BIGINT,
+                tags TEXT,
+                notes TEXT
+            )
+            """
+        )
+        c.execute("""
+            CREATE UNIQUE INDEX snitch_world_x_y_z_unique
+            ON snitch(world, x, y, z);
+        """)
+        conn.commit()
+
+        for snitch in snitches:
+            args = [
+                snitch.world, snitch.x, snitch.y, snitch.z,
+                snitch.group_name, snitch.type, snitch.name,
+                snitch.dormant_ts, snitch.cull_ts, snitch.first_seen_ts,
+                snitch.last_seen_ts, snitch.created_ts,
+                snitch.created_by_uuid, snitch.renamed_ts,
+                snitch.renamed_by_uuid, snitch.lost_jalist_access_ts,
+                snitch.broken_ts, snitch.gone_ts, snitch.tags, snitch.notes
+            ]
+            # ignore duplicate snitches
+            c.execute("INSERT OR IGNORE INTO snitch VALUES (?, ?, ?, ?, ?, "
+                "?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", args)
+
+        for event in events:
+            args = [
+                event.message_id, event.channel_id, event.username,
+                event.snitch_name, event.namelayer_group, event.x, event.y,
+                event.z, event.t.timestamp()
+            ]
+            c.execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, "
+                "?, ?)", args)
+        conn.commit()
+
+
     @command("tutorial",
         help="Walks you through an initial setup of snitchvis."
     )
@@ -372,22 +449,29 @@ class Snitchvis(Client):
                 "default mode."),
             Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
                 "events from snitches on these namelayer groups will be "
-                "rendered.",)
-            # TODO work on desktop app and svis file format
-            # Arg("--export", store_boolean=True, help="Export the events "
-            #     "matching the specified criteria to a .svis file, for use in "
-            #     "the Snitch Vis desktop application.")
+                "rendered."),
+            # TODO work on svis file format
+            Arg("--export", help="Export the events matching the specified "
+                "criteria to either an sql database, or an .svis file (for use "
+                "in the Snitch Vis desktop application). Pass `--export sql` "
+                "the former and `--export svis` for the latter.")
         ],
         help="Renders snitch events to a vidoe. Provides options to adjust "
             "render look and feel, events included, duration, quality, etc.",
         aliases=["r"]
     )
     async def render(self, message, all_snitches, size, fps, duration, users,
-        past, start, end, fade, line, groups
+        past, start, end, fade, line, groups, export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
             "adjusting your parameters to include more snitch events.")
+
+        # TODO do this validation in argparse
+        if export and export not in ["sql", "svis"]:
+            await message.channel.send("`--export` must be one of `sql`, "
+                "`svis`")
+            return
 
         if past:
             end = datetime.utcnow().timestamp()
@@ -438,6 +522,25 @@ class Snitchvis(Client):
             await message.channel.send(NO_EVENTS)
             return
 
+        all_events = db.get_all_events(message.guild)
+        # use all known events to construct snitches
+        snitches = snitches_from_events(all_events)
+        # if the guild has any snitches uploaded (via .import-snitches), use
+        # those as well, even if they've never been pinged.
+        # Only retrieve snitches which the author has access to via their roles
+        snitches |= set(db.get_snitches(message.guild, message.author.roles))
+        users = create_users(events)
+
+        if export == "sql":
+            await message.channel.send("Exporting specified events to a "
+                "database...")
+            with TemporaryDirectory() as d:
+                p = Path(d) / "snitchvis_export.sqlite"
+                await self.export_to_sql(p, snitches, events)
+                sql_file = File(p)
+                await message.channel.send(file=sql_file)
+            return
+
         num_pixels = duration * fps * (size * size)
         if num_pixels > self.PIXEL_LIMIT_VIDEO:
             await message.channel.send("The requested render would require too "
@@ -458,22 +561,14 @@ class Snitchvis(Client):
                 "render again.")
             return
 
-        event_mode = "line" if line else "square"
-        all_events = db.get_all_events(message.guild)
-        # use all known events to construct snitches
-        snitches = snitches_from_events(all_events)
-        # if the guild has any snitches uploaded (via .import-snitches), use
-        # those as well, even if they've never been pinged.
-        # Only retrieve snitches which the author has access to via their roles
-        snitches |= set(db.get_snitches(message.guild, message.author.roles))
-        users = create_users(events)
-        # duration to ms
-        duration *= 1000
-
         with TemporaryDirectory() as d:
             output_file = str(Path(d) / "out.mp4")
 
             m = await message.channel.send("rendering video...")
+
+            # seconds to ms
+            duration *= 1000
+            event_mode = "line" if line else "square"
 
             # if we run this in the default executor (ThreadPoolExecutor), we
             # get a pretty bad memory leak. We spike to ~700mb on a default
