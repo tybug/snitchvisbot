@@ -69,13 +69,11 @@ class Client(_Client):
             ):
                 continue
 
+            # hardcode some ids (eg me) to not send log mesages for
+            if author.id not in [216008405758771200]:
+                await self.log_channel.send(f"[{author.mention} / "
+                    f"`{author.name}` / `{author.id}`] `{content}`")
+
             # also strip any whitespace, particularly after the command name
             args = content.removeprefix(command_name).strip()
             await command.invoke(message, args)
-
-            # hardcode some ids (eg me) to not send log mesages for
-            if author.id in [216008405758771200]:
-                continue
-
-            await self.log_channel.send(f"[{author.mention} / `{author.name}` "
-                f"/ `{author.id}`] `{content}`")
