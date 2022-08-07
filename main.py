@@ -32,11 +32,13 @@ def run_snitch_vis(snitches, events, users, size, fps, duration, all_snitches,
 class Snitchvis(Client):
     # for reference, a 5 second video of 700 pixels at 30 fps is 70 million
     # pixels. A 60 second video of 1000 pixels at 30 fps is 1.8 billion pixels.
-    PIXEL_LIMIT_VIDEO =   2_000_000_000
+    # PIXEL_LIMIT_VIDEO =   2_000_000_000
+    PIXEL_LIMIT_VIDEO =   2_000_000_00000000000
     # 100 billion pixels is roughly 13 minutes of 1080p @ 60fps
     # (1920*1080*60*60*13 = 97_044_480_000). This is excessively high, and
     # nobody who is not trying to abuse the bot will hit this limit.
-    PIXEL_LIMIT_DAY =   100_000_000_000
+    # PIXEL_LIMIT_DAY =   100_000_000_000
+    PIXEL_LIMIT_DAY =   100_000_000_00000000000000
 
     def __init__(self, *args, **kwargs):
         super().__init__(DEFAULT_PREFIX, LOG_CHANNEL, *args, **kwargs)
