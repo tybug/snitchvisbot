@@ -5,6 +5,7 @@ from pathlib import Path
 from asyncio import Queue
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
+import gzip
 
 from discord import File
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
@@ -530,9 +531,17 @@ class Snitchvis(Client):
             await message.channel.send("Exporting specified events to a "
                 "database...")
             with TemporaryDirectory() as d:
-                p = Path(d) / "snitchvis_export.sqlite"
+                d = Path(d)
+                p = d / "snitchvis_export.sqlite"
+                zipped_p = d / "snitchvis_export.sqlite.gz"
                 await self.export_to_sql(p, snitches, events)
-                sql_file = File(p)
+
+                # compress with gzip
+                with open(p, "rb") as f_in:
+                    with gzip.open(zipped_p, "wb") as f_out:
+                        f_out.writelines(f_in)
+
+                sql_file = File(zipped_p)
                 await message.channel.send(file=sql_file)
             return
 
