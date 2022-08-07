@@ -147,16 +147,13 @@ class Snitchvis(Client):
         c.execute(
             """
             CREATE TABLE event (
-                `message_id` INTEGER NOT NULL,
-                `channel_id` INTEGER NOT NULL,
                 `username` TEXT NOT NULL,
                 `snitch_name` TEXT,
                 `namelayer_group` TEXT NOT NULL,
                 `x` INTEGER NOT NULL,
                 `y` INTEGER NOT NULL,
                 `z` INTEGER NOT NULL,
-                `t` INTEGER NOT NULL,
-                PRIMARY KEY(`message_id`)
+                `t` INTEGER NOT NULL
             )
             """
         )
@@ -208,12 +205,10 @@ class Snitchvis(Client):
 
         for event in events:
             args = [
-                event.message_id, event.channel_id, event.username,
-                event.snitch_name, event.namelayer_group, event.x, event.y,
-                event.z, event.t.timestamp()
+                event.username, event.snitch_name, event.namelayer_group,
+                event.x, event.y, event.z, event.t.timestamp()
             ]
-            c.execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, "
-                "?, ?)", args)
+            c.execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?)", args)
         conn.commit()
 
 
