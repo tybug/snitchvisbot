@@ -880,3 +880,8 @@ if __name__ == "__main__":
 # isn't a perfect solution
 
 # TODO add regex filtering to .events --name, seems useful (--name-regex?)
+
+# TODO .r --bounds x1 y1 x2 y2
+
+# TODO livemap aka render a static frame every minute / new snitch hit to a
+# specified channel
