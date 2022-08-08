@@ -588,7 +588,7 @@ class Snitchvis(Client):
             return
 
         with TemporaryDirectory() as d:
-            output_file = str(Path(d) / "out.mp4")
+            output_file = str(Path(d) / "render.mp4")
 
             m = await message.channel.send("rendering video...")
 
