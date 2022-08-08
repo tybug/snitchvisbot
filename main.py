@@ -863,8 +863,9 @@ if __name__ == "__main__":
 # events, distinguish actual events and the lines, add arrows to indicate
 # directionality
 
-# TODO add "centered at (x, y)" coordinates to info text, can be confusing where
-# the vis is sometimes
+# TODO maybe add "centered at (x, y)" coordinates to info text, can be confusing
+# where the vis is sometimes. Might need a different solution to this (coords at
+# corners? gets cluttered though...)
 
 # TODO support custom kira message formats
 
@@ -885,3 +886,5 @@ if __name__ == "__main__":
 
 # TODO livemap aka render a static frame every minute / new snitch hit to a
 # specified channel
+
+# TODO per-server resource limiting
