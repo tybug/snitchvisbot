@@ -24,10 +24,10 @@ LOG_CHANNEL = 1002607241586823270
 DEFAULT_PREFIX = "."
 
 def run_snitch_vis(snitches, events, users, size, fps, duration, all_snitches,
-    fade, mode, output_file
+    fade, heatmap_percentage, mode, output_file
 ):
     vis = SnitchVisRecord(snitches, events, users, size, fps,
-        duration, all_snitches, fade, mode, output_file)
+        duration, all_snitches, fade, heatmap_percentage, mode, output_file)
     vis.render()
 
 class Snitchvis(Client):
@@ -449,6 +449,14 @@ class Snitchvis(Client):
                 "default mode.\n"
                 "The heatmap mode (`-m/--mode heatmap`) renders an aggregate "
                 "heatmap of events instead of drawing individual users."),
+            Arg("-hp", "--heatmap-percentage", convert=float, default=20,
+                help="What percentage of the "
+                "video duration the heatmap should look backwards for events "
+                "for. For instance, with `-hp 20` the render will only "
+                "consider events in the most recent 20% of the video when "
+                "rendering the heatmap. With `-hp 100`, the heatmap will be "
+                "static for the entire video (because it always considers all "
+                "of the events). Defaults to 20."),
             # TODO work on svis file format
             Arg("--export", help="Export the events matching the specified "
                 "criteria to either an sql database, or an .svis file (for use "
@@ -460,7 +468,7 @@ class Snitchvis(Client):
         aliases=["r"]
     )
     async def render(self, message, all_snitches, size, fps, duration, users,
-        past, start, end, fade, mode, groups, export
+        groups, past, start, end, fade, mode, heatmap_percentage, export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
@@ -474,6 +482,13 @@ class Snitchvis(Client):
         if mode not in ["line", "square", "heatmap"]:
             await message.channel.send("`-m/--mode` must be one of `line`, "
                 "`square`, or `heatmap`")
+            return
+
+        if heatmap_percentage < 1:
+            await message.channel.send("Cannot use a heatmap percentage lower "
+                "than 1%, as it can be very expensive to calculate the "
+                "maximum hits for small heatmap time chunks. Please choose a "
+                "value greater than or equal to 1.")
             return
 
         if past:
@@ -606,7 +621,8 @@ class Snitchvis(Client):
             # We are taking a slight hit on the event pickling, but hopefully
             # it's not too bad.
             f = partial(run_snitch_vis, snitches, events, users, size, fps,
-                duration, all_snitches, fade, mode, output_file)
+                duration, all_snitches, fade, heatmap_percentage, mode,
+                output_file)
             with ProcessPoolExecutor() as pool:
                 await self.loop.run_in_executor(pool, f)
 
