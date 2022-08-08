@@ -175,6 +175,16 @@ class Command:
             if arg.dest not in kwargs:
                 kwargs[arg.dest] = arg.default
 
+        # validate argument values against valid choices if specified
+        for arg in self.args:
+            if not arg.choices:
+                continue
+
+            val = kwargs[arg.dest]
+            if val not in arg.choices:
+                raise ParseError(f"`{arg}` must be one of "
+                    f"`{'`, `'.join(arg.choices)}`.")
+
         await self.function(message, **kwargs)
 
 def command(name, *, args=[], help=None, help_short=None, permissions=[],
@@ -197,7 +207,8 @@ def command(name, *, args=[], help=None, help_short=None, permissions=[],
 
 class Arg:
     def __init__(self, short, long=None, *, default=None, convert=None,
-        nargs=None, store_boolean=False, required=False, dest=None, help=None
+        nargs=None, store_boolean=False, required=False, dest=None, help=None,
+        choices=None
     ):
         if not short.startswith("-"):
             positional = True
@@ -231,6 +242,7 @@ class Arg:
         self.store_boolean = store_boolean
         self.required = required
         self.help = help
+        self.choices = choices
 
         if help is None:
             raise Exception("Help text is required for all arguments.")

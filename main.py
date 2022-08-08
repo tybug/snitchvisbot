@@ -436,7 +436,8 @@ class Snitchvis(Client):
                 "the render. Fade duration is limited to a minimum of 1.5 "
                 "seconds regardless of what you specify for --fade. Defaults "
                 "to 10% of video duration (equivalent to --fade 10)."),
-            Arg("-m", "--mode", default="square", help="What mode to render "
+            Arg("-m", "--mode", choices=["line", "square", "heatmap"],
+                default="square", help="What mode to render "
                 "in. The line mode (`-m/--mode line`) draws lines "
                 "between snitch events instead of the default boxes around "
                 "individual snitch events. This option is "
@@ -455,7 +456,8 @@ class Snitchvis(Client):
                 "static for the entire video (because it always considers all "
                 "of the events). Defaults to 20."),
             # TODO work on svis file format
-            Arg("--export", help="Export the events matching the specified "
+            Arg("--export", choices=["sql", "svis"],
+                help="Export the events matching the specified "
                 "criteria to either an sql database, or an .svis file (for use "
                 "in the Snitch Vis desktop application). Pass `--export sql` "
                 "the former and `--export svis` for the latter.")
@@ -470,16 +472,6 @@ class Snitchvis(Client):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
             "adjusting your parameters to include more snitch events.")
-
-        # TODO do this validation in argparse
-        if export and export not in ["sql", "svis"]:
-            await message.channel.send("`--export` must be one of `sql` or "
-                "`svis`")
-            return
-        if mode not in ["line", "square", "heatmap"]:
-            await message.channel.send("`-m/--mode` must be one of `line`, "
-                "`square`, or `heatmap`")
-            return
 
         if heatmap_percentage < 1:
             await message.channel.send("Cannot use a heatmap percentage lower "
