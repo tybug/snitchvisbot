@@ -9,7 +9,7 @@ import gzip
 
 from discord import File
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
-    create_users, snitches_from_events, Snitch)
+    create_users, snitches_from_events, Snitch, Config)
 from PyQt6.QtWidgets import QApplication
 
 import db
@@ -23,11 +23,8 @@ INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
 LOG_CHANNEL = 1002607241586823270
 DEFAULT_PREFIX = "."
 
-def run_snitch_vis(snitches, events, users, size, fps, duration, all_snitches,
-    fade, heatmap_percentage, mode, output_file
-):
-    vis = SnitchVisRecord(snitches, events, users, size, fps,
-        duration, all_snitches, fade, heatmap_percentage, mode, output_file)
+def run_snitch_vis(*args):
+    vis = SnitchVisRecord(*args)
     vis.render()
 
 class Snitchvis(Client):
@@ -620,9 +617,11 @@ class Snitchvis(Client):
             # since its only job is writing to an output mp4.
             # We are taking a slight hit on the event pickling, but hopefully
             # it's not too bad.
-            f = partial(run_snitch_vis, snitches, events, users, size, fps,
-                duration, all_snitches, fade, heatmap_percentage, mode,
-                output_file)
+            config = Config(snitches=snitches, events=events, users=users,
+                show_all_snitches=all_snitches, mode=mode,
+                heatmap_percentage=heatmap_percentage)
+            f = partial(run_snitch_vis, duration, size, fps, fade, output_file,
+                config)
             with ProcessPoolExecutor() as pool:
                 await self.loop.run_in_executor(pool, f)
 
