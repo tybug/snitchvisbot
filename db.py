@@ -154,7 +154,7 @@ def convert(rows, Class):
 
 ## snitches
 
-def get_snitches(guild, roles):
+def get_snitches(guild_id, roles):
     role_filter = ("?, " * len(roles))[:-2]
     role_ids = [role.id for role in roles]
     rows = select(f"""
@@ -164,13 +164,13 @@ def get_snitches(guild, roles):
         WHERE snitch.guild_id = ? AND
         snitch_allowed_roles.role_id IN ({role_filter})
         """,
-        [guild.id, *role_ids]
+        [guild_id, *role_ids]
     )
     return convert(rows, Snitch)
 
-def add_snitch(guild, snitch, allowed_roles, commit=True):
+def add_snitch(guild_id, snitch, allowed_roles, commit=True):
     args = [
-        guild.id, snitch.world, snitch.x, snitch.y, snitch.z, snitch.group_name,
+        guild_id, snitch.world, snitch.x, snitch.y, snitch.z, snitch.group_name,
         snitch.type, snitch.name, snitch.dormant_ts, snitch.cull_ts,
         snitch.first_seen_ts, snitch.last_seen_ts, snitch.created_ts,
         snitch.created_by_uuid, snitch.renamed_ts, snitch.renamed_by_uuid,
@@ -190,17 +190,17 @@ def add_snitch(guild, snitch, allowed_roles, commit=True):
 
 ## snitch channels
 
-def get_snitch_channels(guild):
+def get_snitch_channels(guild_id):
     # if guild is none then ALL snitch channels will be returned
 
-    guild_filter = "WHERE snitch_channel.guild_id = ?" if guild else ""
+    guild_filter = "WHERE snitch_channel.guild_id = ?" if guild_id else ""
     rows = select(f"""
         SELECT * FROM snitch_channel
         JOIN snitch_channel_allowed_roles
         ON snitch_channel.id = snitch_channel_allowed_roles.channel_id
         {guild_filter}
         """,
-        [guild.id] if guild else []
+        [guild_id] if guild_id else []
     )
     # manually aggregate allowed role ids into a list for our convert function
     # channel id to list of dictionaries (channel k/v dicts).
@@ -228,27 +228,27 @@ def add_snitch_channel(channel, roles):
     # necessary
     commit()
 
-def remove_snitch_channel(channel):
-    return execute("DELETE FROM snitch_channel WHERE id = ?", [channel.id])
+def remove_snitch_channel(channel_id):
+    return execute("DELETE FROM snitch_channel WHERE id = ?", [channel_id])
 
-def snitch_channel_exists(channel):
+def snitch_channel_exists(channel_id):
     rows = select("SELECT * FROM snitch_channel WHERE id = ?",
-        [channel.id])
+        [channel_id])
     return bool(rows)
 
-def is_snitch_channel(channel):
+def is_snitch_channel(channel_id):
     rows = select("SELECT * FROM snitch_channel WHERE id = ?",
-        [channel.id])
+        [channel_id])
     return bool(rows)
 
-def allowed_roles(snitch_channel):
+def allowed_roles(channel_id):
     rows = select("SELECT * FROM snitch_channel_allowed_roles WHERE "
-        "channel_id = ?", [snitch_channel.id])
+        "channel_id = ?", [channel_id])
     return [row["role_id"] for row in rows]
 
-def get_snitch_channel(channel):
+def get_snitch_channel(channel_id):
     rows = select("SELECT * FROM snitch_channel WHERE id = ?",
-        [channel.id])
+        [channel_id])
     if not rows:
         return None
 
@@ -256,12 +256,12 @@ def get_snitch_channel(channel):
     # assignment"
     row = rows[0]
     row = dict(zip(row.keys(), list(row)))
-    row["allowed_roles"] = allowed_roles(channel)
+    row["allowed_roles"] = allowed_roles(channel_id)
     return convert([row], SnitchChannel)[0]
 
-def update_last_indexed(channel, message_id, commit=True):
+def update_last_indexed(channel_id, message_id, commit=True):
     return execute("UPDATE snitch_channel SET last_indexed_id = ? WHERE id = ?",
-        [message_id, channel.id], commit_=commit)
+        [message_id, channel_id], commit_=commit)
 
 ## events
 
@@ -283,15 +283,15 @@ def event_exists(message_id):
     rows = select("SELECT * FROM event WHERE message_id = ?", [message_id])
     return bool(rows)
 
-def most_recent_event(guild):
+def most_recent_event(guild_id):
     rows = select("SELECT * FROM event WHERE guild_id = ? ORDER BY t DESC "
-        "LIMIT 1", [guild.id])
+        "LIMIT 1", [guild_id])
     if not rows:
         return None
 
     return convert(rows, Event)[0]
 
-def get_events(guild, author, start_date, end_date, users, groups):
+def get_events(guild_id, author, start_date, end_date, users, groups):
     # compare case insensitive
     users = [user.lower() for user in users]
 
@@ -313,7 +313,7 @@ def get_events(guild, author, start_date, end_date, users, groups):
         group_filter = "1"
 
 
-    snitch_channels = get_snitch_channels(guild)
+    snitch_channels = get_snitch_channels(guild_id)
     channel_ids = set()
 
     # TODO can we do this filtering based on allowed roles entirely in sql?
@@ -350,21 +350,21 @@ def get_events(guild, author, start_date, end_date, users, groups):
         AND {channel_filter}
         AND {group_filter}
         """,
-        [guild.id, start_date, end_date, *users, *channel_ids, *groups]
+        [guild_id, start_date, end_date, *users, *channel_ids, *groups]
     )
     return convert(rows, Event)
 
-def get_all_events(guild):
-    rows = select("SELECT * FROM event WHERE guild_id = ?", [guild.id])
+def get_all_events(guild_id):
+    rows = select("SELECT * FROM event WHERE guild_id = ?", [guild_id])
     return convert(rows, Event)
 
 ## render history
 
-def get_pixel_usage(guild, start, end):
+def get_pixel_usage(guild_id, start, end):
     rows = select("""
         SELECT * FROM render_history
         WHERE guild_id = ? AND timestamp > ? AND timestamp < ?
-    """, [guild.id, start, end])
+    """, [guild_id, start, end])
 
     pixel_usage = 0
     for row in rows:
@@ -372,19 +372,19 @@ def get_pixel_usage(guild, start, end):
 
     return pixel_usage
 
-def add_render_history(guild, pixel_usage, timestamp):
+def add_render_history(guild_id, pixel_usage, timestamp):
     execute("INSERT INTO render_history VALUES (?, ?, ?)",
-        [guild.id, pixel_usage, timestamp])
+        [guild_id, pixel_usage, timestamp])
 
 ## guilds
 
-def create_new_guild(guild):
+def create_new_guild(guild_id):
     # default to null prefix. ignore error on guilds we're rejoining for a
     # second time, they already have a proper row
-    execute("INSERT OR IGNORE INTO guild VALUES (?, null)", [guild.id])
+    execute("INSERT OR IGNORE INTO guild VALUES (?, null)", [guild_id])
 
-def get_snitch_prefix(guild):
-    rows = select("SELECT * FROM guild WHERE guild_id = ?", [guild.id])
+def get_snitch_prefix(guild_id):
+    rows = select("SELECT * FROM guild WHERE guild_id = ?", [guild_id])
 
     if not rows:
         print("attempted to retrieve the prefix of a guild that doesn't exist. "
@@ -393,6 +393,6 @@ def get_snitch_prefix(guild):
 
     return rows[0]["prefix"]
 
-def set_guild_prefix(guild, prefix):
+def set_guild_prefix(guild_id, prefix):
     execute("UPDATE guild SET prefix = ? WHERE guild_id = ?",
-        [prefix, guild.id])
+        [prefix, guild_id])

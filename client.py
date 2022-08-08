@@ -37,7 +37,7 @@ class Client(_Client):
     async def on_guild_join(self, guild):
         await self.log_channel.send(f"Joined new guild `{guild.name}` / "
             f"`{guild.id}`")
-        db.create_new_guild(guild)
+        db.create_new_guild(guild.id)
 
 
     async def on_message(self, message):
@@ -46,7 +46,7 @@ class Client(_Client):
         guild = message.guild
 
         if guild.id not in self.prefixes:
-            prefix = db.get_snitch_prefix(guild)
+            prefix = db.get_snitch_prefix(guild.id)
             # fall back to default prefix if no prefix specified
             if prefix is None:
                 self.prefixes[guild.id] = self.default_prefix

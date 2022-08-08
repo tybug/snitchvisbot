@@ -94,7 +94,7 @@ class Snitchvis(Client):
             self.indexing_queue.put_nowait(message)
 
     async def maybe_index_message(self, message):
-        snitch_channel = db.get_snitch_channel(message.channel)
+        snitch_channel = db.get_snitch_channel(message.channel.id)
         # only index messages in snitch channels which have been fully indexed
         # by `.index` already. If someone adds a snitch channel with
         # `.channel add #snitches`, and then a snitch ping is immediately sent
@@ -110,7 +110,7 @@ class Snitchvis(Client):
             return
 
         db.add_event(message, event)
-        db.update_last_indexed(message.channel, message.id)
+        db.update_last_indexed(message.channel.id, message.id)
 
     async def index_channel(self, channel, discord_channel):
         print(f"Indexing channel {discord_channel} / {discord_channel.id}, "
@@ -133,7 +133,7 @@ class Snitchvis(Client):
         # only update if the channel has messages
         if last_messages:
             last_message = last_messages[0]
-            db.update_last_indexed(channel, last_message.id, commit=False)
+            db.update_last_indexed(channel.id, last_message.id, commit=False)
 
         for (message_, event) in events:
             # caller is responsible for committing
@@ -273,7 +273,7 @@ class Snitchvis(Client):
     )
     async def channel_add(self, message, channels, roles):
         for channel in channels:
-            if db.snitch_channel_exists(channel):
+            if db.snitch_channel_exists(channel.id):
                 await message.channel.send(f"{channel.mention} is already a "
                     "snitch channel. If you would like to change which roles "
                     f"have access to {channel.mention}, first remove it "
@@ -297,7 +297,7 @@ class Snitchvis(Client):
     )
     async def channel_remove(self, message, channels):
         for channel in channels:
-            db.remove_snitch_channel(channel)
+            db.remove_snitch_channel(channel.id)
 
         await message.channel.send(f"Removed {utils.channel_str(channels)} "
             "from snitch channels.")
@@ -308,7 +308,7 @@ class Snitchvis(Client):
         permissions=["manage_guild"]
     )
     async def channel_list(self, message):
-        channels = db.get_snitch_channels(message.guild)
+        channels = db.get_snitch_channels(message.guild.id)
         if not channels:
             await message.channel.send("No snitch channels set. You can add "
                 "snitch channels with `.channel add`.")
@@ -325,7 +325,7 @@ class Snitchvis(Client):
         permissions=["manage_guild"]
     )
     async def index(self, message):
-        channels = db.get_snitch_channels(message.guild)
+        channels = db.get_snitch_channels(message.guild.id)
 
         if not channels:
             await message.channel.send("No snitch channels to index. Use "
@@ -505,7 +505,7 @@ class Snitchvis(Client):
                 # `x` ms, go back to the most recent event (however long ago
                 # that may be) and *then* go back `x` ms and grab all those
                 # events.
-                event = db.most_recent_event(message.guild)
+                event = db.most_recent_event(message.guild.id)
                 # if the guild doesn't have any events at all yet, complain and
                 # exit.
                 if not event:
@@ -533,20 +533,20 @@ class Snitchvis(Client):
             return
 
         # TODO warn if no events by the specified users are in the events filter
-        events = db.get_events(message.guild, message.author, start, end, users,
-            groups)
+        events = db.get_events(message.guild.id, message.author, start, end,
+            users, groups)
 
         if not events:
             await message.channel.send(NO_EVENTS)
             return
 
-        all_events = db.get_all_events(message.guild)
+        all_events = db.get_all_events(message.guild.id)
         # use all known events to construct snitches
         snitches = snitches_from_events(all_events)
         # if the guild has any snitches uploaded (via .import-snitches), use
         # those as well, even if they've never been pinged.
         # Only retrieve snitches which the author has access to via their roles
-        snitches |= set(db.get_snitches(message.guild, message.author.roles))
+        snitches |= set(db.get_snitches(message.guild.id, message.author.roles))
         users = create_users(events)
 
         if export == "sql":
@@ -577,7 +577,7 @@ class Snitchvis(Client):
 
         start = (datetime.now() - timedelta(days=1)).timestamp()
         end = datetime.now().timestamp()
-        usage = db.get_pixel_usage(message.guild, start, end)
+        usage = db.get_pixel_usage(message.guild.id, start, end)
         if usage > self.PIXEL_LIMIT_DAY:
             await message.channel.send("You've rendered more than 100 billion "
                 "pixels in the past 24 hours. I have limited server resources "
@@ -635,7 +635,7 @@ class Snitchvis(Client):
                 vis_file = File(output_file)
                 await self.log_channel.send(file=vis_file)
 
-        db.add_render_history(message.guild, num_pixels,
+        db.add_render_history(message.guild.id, num_pixels,
             datetime.now().timestamp())
 
     @command("import-snitches",
@@ -703,7 +703,7 @@ class Snitchvis(Client):
             for row in rows:
                 snitch = Snitch.from_snitchmod(row)
                 # batch commit for speed
-                rowcount = db.add_snitch(message.guild, snitch, roles,
+                rowcount = db.add_snitch(message.guild.id, snitch, roles,
                     commit=False)
                 snitches_added += rowcount
 
@@ -720,7 +720,7 @@ class Snitchvis(Client):
     )
     async def permissions(self, message):
         # tells the command author what snitch channels they can view.
-        snitch_channels = db.get_snitch_channels(message.guild)
+        snitch_channels = db.get_snitch_channels(message.guild.id)
 
         channels = set()
         for role in message.author.roles:
@@ -856,7 +856,7 @@ class Snitchvis(Client):
             await message.channel.send("New prefix must be a single character.")
             return
 
-        db.set_guild_prefix(message.guild, prefix)
+        db.set_guild_prefix(message.guild.id, prefix)
         # update cached prefix immediately, this updates on bot restart normally
         self.prefixes[message.guild.id] = prefix
 
