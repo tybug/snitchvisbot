@@ -413,6 +413,9 @@ class Snitchvis(Client):
                 "take longer to render."),
             Arg("-u", "--users", nargs="*", default=[], help="If passed, only "
                 "events by these users will be rendered."),
+            Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
+                "events from snitches on these namelayer groups will be "
+                "rendered."),
             Arg("-p", "--past", convert=human_timedelta, help="How far in the "
                 "past to look for events. Specify in human-readable form, ie "
                 "-p 1y2mo5w2d3h5m2s (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
@@ -446,9 +449,6 @@ class Snitchvis(Client):
                 "default mode.\n"
                 "The heatmap mode (`-m/--mode heatmap`) renders an aggregate "
                 "heatmap of events instead of drawing individual users."),
-            Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
-                "events from snitches on these namelayer groups will be "
-                "rendered."),
             # TODO work on svis file format
             Arg("--export", help="Export the events matching the specified "
                 "criteria to either an sql database, or an .svis file (for use "
