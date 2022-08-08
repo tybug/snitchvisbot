@@ -452,8 +452,8 @@ class Snitchvis(Client):
             Arg("-hp", "--heatmap-percentage", convert=float, default=20,
                 help="What percentage of the "
                 "video duration the heatmap should look backwards for events "
-                "for. For instance, with `-hp 20` the render will only "
-                "consider events in the most recent 20% of the video when "
+                "for. For instance, with `-hp 30` the render will only "
+                "consider events in the most recent 30% of the video when "
                 "rendering the heatmap. With `-hp 100`, the heatmap will be "
                 "static for the entire video (because it always considers all "
                 "of the events). Defaults to 20."),
