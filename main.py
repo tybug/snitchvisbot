@@ -142,7 +142,7 @@ class Snitchvis(Client):
         # avoid infinite refresh chains
         if refresh:
             # TODO "refresh in worst case to get blank canvas again"
-            refresh_at = datetime.utcnow() + timedelta(minutes=1)
+            refresh_at = datetime.utcnow() + timedelta(minutes=10)
             self.livemaps_refresh_at[channel_id] = refresh_at
 
         if channel_id in self.livemap_last_uploaded:
