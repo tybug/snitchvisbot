@@ -4,6 +4,7 @@ from discord import Client as _Client
 
 from command import Command
 import db
+import config
 
 class Client(_Client):
     def __init__(self, default_prefix, log_channel, *args, **kwargs):
@@ -44,6 +45,11 @@ class Client(_Client):
         content = message.content
         author = message.author
         guild = message.guild
+
+        # only respond to messages from whitelisted guilds if testing, to avoid
+        # responding from commands from actual users
+        if config.TESTING and guild.id not in config.TESTING_GUILDS:
+            return
 
         if guild.id not in self.prefixes:
             prefix = db.get_snitch_prefix(guild.id)
