@@ -133,7 +133,7 @@ class Snitchvis(Client):
             if now < refresh_at:
                 continue
             del self.livemaps_refresh_at[channel_id]
-            lm_channel = db.get_livemap_channel_from_id(channel_id)
+            lm_channel = db.get_livemap_channel_from_channel(channel_id)
             await self.update_livemap_channel(lm_channel, refresh=False)
 
     async def update_livemap_channel(self, lm_channel, refresh=True):

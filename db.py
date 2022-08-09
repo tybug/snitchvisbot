@@ -427,7 +427,7 @@ def get_livemap_channel(guild_id):
 
     return convert(rows, LivemapChannel)[0]
 
-def get_livemap_channel_from_id(channel_id):
+def get_livemap_channel_from_channel(channel_id):
     rows = select("SELECT * FROM livemap_channel WHERE channel_id = ?",
         [channel_id])
     if not rows:
