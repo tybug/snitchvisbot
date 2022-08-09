@@ -942,6 +942,9 @@ class Snitchvis(Client):
         db.set_livemap_channel(message.guild.id, channel.id)
         await message.channel.send(f"Set livemap channel to {channel.mention}.")
 
+        lm_channel = db.get_livemap_channel_from_channel(channel.id)
+        await self.update_livemap(lm_channel)
+
     async def update_livemap(self, livemap_channel):
         # TODO track when updating livemap to not duplicate updates
         channel = self.get_channel(livemap_channel.channel_id)
