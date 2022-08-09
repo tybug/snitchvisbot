@@ -391,10 +391,22 @@ class Snitchvis(Client):
     @command("render",
         # TODO make defaults for these parameters configurable
         args=[
-            Arg("-a", "--all-snitches", default=False, store_boolean=True,
-                help="If passed, all known snitches will be rendered, not "
-                "just the snitches pinged by the relevant events. Warning: "
-                "this can result in very small or unreadable event fields."),
+            Arg("-p", "--past", convert=human_timedelta, help="How far in the "
+                "past to look for events. Specify in human-readable form, ie "
+                "-p 1y2mo5w2d3h5m2s (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
+                "minutes 2 seconds ago\"), or any combination thereof, ie "
+                "-p 1h30m (\"1 hour 30 minutes ago\"). Use the special value "
+                "\"all\" to render all events."),
+            Arg("--start", convert=human_datetime, help="The start date of "
+                "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
+                "eg 7/18/2022 or 12/31/21. If --start is passed but not "
+                "--end, *all* events after the passed start date will be "
+                "rendered."),
+            Arg("--end", convert=human_datetime, help="The end date of "
+                "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
+                "eg 7/18/2022 or 12/31/21. If --end is passed but not "
+                "--start, *all* events before the passed end date will be "
+                "rendered."),
             Arg("-s", "--size", default=700, convert=int, help="The resolution "
                 "of the render, in pixels. Defaults to 700. Decrease if "
                 "you want faster renders, increase if you want higher quality "
@@ -413,22 +425,6 @@ class Snitchvis(Client):
             Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
                 "events from snitches on these namelayer groups will be "
                 "rendered."),
-            Arg("-p", "--past", convert=human_timedelta, help="How far in the "
-                "past to look for events. Specify in human-readable form, ie "
-                "-p 1y2mo5w2d3h5m2s (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
-                "minutes 2 seconds ago\"), or any combination thereof, ie "
-                "-p 1h30m (\"1 hour 30 minutes ago\"). Use the special value "
-                "\"all\" to render all events."),
-            Arg("--start", convert=human_datetime, help="The start date of "
-                "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
-                "eg 7/18/2022 or 12/31/21. If --start is passed but not "
-                "--end, *all* events after the passed start date will be "
-                "rendered."),
-            Arg("--end", convert=human_datetime, help="The end date of "
-                "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
-                "eg 7/18/2022 or 12/31/21. If --end is passed but not "
-                "--start, *all* events before the passed end date will be "
-                "rendered."),
             Arg("--fade", default=10, convert=float, help="What percentage of "
                 "the video duration event highlighting will be visible for. At "
                 "--fade 100, every event will remain on screen for the entire "
@@ -436,6 +432,10 @@ class Snitchvis(Client):
                 "the render. Fade duration is limited to a minimum of 1.5 "
                 "seconds regardless of what you specify for --fade. Defaults "
                 "to 10% of video duration (equivalent to --fade 10)."),
+            Arg("-a", "--all-snitches", default=False, store_boolean=True,
+                help="If passed, all known snitches will be rendered, not "
+                "just the snitches pinged by the relevant events. Warning: "
+                "this can result in very small or unreadable event fields."),
             Arg("-m", "--mode", choices=["line", "square", "heatmap"],
                 default="square", help="What mode to render "
                 "in. The line mode (`-m/--mode line`) draws lines "
@@ -476,8 +476,8 @@ class Snitchvis(Client):
             "render look and feel, events included, duration, quality, etc.",
         aliases=["r"]
     )
-    async def render(self, message, all_snitches, size, fps, duration, users,
-        groups, past, start, end, fade, mode, heatmap_percentage, heatmap_scale,
+    async def render(self, message, past, start, end, size, fps, duration, users,
+        groups, fade, all_snitches, mode, heatmap_percentage, heatmap_scale,
         export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
