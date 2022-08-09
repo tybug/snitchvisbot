@@ -9,7 +9,7 @@ import gzip
 
 from discord import File
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
-    create_users, snitches_from_events, Snitch, Config)
+    create_users, snitches_from_events, Snitch, Config, SnitchVisImage)
 from PyQt6.QtWidgets import QApplication
 
 import db
@@ -25,6 +25,10 @@ DEFAULT_PREFIX = "."
 
 def run_snitch_vis(*args):
     vis = SnitchVisRecord(*args)
+    vis.render()
+
+def run_image_render(*args):
+    vis = SnitchVisImage(*args)
     vis.render()
 
 class Snitchvis(Client):
@@ -53,6 +57,8 @@ class Snitchvis(Client):
         # won't mess up our last_indexed_id.
         self.defer_indexing = False
         self.indexing_queue = Queue()
+        # guild id to datetime
+        self.livemap_last_uploaded = {}
 
     async def on_ready(self):
         await super().on_ready()
@@ -108,6 +114,28 @@ class Snitchvis(Client):
 
         db.add_event(message, event)
         db.update_last_indexed(message.channel.id, message.id)
+
+        await self.update_livemaps(message.guild)
+
+    async def update_livemaps(self, guild):
+        # update all the livemaps of the guild
+        livemap_channel = db.get_livemap_channel(guild.id)
+        if not livemap_channel:
+            return
+
+        channel_id = livemap_channel.channel_id
+        if channel_id in self.livemap_last_uploaded:
+            last_uploaded = self.livemap_last_uploaded[channel_id]
+            # only update livemap every 10 seconds, even if we get new events
+            # TODO the event which caused this update_livemaps call could
+            # potentially never get visualized if it causes a delay and then no
+            # more events come in the near future. We should probably check
+            # again after a delay whether we should re-update the livemaps.
+            if last_uploaded > datetime.utcnow() - timedelta(seconds=10):
+                return
+
+        await self.update_livemap(livemap_channel)
+        self.livemap_last_uploaded[channel_id] = datetime.utcnow()
 
     async def index_channel(self, channel, discord_channel):
         print(f"Indexing channel {discord_channel} / {discord_channel.id}, "
@@ -540,7 +568,10 @@ class Snitchvis(Client):
             await message.channel.send(NO_EVENTS)
             return
 
-        snitches = snitches_from_events(events)
+        # use all events this author has access to to construct snitches,
+        # instead of just the events returned by the filter
+        all_events = db.get_events(message.guild.id, message.author.roles)
+        snitches = snitches_from_events(all_events)
         # if the guild has any snitches uploaded (via .import-snitches), use
         # those as well, even if they've never been pinged.
         # Only retrieve snitches which the author has access to via their roles
@@ -867,6 +898,69 @@ class Snitchvis(Client):
 
         await message.channel.send(f"Successfully set prefix to `{prefix}`.")
 
+    @command("set-livemap-channel",
+        args=[
+            Arg("channel", convert=channel, help="What channel to upload the "
+                "livemap to.")
+        ],
+        help="Sets the channel to use for livemap updates. A \"livemap\" in "
+            "this context is a static image uploaded to the livemap channel, "
+            "updated every minute, or every 15 seconds if there are new snitch "
+            "hits.",
+        help_short="Sets the channel to use for livemap updates.",
+        permissions=["manage_guild"]
+    )
+    async def set_livemap_channel(self, message, channel):
+        permissions = channel.permissions_for(message.guild.me)
+        if not permissions.send_messages:
+            await message.channel.send("I don't have permission to send "
+                "messages in that channel. Please adjust permissions and try "
+                "again.")
+            return
+
+        db.set_livemap_channel(message.guild.id, channel.id)
+        await message.channel.send(f"Set livemap channel to {channel.mention}.")
+
+    async def update_livemap(self, livemap_channel):
+        channel = self.get_channel(livemap_channel.channel_id)
+        guild = channel.guild
+        # for now we'll just render all events to the livemap, eventually we may
+        # want to support different livemap channels with granular role-based
+        # snitch vision
+        start = (datetime.utcnow() - timedelta(minutes=10)).timestamp()
+        events = db.get_events(guild.id, "all", start=start)
+
+        # use all events to construct snitches instead of the filtered subset
+        # above
+        all_events = db.get_events(guild.id, "all")
+        snitches = snitches_from_events(all_events)
+        snitches |= set(db.get_snitches(guild.id, "all"))
+        users = create_users(events)
+
+        with TemporaryDirectory() as d:
+            output_file = str(Path(d) / "livemap.jpg")
+
+            config = Config(snitches=snitches, events=events, users=users)
+            f = partial(run_image_render, output_file, config)
+
+            with ProcessPoolExecutor() as pool:
+                await self.loop.run_in_executor(pool, f)
+
+            jpg_file = File(output_file)
+            new_m = await channel.send(file=jpg_file)
+
+        # get rid of our old livemap message
+        if livemap_channel.last_message_id:
+            # if the message was already deleted, don't fail-early - could cause
+            # a chain reaction since we would never set the livemap last message
+            # id below.
+            try:
+                old_m = await channel.fetch_message(livemap_channel.last_message_id)
+                await old_m.delete()
+            except:
+                pass
+        db.set_livemap_last_message_id(livemap_channel.channel_id, new_m.id)
+
 # we can only have one qapp active at a time, but we want to be able to
 # be rendering multiple snitch logs at the same time (ie multiple .v
 # commands, potentially in different servers). We'll keep a master qapp
@@ -904,8 +998,5 @@ if __name__ == "__main__":
 # TODO add regex filtering to .events --name, seems useful (--name-regex?)
 
 # TODO .r --bounds x1 y1 x2 y2
-
-# TODO livemap aka render a static frame every minute / new snitch hit to a
-# specified channel
 
 # TODO per-server resource limiting

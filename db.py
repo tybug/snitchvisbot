@@ -5,7 +5,7 @@ from collections import defaultdict
 import inspect
 import time
 
-from models import SnitchChannel, Event, Snitch
+from models import SnitchChannel, Event, Snitch, LivemapChannel
 
 db_path = Path(__file__).parent / "snitchvis.db"
 
@@ -125,6 +125,13 @@ def create_db():
             PRIMARY KEY(guild_id)
         )
     """)
+    c.execute("""
+        CREATE TABLE livemap_channel (
+            guild_id INTEGER NOT NULL,
+            channel_id INTEGER NOT NULL,
+            last_message_id INTEGER
+        )
+    """)
 
     conn.commit()
     conn.close()
@@ -176,17 +183,27 @@ def convert(rows, Class):
 ## snitches
 
 def get_snitches(guild_id, roles):
-    role_filter = ("?, " * len(roles))[:-2]
-    role_ids = [role.id for role in roles]
-    rows = select(f"""
-        SELECT * FROM snitch
-        JOIN snitch_allowed_roles
-        ON snitch.rowid = snitch_allowed_roles.snitch_id
-        WHERE snitch.guild_id = ? AND
-        snitch_allowed_roles.role_id IN ({role_filter})
-        """,
-        [guild_id, *role_ids]
-    )
+    # special value of all to return all snitches
+    if roles == "all":
+        rows = select("""
+            SELECT * FROM snitch
+            WHERE guild_id = ?
+            """,
+            [guild_id]
+        )
+    else:
+        role_filter = ("?, " * len(roles))[:-2]
+        role_ids = [role.id for role in roles]
+        rows = select(f"""
+            SELECT * FROM snitch
+            JOIN snitch_allowed_roles
+            ON snitch.rowid = snitch_allowed_roles.snitch_id
+            WHERE snitch.guild_id = ? AND
+            snitch_allowed_roles.role_id IN ({role_filter})
+            """,
+            [guild_id, *role_ids]
+        )
+
     return convert(rows, Snitch)
 
 def add_snitch(guild_id, snitch, allowed_roles, commit=True):
@@ -326,28 +343,31 @@ def get_events(guild_id, roles, *, start=None, end=None, users=[], groups=[]):
     snitch_channels = get_snitch_channels(guild_id)
     channel_ids = set()
 
-    # TODO can we do this filtering based on allowed roles entirely in sql?
-    # Probably not worth it until/if it becomes a performance concern.
+    # special value of `all` to retrieve all events, regardless of permissions
+    if roles != "all":
+        # TODO can we do this filtering based on allowed roles entirely in sql?
+        # Probably not worth it until/if it becomes a performance concern.
 
-    # build a dict to avoid potentially cubic behavior. This is still quadratic,
-    # but hopefully no more than a few hundred iterations at worst.
-    role_to_channels = defaultdict(set)
-    for channel in snitch_channels:
-        for role in channel.allowed_roles:
-            role_to_channels[role].add(channel.id)
+        # build a dict to avoid potentially cubic behavior. This is still
+        # quadratic, but hopefully no more than a few hundred iterations at
+        #  worst.
+        role_to_channels = defaultdict(set)
+        for channel in snitch_channels:
+            for role in channel.allowed_roles:
+                role_to_channels[role].add(channel.id)
 
-    # for each role, add any snitch channels that role gives them permission to
-    # view.
-    for role in roles:
-        channels = role_to_channels[role.id]
-        channel_ids |= channels
+        # for each role, add any snitch channels that role gives them permission
+        # to view.
+        for role in roles:
+            channels = role_to_channels[role.id]
+            channel_ids |= channels
 
-    if not channel_ids:
-        # if the author doesn't have permission to view any channels, don't
-        # return any events
-        return []
+        if not channel_ids:
+            # if the author doesn't have permission to view any channels, don't
+            # return any events
+            return []
 
-    where.add("channel_id IN ", channel_ids)
+        where.add("channel_id IN ", channel_ids)
 
     rows = select(
         f"""
@@ -356,10 +376,6 @@ def get_events(guild_id, roles, *, start=None, end=None, users=[], groups=[]):
         """,
         [*where.params]
     )
-    return convert(rows, Event)
-
-def get_all_events(guild_id):
-    rows = select("SELECT * FROM event WHERE guild_id = ?", [guild_id])
     return convert(rows, Event)
 
 ## render history
@@ -400,3 +416,29 @@ def get_snitch_prefix(guild_id):
 def set_guild_prefix(guild_id, prefix):
     execute("UPDATE guild SET prefix = ? WHERE guild_id = ?",
         [prefix, guild_id])
+
+## livemap
+
+def get_livemap_channel(guild_id):
+    rows = select("SELECT * FROM livemap_channel WHERE guild_id = ?",
+        [guild_id])
+    if not rows:
+        return None
+
+    return convert(rows, LivemapChannel)[0]
+
+def set_livemap_channel(guild_id, channel_id):
+    if get_livemap_channel(guild_id):
+        execute("UPDATE livemap_channel SET channel_id = ? WHERE guild_id = ?",
+            [channel_id, guild_id])
+        return
+
+    execute("INSERT INTO livemap_channel (guild_id, channel_id) VALUES (?, ?)",
+        [guild_id, channel_id])
+
+def set_livemap_last_message_id(channel_id, last_message_id):
+    execute("""
+        UPDATE livemap_channel
+        SET last_message_id = ?
+        WHERE channel_id = ?
+    """, [last_message_id, channel_id])

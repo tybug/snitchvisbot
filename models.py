@@ -74,3 +74,9 @@ class Snitch:
     def __eq__(self, other):
         return (self.x == other.x and self.y == other.y and self.z == other.z
             and self.world == other.world)
+
+@dataclass
+class LivemapChannel:
+    guild_id: int
+    channel_id: int
+    last_message_id: int
