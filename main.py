@@ -63,6 +63,9 @@ class Snitchvis(Client):
         self.livemap_last_uploaded = {}
         # channel id to datetime
         self.livemaps_refresh_at = {}
+        # currently updating livemap ids, so we don't double-update on quick
+        # successive snitch hits
+        self.livemap_updating_channels = []
 
     async def on_ready(self):
         await super().on_ready()
@@ -946,9 +949,14 @@ class Snitchvis(Client):
         lm_channel = db.get_livemap_channel_from_channel(channel.id)
         await self.update_livemap(lm_channel)
 
-    async def update_livemap(self, livemap_channel):
-        # TODO track when updating livemap to not duplicate updates
-        channel = self.get_channel(livemap_channel.channel_id)
+    async def update_livemap(self, lm_channel):
+        # we're currently updating the livemap for this channel already, don't
+        # duplicate events (which can cause last_message_id to get messed up)
+        if lm_channel.channel_id in self.livemap_updating_channels:
+            return
+        self.livemap_updating_channels.append(lm_channel.channel_id)
+
+        channel = self.get_channel(lm_channel.channel_id)
         guild = channel.guild
         # for now we'll just render all events to the livemap, eventually we may
         # want to support different livemap channels with granular role-based
@@ -976,16 +984,18 @@ class Snitchvis(Client):
             new_m = await channel.send(file=jpg_file)
 
         # get rid of our old livemap message
-        if livemap_channel.last_message_id:
+        if lm_channel.last_message_id:
             # if the message was already deleted, don't fail-early - could cause
             # a chain reaction since we would never set the livemap last message
             # id below.
             try:
-                old_m = await channel.fetch_message(livemap_channel.last_message_id)
+                old_m = await channel.fetch_message(lm_channel.last_message_id)
                 await old_m.delete()
             except:
                 pass
-        db.set_livemap_last_message_id(livemap_channel.channel_id, new_m.id)
+        db.set_livemap_last_message_id(lm_channel.channel_id, new_m.id)
+
+        self.livemap_updating_channels.remove(lm_channel.channel_id)
 
 # we can only have one qapp active at a time, but we want to be able to
 # be rendering multiple snitch logs at the same time (ie multiple .v
