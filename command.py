@@ -181,6 +181,10 @@ class Command:
                 continue
 
             val = kwargs[arg.dest]
+            # if the argument wasn't passed, don't validate it against choices
+            if val is None:
+                continue
+
             if val not in arg.choices:
                 raise ParseError(f"`{arg}` must be one of "
                     f"`{'`, `'.join(arg.choices)}`.")
