@@ -540,9 +540,7 @@ class Snitchvis(Client):
             await message.channel.send(NO_EVENTS)
             return
 
-        all_events = db.get_all_events(message.guild.id)
-        # use all known events to construct snitches
-        snitches = snitches_from_events(all_events)
+        snitches = snitches_from_events(events)
         # if the guild has any snitches uploaded (via .import-snitches), use
         # those as well, even if they've never been pinged.
         # Only retrieve snitches which the author has access to via their roles
