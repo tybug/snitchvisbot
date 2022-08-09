@@ -9,6 +9,27 @@ from models import SnitchChannel, Event, Snitch
 
 db_path = Path(__file__).parent / "snitchvis.db"
 
+
+class Where:
+    def __init__(self):
+        self.params = []
+        self.query = "WHERE 1"
+
+    def add(self, query, param):
+        if not param:
+            return
+
+        if isinstance(param, (list, set)):
+            qs = "?, " * len(param)
+            qs = f"({qs[:-2]})"
+        else:
+            param = [param]
+            qs = "?"
+
+        self.params += param
+        self.query += f" AND {query}{qs}"
+
+
 def create_db():
     conn = sqlite3.connect(str(db_path))
     c = conn.cursor()
@@ -291,27 +312,16 @@ def most_recent_event(guild_id):
 
     return convert(rows, Event)[0]
 
-def get_events(guild_id, author, start_date, end_date, users, groups):
-    # compare case insensitive
+def get_events(guild_id, roles, *, start=None, end=None, users=[], groups=[]):
     users = [user.lower() for user in users]
 
-    # XXX be careful no sql injection can happen here
-    if users:
-        qs = '?, ' * len(users)
-        qs = qs[:-2] # remove trailing `, `
-        user_filter = f"LOWER(username) IN ({qs})"
-    else:
-        # if no users are passed, all events are fair game
-        user_filter = "1"
-
-    if groups:
-        qs = '?, ' * len(groups)
-        qs = qs[:-2]
-        group_filter = f"LOWER(namelayer_group) IN ({qs})"
-    else:
-        # if no users are passed, all events are fair game
-        group_filter = "1"
-
+    where = Where()
+    where.add("guild_id = ", guild_id)
+    where.add("t >= ", start)
+    where.add("t <= ", end)
+    # compare case insensitive
+    where.add("LOWER(username) IN ", users)
+    where.add("LOWER(namelayer_group) IN ", groups)
 
     snitch_channels = get_snitch_channels(guild_id)
     channel_ids = set()
@@ -328,29 +338,23 @@ def get_events(guild_id, author, start_date, end_date, users, groups):
 
     # for each role, add any snitch channels that role gives them permission to
     # view.
-    for role in author.roles:
+    for role in roles:
         channels = role_to_channels[role.id]
-        channel_ids |= (channels)
+        channel_ids |= channels
 
-    if channel_ids:
-        qs = '?, ' * len(channel_ids)
-        qs = qs[:-2]
-        channel_filter = f"channel_id IN ({qs})"
-    else:
+    if not channel_ids:
         # if the author doesn't have permission to view any channels, don't
         # return any events
-        channel_filter = "0"
+        return []
+
+    where.add("channel_id IN ", channel_ids)
 
     rows = select(
         f"""
         SELECT * FROM event
-        WHERE guild_id = ?
-        AND t >= ? AND t <= ?
-        AND {user_filter}
-        AND {channel_filter}
-        AND {group_filter}
+        {where.query}
         """,
-        [guild_id, start_date, end_date, *users, *channel_ids, *groups]
+        [*where.params]
     )
     return convert(rows, Event)
 
