@@ -8,6 +8,7 @@ from functools import partial
 import gzip
 
 from discord import File
+from discord.ext.tasks import loop
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
     create_users, snitches_from_events, Snitch, Config, SnitchVisImage)
 from PyQt6.QtWidgets import QApplication
@@ -57,8 +58,10 @@ class Snitchvis(Client):
         # won't mess up our last_indexed_id.
         self.defer_indexing = False
         self.indexing_queue = Queue()
-        # guild id to datetime
+        # channel id to datetime
         self.livemap_last_uploaded = {}
+        # channel id to datetime
+        self.livemaps_refresh_at = {}
 
     async def on_ready(self):
         await super().on_ready()
@@ -89,6 +92,8 @@ class Snitchvis(Client):
         # can go back to indexing new messages normally.
         self.defer_indexing = False
 
+        self.check_outdated_livemaps.start()
+
     async def on_message(self, message):
         await super().on_message(message)
         if not self.defer_indexing:
@@ -115,15 +120,31 @@ class Snitchvis(Client):
         db.add_event(message, event)
         db.update_last_indexed(message.channel.id, message.id)
 
-        await self.update_livemaps(message.guild)
-
-    async def update_livemaps(self, guild):
         # update all the livemaps of the guild
-        livemap_channel = db.get_livemap_channel(guild.id)
-        if not livemap_channel:
+        lm_channel = db.get_livemap_channel(message.guild.id)
+        if not lm_channel:
             return
+        await self.update_livemap_channel(lm_channel)
 
-        channel_id = livemap_channel.channel_id
+    @loop(seconds=10)
+    async def check_outdated_livemaps(self):
+        now = datetime.utcnow()
+        for channel_id, refresh_at in self.livemaps_refresh_at.copy().items():
+            if now < refresh_at:
+                continue
+            del self.livemaps_refresh_at[channel_id]
+            lm_channel = db.get_livemap_channel_from_id(channel_id)
+            await self.update_livemap_channel(lm_channel, refresh=False)
+
+    async def update_livemap_channel(self, lm_channel, refresh=True):
+        channel_id = lm_channel.channel_id
+
+        # avoid infinite refresh chains
+        if refresh:
+            # TODO "refresh in worst case to get blank canvas again"
+            refresh_at = datetime.utcnow() + timedelta(minutes=1)
+            self.livemaps_refresh_at[channel_id] = refresh_at
+
         if channel_id in self.livemap_last_uploaded:
             last_uploaded = self.livemap_last_uploaded[channel_id]
             # only update livemap every 10 seconds, even if we get new events
@@ -134,7 +155,7 @@ class Snitchvis(Client):
             if last_uploaded > datetime.utcnow() - timedelta(seconds=10):
                 return
 
-        await self.update_livemap(livemap_channel)
+        await self.update_livemap(lm_channel)
         self.livemap_last_uploaded[channel_id] = datetime.utcnow()
 
     async def index_channel(self, channel, discord_channel):
@@ -922,6 +943,7 @@ class Snitchvis(Client):
         await message.channel.send(f"Set livemap channel to {channel.mention}.")
 
     async def update_livemap(self, livemap_channel):
+        # TODO track when updating livemap to not duplicate updates
         channel = self.get_channel(livemap_channel.channel_id)
         guild = channel.guild
         # for now we'll just render all events to the livemap, eventually we may

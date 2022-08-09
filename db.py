@@ -427,6 +427,18 @@ def get_livemap_channel(guild_id):
 
     return convert(rows, LivemapChannel)[0]
 
+def get_livemap_channel_from_id(channel_id):
+    rows = select("SELECT * FROM livemap_channel WHERE channel_id = ?",
+        [channel_id])
+    if not rows:
+        return None
+
+    return convert(rows, LivemapChannel)[0]
+
+def get_all_livemap_channels():
+    rows = select("SELECT * FROM livemap_channel")
+    return convert(rows, LivemapChannel)
+
 def set_livemap_channel(guild_id, channel_id):
     if get_livemap_channel(guild_id):
         execute("UPDATE livemap_channel SET channel_id = ? WHERE guild_id = ?",
