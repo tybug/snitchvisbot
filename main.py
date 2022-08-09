@@ -455,6 +455,16 @@ class Snitchvis(Client):
                 "rendering the heatmap. With `-hp 100`, the heatmap will be "
                 "static for the entire video (because it always considers all "
                 "of the events). Defaults to 20."),
+            Arg("-hs", "--heatmap-scale", choices=["linear", "weighted"],
+                default="linear", help="What scale "
+                "to use for the heatmap colors. One of \"linear\" or "
+                "\"weighted\". Defaults to linear. In linear mode, heatmap "
+                "brightness scale linearly with the number of hits. In "
+                "weighted mode, snitches with low hits are made slighty "
+                "brighter and snitches with a high number of hits are made "
+                "slightly dimmer. This can help if you have a few snitches "
+                "with a very high number of hits drowning out the rest of the "
+                "heatmap."),
             # TODO work on svis file format
             Arg("--export", choices=["sql", "svis"],
                 help="Export the events matching the specified "
@@ -467,7 +477,8 @@ class Snitchvis(Client):
         aliases=["r"]
     )
     async def render(self, message, all_snitches, size, fps, duration, users,
-        groups, past, start, end, fade, mode, heatmap_percentage, export
+        groups, past, start, end, fade, mode, heatmap_percentage, heatmap_scale,
+        export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
@@ -611,7 +622,8 @@ class Snitchvis(Client):
             # it's not too bad.
             config = Config(snitches=snitches, events=events, users=users,
                 show_all_snitches=all_snitches, mode=mode,
-                heatmap_percentage=heatmap_percentage)
+                heatmap_percentage=heatmap_percentage,
+                heatmap_scale=heatmap_scale)
             f = partial(run_snitch_vis, duration, size, fps, fade, output_file,
                 config)
             with ProcessPoolExecutor() as pool:
