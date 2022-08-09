@@ -566,6 +566,10 @@ class Snitchvis(Client):
                 sql_file = File(zipped_p)
                 await message.channel.send(file=sql_file)
             return
+        if export == "svis":
+            await message.channel.send("Exporting to a .svis file is not "
+                "implemented yet.")
+            return
 
         num_pixels = duration * fps * (size * size)
         if num_pixels > self.PIXEL_LIMIT_VIDEO:
