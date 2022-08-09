@@ -577,8 +577,8 @@ class Snitchvis(Client):
                 "(`-d/--duration`).")
             return
 
-        start = (datetime.now() - timedelta(days=1)).timestamp()
-        end = datetime.now().timestamp()
+        start = (datetime.utcnow() - timedelta(days=1)).timestamp()
+        end = datetime.utcnow().timestamp()
         usage = db.get_pixel_usage(message.guild.id, start, end)
         if usage > self.PIXEL_LIMIT_DAY:
             await message.channel.send("You've rendered more than 100 billion "
@@ -641,7 +641,7 @@ class Snitchvis(Client):
                 await self.log_channel.send(file=vis_file)
 
         db.add_render_history(message.guild.id, num_pixels,
-            datetime.now().timestamp())
+            datetime.utcnow().timestamp())
 
     @command("import-snitches",
         args=[
