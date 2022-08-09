@@ -15,7 +15,8 @@ from PyQt6.QtWidgets import QApplication
 
 import db
 import utils
-from secret import TOKEN
+from config import TOKEN
+
 from command import command, Arg, channel, role, human_timedelta, human_datetime
 from client import Client
 

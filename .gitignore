@@ -6,6 +6,7 @@
 .vscode/
 .env
 secret.py
+config.py
 snitchvis.db
 *.mp4
 
