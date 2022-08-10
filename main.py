@@ -96,7 +96,7 @@ class Snitchvis(Client):
         # can go back to indexing new messages normally.
         self.defer_indexing = False
 
-        self.check_outdated_livemaps.start()
+        self.check_outdated_livemaps.start() # pylint: disable=no-member
 
     async def on_message(self, message):
         await super().on_message(message)
