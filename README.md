@@ -167,16 +167,12 @@ Takes no arguments.
 git clone https://github.com/tybug/snitchvisbot
 cd snitchvisbot
 pip install -r requirements.txt
-touch secret.py
+cp config.example.py config.py
 ```
 
-Open `secret.py` and add your discord bot token:
+Now open `config.py` and set your bot token, as well as author id and testing guilds if you want.
 
-```python
-TOKEN = "LONG_STRING"
-```
-
-Now:
+Finally:
 
 ```
 python main.py
