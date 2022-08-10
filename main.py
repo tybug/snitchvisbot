@@ -1053,3 +1053,6 @@ if __name__ == "__main__":
 
 # TODO limit concurrent renders to limit abuse (5 at a time should be more than
 # enough)
+
+# TODO tiny pop-in / ease animation for new events? hard to see where new events
+# are on big maps sometimes. could get annoying though
