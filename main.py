@@ -36,13 +36,9 @@ def run_image_render(*args):
 class Snitchvis(Client):
     # for reference, a 5 second video of 700 pixels at 30 fps is 70 million
     # pixels. A 60 second video of 1000 pixels at 30 fps is 1.8 billion pixels.
-    # PIXEL_LIMIT_VIDEO =   2_000_000_000
-    PIXEL_LIMIT_VIDEO =   2_000_000_00000000000
-    # 100 billion pixels is roughly 13 minutes of 1080p @ 60fps
-    # (1920*1080*60*60*13 = 97_044_480_000). This is excessively high, and
-    # nobody who is not trying to abuse the bot will hit this limit.
-    # PIXEL_LIMIT_DAY =   100_000_000_000
-    PIXEL_LIMIT_DAY =   100_000_000_00000000000000
+    PIXEL_LIMIT_VIDEO =   10_000_000_000
+    # 500 billion pixels is roughly an hour of 1080p @ 60fps.
+    PIXEL_LIMIT_DAY   =  500_000_000_000
 
     def __init__(self, *args, **kwargs):
         super().__init__(DEFAULT_PREFIX, LOG_CHANNEL, *args, **kwargs)
@@ -625,8 +621,9 @@ class Snitchvis(Client):
                 "implemented yet.")
             return
 
+        multiplier = db.get_guild_multiplier(message.guild.id)
         num_pixels = duration * fps * (size * size)
-        if num_pixels > self.PIXEL_LIMIT_VIDEO:
+        if num_pixels > self.PIXEL_LIMIT_VIDEO * multiplier:
             await message.channel.send("The requested render would require too "
                 "many server resources to generate. Decrease either the render "
                 "size (`-s/--size`), fps (`-f/--fps`), or duration "
@@ -636,7 +633,7 @@ class Snitchvis(Client):
         start = (datetime.utcnow() - timedelta(days=1)).timestamp()
         end = datetime.utcnow().timestamp()
         usage = db.get_pixel_usage(message.guild.id, start, end)
-        if usage > self.PIXEL_LIMIT_DAY:
+        if usage > self.PIXEL_LIMIT_DAY * multiplier:
             await message.channel.send("You've rendered more than 100 billion "
                 "pixels in the past 24 hours. I have limited server resources "
                 "and cannot allow servers to render more than this (already "
@@ -896,6 +893,10 @@ class Snitchvis(Client):
             # section or different display method for them)
             if command.alias:
                 continue
+            # don't show author-only commands in help message, unless I'm the
+            # one running .help
+            if "author" in command.permissions and message.author.id != config.AUTHOR_ID:
+                continue
             # TODO display custom prefixes if set
             prefix = self.default_prefix if command.use_prefix else ""
             command_texts.append(f"  {prefix}{command.name}: "
@@ -948,6 +949,21 @@ class Snitchvis(Client):
 
         lm_channel = db.get_livemap_channel_from_channel(channel.id)
         await self.update_livemap(lm_channel)
+
+    @command("set-pixel-multiplier",
+        args=[
+            Arg("guild_id", convert=int, help="The guild id to set the pixel "
+                "limit multipler of"),
+            Arg("multiplier", convert=int, help="The pixel limit multiplier "
+                "to set the guild to")
+        ],
+        help="Set the pixel multiplier for a guild",
+        permissions=["author"]
+    )
+    async def set_pixel_multiplier(self, message, guild_id, multiplier):
+        db.set_guild_multiplier(guild_id, multiplier)
+        await message.channel.send("Updated mutliplier for guild "
+            f"{guild_id} to {multiplier}.")
 
     async def update_livemap(self, lm_channel):
         # we're currently updating the livemap for this channel already, don't
@@ -1035,4 +1051,5 @@ if __name__ == "__main__":
 
 # TODO .r --bounds x1 y1 x2 y2
 
-# TODO per-server resource limiting
+# TODO limit concurrent renders to limit abuse (5 at a time should be more than
+# enough)

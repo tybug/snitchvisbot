@@ -122,6 +122,7 @@ def create_db():
         CREATE TABLE guild (
             guild_id INTEGER NOT NULL,
             prefix TEXT,
+            pixel_limit_multiplier INTEGER DEFAULT 1,
             PRIMARY KEY(guild_id)
         )
     """)
@@ -401,7 +402,7 @@ def add_render_history(guild_id, pixel_usage, timestamp):
 def create_new_guild(guild_id):
     # default to null prefix. ignore error on guilds we're rejoining for a
     # second time, they already have a proper row
-    execute("INSERT OR IGNORE INTO guild VALUES (?, null)", [guild_id])
+    execute("INSERT OR IGNORE INTO guild (guild_id) VALUES (?)", [guild_id])
 
 def get_snitch_prefix(guild_id):
     rows = select("SELECT * FROM guild WHERE guild_id = ?", [guild_id])
@@ -416,6 +417,19 @@ def get_snitch_prefix(guild_id):
 def set_guild_prefix(guild_id, prefix):
     execute("UPDATE guild SET prefix = ? WHERE guild_id = ?",
         [prefix, guild_id])
+
+def set_guild_multiplier(guild_id, multiplier):
+    execute("UPDATE guild SET pixel_limit_multiplier = ? WHERE guild_id = ?",
+        [multiplier, guild_id])
+
+def get_guild_multiplier(guild_id):
+    rows = select("SELECT * FROM guild WHERE guild_id = ?", [guild_id])
+    if not rows:
+        print("attempted to retrieve the guild multiplier of a guild that "
+            "doesn't exist. This should never happen")
+        return 1
+
+    return rows[0]["pixel_limit_multiplier"]
 
 ## livemap
 
