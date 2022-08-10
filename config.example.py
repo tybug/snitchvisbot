@@ -1,0 +1,4 @@
+TOKEN = ""
+TESTING = True
+TESTING_GUILDS = []
+AUTHOR_ID = None
