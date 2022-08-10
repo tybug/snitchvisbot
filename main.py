@@ -678,12 +678,12 @@ class Snitchvis(Client):
             # since its only job is writing to an output mp4.
             # We are taking a slight hit on the event pickling, but hopefully
             # it's not too bad.
-            config = Config(snitches=snitches, events=events, users=users,
+            config_ = Config(snitches=snitches, events=events, users=users,
                 show_all_snitches=all_snitches, mode=mode,
                 heatmap_percentage=heatmap_percentage,
                 heatmap_scale=heatmap_scale)
             f = partial(run_snitch_vis, duration, size, fps, fade, output_file,
-                config)
+                config_)
             with ProcessPoolExecutor() as pool:
                 await self.loop.run_in_executor(pool, f)
 
