@@ -3,6 +3,8 @@ import shlex
 from datetime import timedelta, datetime
 import inspect
 
+import config
+
 class ParseError(Exception):
     pass
 
@@ -41,6 +43,14 @@ class Command:
 
     async def invoke(self, message, arg_string):
         for permission in self.permissions:
+            # handle custom permissions
+            if permission == "author":
+                if message.author.id != config.AUTHOR_ID:
+                    await message.channel.send("Only the bot author "
+                        f"(<@{config.AUTHOR_ID}>) can run that command.")
+                    return
+                continue
+
             permissions = message.author.permissions_in(message.channel)
             if not getattr(permissions, permission):
                 await message.channel.send("You do not have permission to do "
