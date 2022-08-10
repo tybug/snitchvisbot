@@ -75,8 +75,8 @@ class Client(_Client):
             ):
                 continue
 
-            # hardcode some ids (eg me) to not send log mesages for
-            if author.id not in [216008405758771200]:
+            # don't log commands by myself
+            if author.id != config.AUTHOR_ID:
                 await self.log_channel.send(f"[{author.mention} / "
                     f"`{author.name}` / `{author.id}`] `{content}`")
 

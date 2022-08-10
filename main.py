@@ -15,7 +15,7 @@ from PyQt6.QtWidgets import QApplication
 
 import db
 import utils
-from config import TOKEN
+import config
 
 from command import command, Arg, channel, role, human_timedelta, human_datetime
 from client import Client
@@ -691,8 +691,8 @@ class Snitchvis(Client):
             await message.channel.send(file=vis_file)
             await m.delete()
 
-            # hardcode some ids (eg me) to not send log mesages for
-            if message.author.id not in [216008405758771200]:
+            # don't log tests by myself
+            if message.author.id != config.AUTHOR_ID:
                 vis_file = File(output_file)
                 await self.log_channel.send(file=vis_file)
 
@@ -1008,7 +1008,7 @@ qapp = QApplication(['-platform', 'minimal'])
 
 if __name__ == "__main__":
     client = Snitchvis()
-    client.run(TOKEN)
+    client.run(config.TOKEN)
 
 # TODO make lines mode in visualizer actually worth using - highlight single
 # events, distinguish actual events and the lines, add arrows to indicate
