@@ -963,7 +963,7 @@ class Snitchvis(Client):
     async def set_pixel_multiplier(self, message, guild_id, multiplier):
         db.set_guild_multiplier(guild_id, multiplier)
         await message.channel.send("Updated mutliplier for guild "
-            f"{guild_id} to {multiplier}.")
+            f"`{guild_id}` to `{multiplier}`.")
 
     async def update_livemap(self, lm_channel):
         # we're currently updating the livemap for this channel already, don't
