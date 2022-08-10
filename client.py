@@ -77,8 +77,8 @@ class Client(_Client):
 
             # don't log commands by myself
             if author.id != config.AUTHOR_ID:
-                await self.log_channel.send(f"[{author.mention} / "
-                    f"`{author.name}` / `{author.id}`] `{content}`")
+                await self.log_channel.send(f"[`{guild.name}`] "
+                    f"[{author.mention} / `{author.name}`] `{content}`")
 
             # also strip any whitespace, particularly after the command name
             args = content.removeprefix(command_name).strip()
