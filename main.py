@@ -165,6 +165,55 @@ class Snitchvis(Client):
         await self.update_livemap(lm_channel)
         self.livemap_last_uploaded[channel_id] = datetime.utcnow()
 
+
+    async def update_livemap(self, lm_channel):
+        # we're currently updating the livemap for this channel already, don't
+        # duplicate events (which can cause last_message_id to get messed up)
+        if lm_channel.channel_id in self.livemap_updating_channels:
+            return
+        self.livemap_updating_channels.append(lm_channel.channel_id)
+
+        channel = self.get_channel(lm_channel.channel_id)
+        guild = channel.guild
+        # for now we'll just render all events to the livemap, eventually we may
+        # want to support different livemap channels with granular role-based
+        # snitch vision
+        start = (datetime.utcnow() - timedelta(minutes=10)).timestamp()
+        events = db.get_events(guild.id, "all", start=start)
+
+        # use all events to construct snitches instead of the filtered subset
+        # above
+        all_events = db.get_events(guild.id, "all")
+        snitches = snitches_from_events(all_events)
+        snitches |= set(db.get_snitches(guild.id, "all"))
+        users = create_users(events)
+
+        with TemporaryDirectory() as d:
+            output_file = str(Path(d) / "livemap.jpg")
+
+            config = Config(snitches=snitches, events=events, users=users)
+            f = partial(run_image_render, output_file, config)
+
+            with ProcessPoolExecutor() as pool:
+                await self.loop.run_in_executor(pool, f)
+
+            jpg_file = File(output_file)
+            new_m = await channel.send(file=jpg_file)
+
+        # get rid of our old livemap message
+        if lm_channel.last_message_id:
+            # if the message was already deleted, don't fail-early - could cause
+            # a chain reaction since we would never set the livemap last message
+            # id below.
+            try:
+                old_m = await channel.fetch_message(lm_channel.last_message_id)
+                await old_m.delete()
+            except:
+                pass
+        db.set_livemap_last_message_id(lm_channel.channel_id, new_m.id)
+
+        self.livemap_updating_channels.remove(lm_channel.channel_id)
+
     async def index_channel(self, channel, discord_channel):
         print(f"Indexing channel {discord_channel} / {discord_channel.id}, "
             f"guild {discord_channel.guild} / {discord_channel.guild.id}")
@@ -1002,54 +1051,6 @@ class Snitchvis(Client):
         db.set_guild_multiplier(guild_id, multiplier)
         await message.channel.send("Updated mutliplier for guild "
             f"`{guild_id}` to `{multiplier}`.")
-
-    async def update_livemap(self, lm_channel):
-        # we're currently updating the livemap for this channel already, don't
-        # duplicate events (which can cause last_message_id to get messed up)
-        if lm_channel.channel_id in self.livemap_updating_channels:
-            return
-        self.livemap_updating_channels.append(lm_channel.channel_id)
-
-        channel = self.get_channel(lm_channel.channel_id)
-        guild = channel.guild
-        # for now we'll just render all events to the livemap, eventually we may
-        # want to support different livemap channels with granular role-based
-        # snitch vision
-        start = (datetime.utcnow() - timedelta(minutes=10)).timestamp()
-        events = db.get_events(guild.id, "all", start=start)
-
-        # use all events to construct snitches instead of the filtered subset
-        # above
-        all_events = db.get_events(guild.id, "all")
-        snitches = snitches_from_events(all_events)
-        snitches |= set(db.get_snitches(guild.id, "all"))
-        users = create_users(events)
-
-        with TemporaryDirectory() as d:
-            output_file = str(Path(d) / "livemap.jpg")
-
-            config = Config(snitches=snitches, events=events, users=users)
-            f = partial(run_image_render, output_file, config)
-
-            with ProcessPoolExecutor() as pool:
-                await self.loop.run_in_executor(pool, f)
-
-            jpg_file = File(output_file)
-            new_m = await channel.send(file=jpg_file)
-
-        # get rid of our old livemap message
-        if lm_channel.last_message_id:
-            # if the message was already deleted, don't fail-early - could cause
-            # a chain reaction since we would never set the livemap last message
-            # id below.
-            try:
-                old_m = await channel.fetch_message(lm_channel.last_message_id)
-                await old_m.delete()
-            except:
-                pass
-        db.set_livemap_last_message_id(lm_channel.channel_id, new_m.id)
-
-        self.livemap_updating_channels.remove(lm_channel.channel_id)
 
 # we can only have one qapp active at a time, but we want to be able to
 # be rendering multiple snitch logs at the same time (ie multiple .v
