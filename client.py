@@ -98,10 +98,12 @@ class Client(_Client):
             if isinstance(command, Command):
                 await command.invoke(message, args)
             else:
+                # forward any alias args to the actual command
+                command_text = f"{command.command_text} {args}"
                 # recurse on the aliased command text. Should never infinitely
                 # recurse because we require new commands to invoke an existing
                 # command, so they should never self reference or loop.
-                await self.maybe_handle_command(message, command.command_text)
+                await self.maybe_handle_command(message, command_text)
 
     def command_matches(self, guild_id, command, content):
         if guild_id not in self.prefixes:
