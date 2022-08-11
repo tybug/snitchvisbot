@@ -59,6 +59,34 @@ def create_db():
         )
         """
     )
+    c.execute("""
+        CREATE INDEX idx_event_channel
+        ON event (channel_id)
+    """)
+    c.execute("""
+        CREATE INDEX idx_event_guild
+        ON event (guild_id)
+    """)
+    c.execute("""
+        CREATE INDEX idx_event_username
+        ON event (username)
+    """)
+    c.execute("""
+        CREATE INDEX idx_event_snitch_name
+        ON event (snitch_name)
+    """)
+    c.execute("""
+        CREATE INDEX idx_event_snitch_namelayer_group
+        ON event (namelayer_group)
+    """)
+    c.execute("""
+        CREATE INDEX idx_event_snitch_location
+        ON event (x, y, z)
+    """)
+    c.execute("""
+        CREATE INDEX idx_event_snitch_t
+        ON event (t)
+    """)
     c.execute(
         # schema matches gjum's snitchmod snitches_v2 table, with a few of our
         # own rows added
@@ -89,8 +117,20 @@ def create_db():
         """
     )
     c.execute("""
-        CREATE UNIQUE INDEX snitch_world_x_y_z_unique
-        ON snitch(world, x, y, z);
+        CREATE UNIQUE INDEX idx_snitch_world_x_y_z_unique
+        ON snitch (world, x, y, z)
+    """)
+    c.execute("""
+        CREATE INDEX idx_snitch_guild
+        ON snitch (guild_id)
+    """)
+    c.execute("""
+        CREATE INDEX idx_snitch_group_name
+        ON snitch (group_name)
+    """)
+    c.execute("""
+        CREATE INDEX idx_snitch_name
+        ON snitch (name)
     """)
     # junction table between snitch_channel and roles
     c.execute(
@@ -107,8 +147,15 @@ def create_db():
         """
         CREATE TABLE snitch_allowed_roles (
             snitch_id INTEGER NOT NULL,
-            role_id INTEGER NOT NULL
+            role_id INTEGER NOT NULL,
+            PRIMARY KEY(snitch_id)
         )
+        """
+    )
+    c.execute(
+        """
+        CREATE INDEX idx_snitch_allowed_roles_role
+            ON snitch_allowed_roles (role_id)
         """
     )
     c.execute("""
@@ -117,6 +164,14 @@ def create_db():
             pixel_usage INTEGER NOT NULL,
             timestamp INTEGER NOT NULL
         )
+    """)
+    c.execute("""
+        CREATE INDEX idx_render_history_guild
+            ON render_history (guild_id)
+    """)
+    c.execute("""
+        CREATE INDEX idx_render_history_timestamp
+            ON render_history (timestamp)
     """)
     c.execute("""
         CREATE TABLE guild (
@@ -130,7 +185,8 @@ def create_db():
         CREATE TABLE livemap_channel (
             guild_id INTEGER NOT NULL,
             channel_id INTEGER NOT NULL,
-            last_message_id INTEGER
+            last_message_id INTEGER,
+            PRIMARY KEY(guild_id)
         )
     """)
     c.execute("""
@@ -139,6 +195,10 @@ def create_db():
             command TEXT NOT NULL,
             command_text TEXT NOT NULL
         )
+    """)
+    c.execute("""
+        CREATE INDEX idx_command_guild
+            ON command (guild_id)
     """)
 
     conn.commit()
