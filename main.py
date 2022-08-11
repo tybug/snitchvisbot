@@ -701,9 +701,9 @@ class Snitchvis(Client):
             await m.delete()
 
             # don't log tests by myself
-            if message.author.id != config.AUTHOR_ID:
+            if message.author.id != config.AUTHOR_ID and self.command_log_channel:
                 vis_file = File(output_file)
-                await self.log_channel.send(file=vis_file)
+                await self.command_log_channel.send(file=vis_file)
 
         db.add_render_history(message.guild.id, num_pixels,
             datetime.utcnow().timestamp())
