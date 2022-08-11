@@ -550,9 +550,8 @@ class Snitchvis(Client):
                 "seconds regardless of what you specify for --fade. Defaults "
                 "to 10% of video duration (equivalent to --fade 10)."),
             Arg("-b", "--bounds", nargs="*", convert=bounds,
-                convert_mode="together",
-                help="Sets what "
-                "area will be visualized. "
+                convert_mode="together", help="Sets what area will be "
+                "visualized. "
                 "This will override the automatic detection, which tries to "
                 "include all events without making the area too large. Format "
                 "is "
@@ -599,7 +598,7 @@ class Snitchvis(Client):
                 "in the Snitch Vis desktop application). Pass `--export sql` "
                 "the former and `--export svis` for the latter.")
         ],
-        help="Renders snitch events to a vidoe. Provides options to adjust "
+        help="Renders snitch events to a video. Provides options to adjust "
             "render look and feel, events included, duration, quality, etc.",
         aliases=["r"]
     )
