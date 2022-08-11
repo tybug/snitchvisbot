@@ -1044,7 +1044,7 @@ class Snitchvis(Client):
             Arg("multiplier", convert=int, help="The pixel limit multiplier "
                 "to set the guild to")
         ],
-        help="Set the pixel multiplier for a guild",
+        help="Set the pixel limit multiplier for a guild",
         permissions=["author"]
     )
     async def set_pixel_multiplier(self, message, guild_id, multiplier):
