@@ -7,13 +7,14 @@ import db
 import config
 
 class Client(_Client):
-    def __init__(self, default_prefix, log_channel, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.default_prefix = default_prefix
+        self.default_prefix = config.DEFAULT_PREFIX
         # guild id to prefix. cache snitch prefix to avoid unecessary db hits
         self.prefixes = {}
         self.commands = []
-        self.log_channel = log_channel
+        self.command_log_channel = None
+        self.join_log_channel = None
 
         # collect all registered commands
         for func in inspect.getmembers(self, predicate=inspect.ismethod):
@@ -33,11 +34,15 @@ class Client(_Client):
 
     async def on_ready(self):
         # convert to discord object once we're connected to discord
-        self.log_channel = self.get_channel(self.log_channel)
+        if config.COMMAND_LOG_CHANNEL:
+            self.command_log_channel = self.get_channel(config.COMMAND_LOG_CHANNEL)
+        if config.JOIN_LOG_CHANNEL:
+            self.join_log_channel = self.get_channel(config.JOIN_LOG_CHANNEL)
 
     async def on_guild_join(self, guild):
-        await self.log_channel.send(f"Joined new guild `{guild.name}` / "
-            f"`{guild.id}`")
+        if self.join_log_channel:
+            await self.join_log_channel.send(f"Joined new guild `{guild.name}` "
+                f"/ `{guild.id}`")
         db.create_new_guild(guild.id)
 
 
@@ -75,9 +80,9 @@ class Client(_Client):
             ):
                 continue
 
-            # don't log commands by myself
-            if author.id != config.AUTHOR_ID:
-                await self.log_channel.send(f"[`{guild.name}`] "
+            # don't log commands by the author, gets annoying for testing
+            if author.id != config.AUTHOR_ID and self.command_log_channel:
+                await self.command_log_channel.send(f"[`{guild.name}`] "
                     f"[{author.mention} / `{author.name}`] `{content}`")
 
             # also strip any whitespace, particularly after the command name

@@ -22,8 +22,6 @@ from client import Client
 
 INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
     "999808708131426434&permissions=0&scope=bot")
-LOG_CHANNEL = 1002607241586823270
-DEFAULT_PREFIX = "."
 
 def run_snitch_vis(*args):
     vis = SnitchVisRecord(*args)
@@ -41,7 +39,7 @@ class Snitchvis(Client):
     PIXEL_LIMIT_DAY   =  500_000_000_000
 
     def __init__(self, *args, **kwargs):
-        super().__init__(DEFAULT_PREFIX, LOG_CHANNEL, *args, **kwargs)
+        super().__init__(*args, **kwargs)
         # there's a potential race condition when indexing messages on startup,
         # where we spend x seconds indexing channels before some channel c,
         # but than at y < x seconds a new message comes in to channel c which
