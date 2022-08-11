@@ -453,7 +453,6 @@ class Snitchvis(Client):
         await self.index(message)
 
     @command("render",
-        # TODO make defaults for these parameters configurable
         args=[
             Arg("-p", "--past", convert=human_timedelta, help="How far in the "
                 "past to look for events. Specify in human-readable form, ie "
@@ -1041,33 +1040,30 @@ if __name__ == "__main__":
     client = Snitchvis()
     client.run(config.TOKEN)
 
-# TODO make lines mode in visualizer actually worth using - highlight single
-# events, distinguish actual events and the lines, add arrows to indicate
-# directionality
+## required for release
+# * support custom kira message formats
+# * command aliasing, for quick .r presets
+# * .r --bounds x1 y1 x2 y2
+# * fix permissions on .events, currently returns results for all events,
+#   need to limit to just the events the user has access to
+# * -c/--context n render option to expand the bounding box by n blocks, for
+#   when you want to see more context. MIN_BOUNDING_BOX_SIZE helps with this but
+#   isn't a perfect solution
+# * limit concurrent renders to limit abuse (5 at a time should be more than
+#   enough)
 
-# TODO maybe add "centered at (x, y)" coordinates to info text, can be confusing
-# where the vis is sometimes. Might need a different solution to this (coords at
-# corners? gets cluttered though...)
+## maybe required for live
+# * tiny pop-in / ease animation for new events? hard to see where new events
+#   are on big maps sometimes. could get annoying though
+# * make lines mode in visualizer actually worth using - highlight single
+#   events, distinguish actual events and the lines, add arrows to indicate
+#   directionality
 
-# TODO support custom kira message formats
-
-# TODO fix permissions on .events, currently returns results for all events,
-# need to limit to just the events the user has access to
-
-# TODO need padding for visible snitches, we care about the *snitch field*
-# being visible, not the snitch itself being visible
-# https://discord.com/channels/993250058801774632/993536931189244045/1002667797907775598
-
-# TODO -c/--context n render option to expand the bounding box by n blocks, for
-# when you want to see more context. MIN_BOUNDING_BOX_SIZE helps with this but
-# isn't a perfect solution
-
-# TODO add regex filtering to .events --name, seems useful (--name-regex?)
-
-# TODO .r --bounds x1 y1 x2 y2
-
-# TODO limit concurrent renders to limit abuse (5 at a time should be more than
-# enough)
-
-# TODO tiny pop-in / ease animation for new events? hard to see where new events
-# are on big maps sometimes. could get annoying though
+## nice to have
+# * maybe add "centered at (x, y)" coordinates to info text, can be confusing
+#   where the vis is sometimes. Might need a different solution to this (coords at
+#   corners? gets cluttered though...)
+# * need padding for visible snitches, we care about the *snitch field*
+#   being visible, not the snitch itself being visible
+#   https://discord.com/channels/993250058801774632/993536931189244045/1002667797907775598
+# * add regex filtering to .events --name, seems useful (--name-regex?)
