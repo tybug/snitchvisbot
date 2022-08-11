@@ -1,4 +1,5 @@
 import inspect
+import traceback
 
 from discord import Client as _Client
 
@@ -15,6 +16,7 @@ class Client(_Client):
         self.commands = []
         self.command_log_channel = None
         self.join_log_channel = None
+        self.error_log_channel = None
 
         # collect all registered commands
         for func in inspect.getmembers(self, predicate=inspect.ismethod):
@@ -39,12 +41,22 @@ class Client(_Client):
             self.command_log_channel = self.get_channel(config.COMMAND_LOG_CHANNEL)
         if config.JOIN_LOG_CHANNEL:
             self.join_log_channel = self.get_channel(config.JOIN_LOG_CHANNEL)
+        if config.ERORR_LOG_CHANNEL:
+            self.error_log_channel = self.get_channel(config.ERORR_LOG_CHANNEL)
 
     async def on_guild_join(self, guild):
         if self.join_log_channel:
             await self.join_log_channel.send(f"Joined new guild `{guild.name}` "
                 f"/ `{guild.id}`")
         db.create_new_guild(guild.id)
+
+    async def on_error(self, event_method, *args, **kwargs):
+        await super().on_error(event_method, *args, **kwargs)
+
+        if self.error_log_channel:
+            err = traceback.format_exc()
+            await self.error_log_channel.send(f"Ignoring exception in "
+                f"{event_method}: \n```\n{err}\n```")
 
 
     async def on_message(self, message):
