@@ -10,7 +10,7 @@ class ParseError(Exception):
 
 class Command:
     def __init__(self, function, name, args, help, help_short, permissions,
-        use_prefix, *, alias=False
+        use_prefix, parse, *, alias=False
     ):
         self.name = name
         self.args = args
@@ -19,6 +19,10 @@ class Command:
         self.help_short = help_short or help
         self.permissions = permissions
         self.use_prefix = use_prefix
+        # whether to parse arguments or not. Will almost always be true, but
+        # some commands have such custom parsing needs that it's easier to just
+        # give them the input text wholesale
+        self.parse = parse
         self.alias = alias
 
     def help_message(self):
@@ -87,6 +91,10 @@ class Command:
                 "more information.")
 
     async def _invoke(self, message, arg_strings):
+        if not self.parse:
+            await self.function(message, args=arg_strings)
+            return
+
         kwargs = {}
         # index into arg_strings
         i = 0
@@ -210,7 +218,7 @@ class Command:
         await self.function(message, **kwargs)
 
 def command(name, *, args=[], help=None, help_short=None, permissions=[],
-    aliases=[], use_prefix=True
+    aliases=[], use_prefix=True, parse=True
 ):
     if not help:
         raise Exception("Help text is required for all commands.")
@@ -224,6 +232,7 @@ def command(name, *, args=[], help=None, help_short=None, permissions=[],
         f._permissions = permissions
         f._aliases = aliases
         f._use_prefix = use_prefix
+        f._parse = parse
         return f
     return decorator
 

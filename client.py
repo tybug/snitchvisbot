@@ -23,13 +23,14 @@ class Client(_Client):
                 continue
 
             command = Command(func, func._name, func._args, func._help,
-                func._help_short, func._permissions, func._use_prefix)
+                func._help_short, func._permissions, func._use_prefix,
+                func._parse)
             self.commands.append(command)
 
             for name in func._aliases:
                 command = Command(func, name, func._args, func._help,
                     func._help_short, func._permissions, func._use_prefix,
-                    alias=True)
+                    func._parse, alias=True)
                 self.commands.append(command)
 
     async def on_ready(self):
