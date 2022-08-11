@@ -441,3 +441,26 @@ def human_datetime(val):
             "inclusive.")
 
     return datetime(year=year, month=month, day=day)
+
+def bounds(val):
+    if len(val) != 4:
+        raise ParseError(f"Invalid bounds {val}. Must be in the format "
+            "`x1 z1 x2 z2`, eg `0 0 400 -400`.")
+
+    x1 = int(val[0])
+    y1 = int(val[1])
+    x2 = int(val[2])
+    y2 = int(val[3])
+
+    if x1 >= x2:
+        raise ParseError(f"x1 ({x1}) must be less than x2 ({x2}). Remember "
+            "that the first two "
+            "values specify the bottom left corner, and the last two values "
+            "specify the top right corner.")
+    if y1 <= y2:
+        raise ParseError(f"z1 ({y1}) must be greater than z2 ({y2}). Remember "
+            "that the first "
+            "two values specify the bottom left corner, and the last two "
+            "values specify the top right corner.")
+
+    return [x1, y1, x2, y2]

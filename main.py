@@ -18,7 +18,8 @@ import db
 import utils
 import config
 
-from command import command, Arg, channel, role, human_timedelta, human_datetime
+from command import (command, Arg, channel, role, human_timedelta,
+    human_datetime, bounds)
 from client import Client
 
 INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
@@ -499,6 +500,16 @@ class Snitchvis(Client):
                 "the render. Fade duration is limited to a minimum of 1.5 "
                 "seconds regardless of what you specify for --fade. Defaults "
                 "to 10% of video duration (equivalent to --fade 10)."),
+            Arg("-b", "--bounds", nargs="*", convert=bounds,
+                convert_mode="together",
+                help="Sets what "
+                "area will be visualized. "
+                "This will override the automatic detection, which tries to "
+                "include all events without making the area too large. Format "
+                "is "
+                "-b/--bounds x1 z1 x2 z2, where (x1, z1) is the bottom left "
+                "corner and (x2, z2) is the top right corner of the desired "
+                "area."),
             Arg("-a", "--all-snitches", default=False, store_boolean=True,
                 help="If passed, all known snitches will be rendered, not "
                 "just the snitches pinged by the relevant events. Warning: "
@@ -544,8 +555,8 @@ class Snitchvis(Client):
         aliases=["r"]
     )
     async def render(self, message, past, start, end, size, fps, duration, users,
-        groups, fade, all_snitches, mode, heatmap_percentage, heatmap_scale,
-        export
+        groups, fade, bounds, all_snitches, mode, heatmap_percentage,
+        heatmap_scale, export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
@@ -702,7 +713,7 @@ class Snitchvis(Client):
             config_ = Config(snitches=snitches, events=events, users=users,
                 show_all_snitches=all_snitches, mode=mode,
                 heatmap_percentage=heatmap_percentage,
-                heatmap_scale=heatmap_scale)
+                heatmap_scale=heatmap_scale, bounds=bounds)
             f = partial(run_snitch_vis, duration, size, fps, fade, output_file,
                 config_)
 
@@ -1056,14 +1067,11 @@ if __name__ == "__main__":
 ## required for release
 # * support custom kira message formats
 # * command aliasing, for quick .r presets
-# * .r --bounds x1 y1 x2 y2
 # * fix permissions on .events, currently returns results for all events,
 #   need to limit to just the events the user has access to
 # * -c/--context n render option to expand the bounding box by n blocks, for
 #   when you want to see more context. MIN_BOUNDING_BOX_SIZE helps with this but
 #   isn't a perfect solution
-# * limit concurrent renders to limit abuse (5 at a time should be more than
-#   enough)
 
 ## maybe required for live
 # * tiny pop-in / ease animation for new events? hard to see where new events
