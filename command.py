@@ -71,9 +71,9 @@ class Command:
             # the middle of a code block, but only `.r -h` invokes this edge
             # case for now.
             if len(help_message) >= 2000:
-                # 50 chars of buffer
-                message1 = help_message[:1950] + "\n```"
-                message2 = "```\n" + help_message[1950:]
+                # 25 chars of buffer
+                message1 = help_message[:1975] + "\n```"
+                message2 = "```\n" + help_message[1975:]
                 await message.channel.send(message1)
                 await message.channel.send(message2)
                 return
