@@ -550,8 +550,8 @@ class Snitchvis(Client):
                 "seconds regardless of what you specify for --fade. Defaults "
                 "to 10% of video duration (equivalent to --fade 10)."),
             Arg("-b", "--bounds", nargs="*", convert=bounds,
-                convert_mode="together", help="Sets what area will be "
-                "visualized. "
+                convert_mode="together", help="Sets what area of the world "
+                "will be visualized. "
                 "This will override the automatic detection, which tries to "
                 "include all events without making the area too large. Format "
                 "is "
@@ -596,7 +596,7 @@ class Snitchvis(Client):
                 help="Export the events matching the specified "
                 "criteria to either an sql database, or an .svis file (for use "
                 "in the Snitch Vis desktop application). Pass `--export sql` "
-                "the former and `--export svis` for the latter.")
+                "for the former and `--export svis` for the latter.")
         ],
         help="Renders snitch events to a video. Provides options to adjust "
             "render look and feel, events included, duration, quality, etc.",
@@ -1144,6 +1144,8 @@ if __name__ == "__main__":
 # * -c/--context n render option to expand the bounding box by n blocks, for
 #   when you want to see more context. MIN_BOUNDING_BOX_SIZE helps with this but
 #   isn't a perfect solution
+# * make livemap update every minute after the last event, instead of just once
+#   10 minutes later
 
 ## maybe required for live
 # * tiny pop-in / ease animation for new events? hard to see where new events
