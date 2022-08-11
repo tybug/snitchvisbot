@@ -62,14 +62,14 @@ class Command:
         # inlude em dash special case for phones
         if any(arg_string in ["--help", "-h", "—help"] for arg_string in arg_strings):
             help_message = self.help_message()
-            # ugly hardcode hack. Hopefully we never seriously need >4000 chars.
+            # ugly hardcode hack.
             # things will get messy if we ever split somewhere other than in
             # the middle of a code block, but only `.r -h` invokes this edge
             # case for now.
             if len(help_message) >= 2000:
-                # 100 chars of buffer
-                message1 = help_message[:1900] + "\n```"
-                message2 = "```\n" + help_message[1900:]
+                # 50 chars of buffer
+                message1 = help_message[:1950] + "\n```"
+                message2 = "```\n" + help_message[1950:]
                 await message.channel.send(message1)
                 await message.channel.send(message2)
                 return
@@ -152,9 +152,17 @@ class Command:
             elif arg.nargs == "*":
                 val = []
                 while i < len(arg_strings) and not is_flag(arg_strings[i]):
-                    val.append(arg.process(message, arg_strings[i]))
+                    v = arg_strings[i]
+                    if arg.convert_mode == "individual":
+                        val.append(arg.process(message, v))
+                    else:
+                        val.append(v)
                     i += 1
+                if arg.convert_mode == "together":
+                    val = arg.process(message, val)
+
             elif arg.nargs == "+":
+                # TODO handle arg.convert_mode in nargs="+"
                 val = []
                 # always process at least one val
                 if i == len(arg_strings) or is_flag(arg_strings[i]):
@@ -222,7 +230,7 @@ def command(name, *, args=[], help=None, help_short=None, permissions=[],
 class Arg:
     def __init__(self, short, long=None, *, default=None, convert=None,
         nargs=None, store_boolean=False, required=False, dest=None, help=None,
-        choices=None
+        choices=None, convert_mode="individual"
     ):
         if not short.startswith("-"):
             positional = True
@@ -257,6 +265,8 @@ class Arg:
         self.required = required
         self.help = help
         self.choices = choices
+        # one of "individual" or "together"
+        self.convert_mode = convert_mode
 
         if help is None:
             raise Exception("Help text is required for all arguments.")
