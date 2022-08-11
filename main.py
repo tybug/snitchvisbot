@@ -1103,6 +1103,7 @@ class Snitchvis(Client):
         if not commands:
             await message.channel.send("No custom commands yet. Create one "
                 "with `.create-command`.")
+            return
 
         text = "Current custom commands:\n"
         for command in commands:
