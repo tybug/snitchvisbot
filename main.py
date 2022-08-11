@@ -6,6 +6,7 @@ from asyncio import Queue
 from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 import gzip
+from collections import defaultdict
 
 from discord import File
 from discord.ext.tasks import loop
@@ -37,6 +38,8 @@ class Snitchvis(Client):
     PIXEL_LIMIT_VIDEO =   10_000_000_000
     # 500 billion pixels is roughly an hour of 1080p @ 60fps.
     PIXEL_LIMIT_DAY   =  500_000_000_000
+    # number of maximum concurrent renders allowed per guild
+    MAXIMUM_CONCURRENT_RENDERS = 3
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -62,6 +65,9 @@ class Snitchvis(Client):
         self.livemap_updating_channels = []
         # guilds which we're currently indexing, so we don't double-index
         self.indexing_guilds = []
+        # guild id to number of currently running renders. used to limit number
+        # of concurrent renders to prevent abuse
+        self.concurrent_renders = defaultdict(int)
 
     async def on_ready(self):
         await super().on_ready()
@@ -552,6 +558,12 @@ class Snitchvis(Client):
                 "value greater than or equal to 1.")
             return
 
+        if self.concurrent_renders[message.guild.id] >= self.MAXIMUM_CONCURRENT_RENDERS:
+            await message.channel.send("You are already running "
+                f"{self.MAXIMUM_CONCURRENT_RENDERS} renders at the same time; "
+                "please wait for one to finish before starting a new one.")
+            return
+
         if past:
             end = datetime.utcnow().timestamp()
             if past == "all":
@@ -693,8 +705,11 @@ class Snitchvis(Client):
                 heatmap_scale=heatmap_scale)
             f = partial(run_snitch_vis, duration, size, fps, fade, output_file,
                 config_)
+
+            self.concurrent_renders[message.guild.id] += 1
             with ProcessPoolExecutor() as pool:
                 await self.loop.run_in_executor(pool, f)
+            self.concurrent_renders[message.guild.id] -= 1
 
             vis_file = File(output_file)
             await message.channel.send(file=vis_file)
