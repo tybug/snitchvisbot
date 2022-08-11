@@ -48,7 +48,9 @@ class Client(_Client):
 
 
     async def on_message(self, message):
-        content = message.content
+        await self.maybe_handle_command(message, message.content)
+
+    async def maybe_handle_command(self, message, content):
         author = message.author
         guild = message.guild
 
@@ -62,24 +64,16 @@ class Client(_Client):
             # fall back to default prefix if no prefix specified
             if prefix is None:
                 self.prefixes[guild.id] = self.default_prefix
-
         prefix = self.prefixes[guild.id]
 
-        for command in self.commands:
+        custom_commands = db.get_commands(guild.id)
 
-            command_name = command.name
-            # some commands don't respect the prefix at all, eg
-            # snitchvissetprefix
+        for command in self.commands + custom_commands:
+            if not self.command_matches(guild.id, command, content):
+                continue
+
             if command.use_prefix:
                 command_name = prefix + command.name
-
-            # avoid .r matching .render by requiring the input to either match
-            # exactly, or match the command name with a space.
-            if not (
-                content.startswith(command_name + " ") or
-                content == command_name
-            ):
-                continue
 
             # don't log commands by the author, gets annoying for testing
             if author.id != config.AUTHOR_ID and self.command_log_channel:
@@ -88,4 +82,32 @@ class Client(_Client):
 
             # also strip any whitespace, particularly after the command name
             args = content.removeprefix(command_name).strip()
-            await command.invoke(message, args)
+
+            if isinstance(command, Command):
+                await command.invoke(message, args)
+            else:
+                # recurse on the aliased command text. Should never infinitely
+                # recurse because we require new commands to invoke an existing
+                # command, so they should never self reference or loop.
+                await self.maybe_handle_command(message, command.command_text)
+
+    def command_matches(self, guild_id, command, content):
+        if guild_id not in self.prefixes:
+            prefix = db.get_snitch_prefix(guild_id)
+            # fall back to default prefix if no prefix specified
+            if prefix is None:
+                self.prefixes[guild_id] = self.default_prefix
+        prefix = self.prefixes[guild_id]
+
+        command_name = command.name
+        # some commands don't respect the prefix at all, eg
+        # snitchvissetprefix
+        if command.use_prefix:
+            command_name = prefix + command.name
+
+        # avoid eg .r matching .render by requiring the input to either match
+        # exactly, or match the command name with a space.
+        return (
+            content.startswith(command_name + " ") or
+            content == command_name
+        )

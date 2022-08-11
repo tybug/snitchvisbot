@@ -80,3 +80,17 @@ class LivemapChannel:
     guild_id: int
     channel_id: int
     last_message_id: int
+
+@dataclass
+class Command:
+    guild_id: int
+    command: str
+    command_text: str
+
+    # make compliant with actual Command class
+    @property
+    def name(self):
+        return self.command
+    @property
+    def use_prefix(self):
+        return True

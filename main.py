@@ -1037,6 +1037,64 @@ class Snitchvis(Client):
         lm_channel = db.get_livemap_channel_from_channel(channel.id)
         await self.update_livemap(lm_channel)
 
+    @command("create-command",
+        args=[
+            Arg("command", help="The name to use to run this new command. "
+                "Don't include the bot prefix (which is `.` by default)."),
+            Arg("command_text", help="This text will be run when you run this "
+                "new command, as if you had run it yourself. "
+                "You can reference existing commands and pass arguments as "
+                "usual.")
+        ],
+        help_short="Create a new command, which can call other commands and "
+            "pass arguments.",
+        help="Create a new command, which can call other commands and "
+            "pass arguments.\n\n"
+            "For instance, if you wanted to have a render command which "
+            "always created a high quality render, you might do "
+            "`.create-command rhq "
+            "render --size 1200`. Now, whenever you type `.rhq`, it will be "
+            "as if you typed `.render --size 1200`.\n\n"
+            "You can call any existing command in your new command, not just "
+            "`.render`. You can also specify any arguments you want to those "
+            "commands.",
+        parse=False,
+        permissions=["manage_guild"]
+    )
+    async def create_command(self, message, args):
+        if len(args) == 0:
+            await message.channel.send("Missing parameter for `command`.\n"
+                "Run `.create-command --help` for more information.")
+            return
+        if len(args) == 1:
+            await message.channel.send("Missing parameter for `command_text`.\n"
+                "Run `.create-command --help` for more information.")
+            return
+
+        new_command = args[0]
+        # manually add prefix so our command_matches command works
+        command_text = "." + " ".join(args[1:])
+
+        command_matches = False
+        for command in self.commands:
+            if self.command_matches(message.guild.id, command, command_text):
+                command_matches = True
+
+        if not command_matches:
+            await message.channel.send("No existing command found matching "
+                f"`{command_text}`. The first part of this argument must be "
+                "an existing command")
+            return
+
+        if db.command_exists(message.guild.id, new_command):
+            db.update_command(message.guild.id, new_command, command_text)
+            await message.channel.send(f"Updated existing command "
+            f"`.{new_command}`. It will now run `{command_text}` when run.")
+        else:
+            db.add_command(message.guild.id, new_command, command_text)
+            await message.channel.send(f"Added new command `.{new_command}`. "
+                f"When you run it, it will run `{command_text}`.")
+
     @command("set-pixel-multiplier",
         args=[
             Arg("guild_id", convert=int, help="The guild id to set the pixel "
@@ -1067,7 +1125,6 @@ if __name__ == "__main__":
 
 ## required for release
 # * support custom kira message formats
-# * command aliasing, for quick .r presets
 # * fix permissions on .events, currently returns results for all events,
 #   need to limit to just the events the user has access to
 # * -c/--context n render option to expand the bounding box by n blocks, for

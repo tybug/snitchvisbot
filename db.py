@@ -5,7 +5,7 @@ from collections import defaultdict
 import inspect
 import time
 
-from models import SnitchChannel, Event, Snitch, LivemapChannel
+from models import SnitchChannel, Event, Snitch, LivemapChannel, Command
 
 db_path = Path(__file__).parent / "snitchvis.db"
 
@@ -131,6 +131,13 @@ def create_db():
             guild_id INTEGER NOT NULL,
             channel_id INTEGER NOT NULL,
             last_message_id INTEGER
+        )
+    """)
+    c.execute("""
+        CREATE TABLE command (
+            guild_id INTEGER NOT NULL,
+            command TEXT NOT NULL,
+            command_text TEXT NOT NULL
         )
     """)
 
@@ -468,3 +475,25 @@ def set_livemap_last_message_id(channel_id, last_message_id):
         SET last_message_id = ?
         WHERE channel_id = ?
     """, [last_message_id, channel_id])
+
+## commands
+
+def add_command(guild_id, command, command_text):
+    execute("INSERT INTO command VALUES (?, ?, ?)",
+        [guild_id, command, command_text])
+
+def get_commands(guild_id):
+    rows = select("SELECT * FROM command WHERE guild_id = ?", [guild_id])
+    return convert(rows, Command)
+
+def command_exists(guild_id, command):
+    rows = select("SELECT * FROM command WHERE command = ? AND guild_id = ?",
+        [command, guild_id])
+    return bool(rows)
+
+def update_command(guild_id, command, command_text):
+    execute("""
+        UPDATE command
+        SET command_text = ?
+        WHERE command = ? AND guild_id = ?
+    """, [command_text, command, guild_id])
