@@ -62,6 +62,8 @@ class Snitchvis(Client):
         # currently updating livemap ids, so we don't double-update on quick
         # successive snitch hits
         self.livemap_updating_channels = []
+        # guilds which we're currently indexing, so we don't double-index
+        self.indexing_guilds = []
 
     async def on_ready(self):
         await super().on_ready()
@@ -378,6 +380,17 @@ class Snitchvis(Client):
                 "`.channel add #channel` to add snitch channels.")
             return
 
+        # running multiple concurrent index commands is NOT safe and will result
+        # in either silently setting last_indexed_message_id to the wrong value,
+        # or a unique constraint failure on insertion of anything but the final
+        # command.
+        if message.guild.id in self.indexing_guilds:
+            await message.channel.send("Indexing is already in progress for "
+                "this server. Please be patient - due to discord api "
+                "limitations, this process could take hours, depending on the "
+                "size of your network.")
+            return
+
         await message.channel.send("Indexing the following snitch channels: "
             f"{utils.channel_str(channels)}. This could take a LONG time if "
             "they have lots of messages in them.")
@@ -394,6 +407,7 @@ class Snitchvis(Client):
                     "`.channel remove`).")
                 return
 
+        self.indexing_guilds.append(message.guild.id)
         for channel in channels:
             await message.channel.send(f"Indexing {channel.mention}...")
             c = channel.to_discord(message.guild)
@@ -404,6 +418,7 @@ class Snitchvis(Client):
                 f"{channel.mention}")
 
         await message.channel.send("Finished indexing snitch channels")
+        self.indexing_guilds.remove(message.guild.id)
 
     @command("full-reindex",
         args=[
