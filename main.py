@@ -1095,6 +1095,21 @@ class Snitchvis(Client):
             await message.channel.send(f"Added new command `.{new_command}`. "
                 f"When you run it, it will run `{command_text}`.")
 
+    @command("commands",
+        help="View all custom commands for this server",
+        permissions=["manage_guild"]
+    )
+    async def list_commands(self, message):
+        commands = db.get_commands(message.guild.id)
+        if not commands:
+            await message.channel.send("No custom commands yet. Create one "
+                "with `.create-command`.")
+
+        text = "Current custom commands:\n"
+        for command in commands:
+            text += f"\n`.{command.command}` - runs `{command.command_text}`"
+        await message.channel.send(text)
+
     @command("set-pixel-multiplier",
         args=[
             Arg("guild_id", convert=int, help="The guild id to set the pixel "
