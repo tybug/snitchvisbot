@@ -62,7 +62,9 @@ class Client(_Client):
     async def on_message(self, message):
         await self.maybe_handle_command(message, message.content)
 
-    async def maybe_handle_command(self, message, content):
+    async def maybe_handle_command(self, message, content, *,
+        include_custom=True
+    ):
         author = message.author
         guild = message.guild
 
@@ -80,7 +82,13 @@ class Client(_Client):
 
         custom_commands = db.get_commands(guild.id)
 
-        for command in self.commands + custom_commands:
+        commands = self.commands
+        if include_custom:
+            # make sure we handle custom commands first, so arguments to aliases
+            # get passed forward to the actual commands.
+            commands = custom_commands + commands
+
+        for command in commands:
             if not self.command_matches(guild.id, command, content):
                 continue
 
@@ -100,10 +108,14 @@ class Client(_Client):
             else:
                 # forward any alias args to the actual command
                 command_text = f"{command.command_text} {args}"
-                # recurse on the aliased command text. Should never infinitely
-                # recurse because we require new commands to invoke an existing
-                # command, so they should never self reference or loop.
-                await self.maybe_handle_command(message, command_text)
+                # recurse on the aliased command text. Ensure we avoid infinite
+                # recursion by not considering custom commands on this recurse.
+                await self.maybe_handle_command(message, command_text,
+                    include_custom=False)
+
+            # only process one command per message, to avoid recursion on
+            # custom commands
+            return
 
     def command_matches(self, guild_id, command, content):
         if guild_id not in self.prefixes:
