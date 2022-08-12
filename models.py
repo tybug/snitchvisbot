@@ -94,3 +94,12 @@ class Command:
     @property
     def use_prefix(self):
         return True
+
+@dataclass
+class KiraConfig:
+    guild_id: int
+    snitch_format: str
+    snitch_enter_message: str
+    snitch_login_message: str
+    snitch_logout_message: str
+    time_format: str

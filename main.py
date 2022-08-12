@@ -7,6 +7,7 @@ from concurrent.futures import ProcessPoolExecutor
 from functools import partial
 import gzip
 from collections import defaultdict
+import re
 
 from discord import File
 from discord.ext.tasks import loop
@@ -17,6 +18,7 @@ from PyQt6.QtWidgets import QApplication
 import db
 import utils
 import config
+from models import KiraConfig
 
 from command import (command, Arg, channel, role, human_timedelta,
     human_datetime, bounds)
@@ -70,6 +72,10 @@ class Snitchvis(Client):
         # of concurrent renders to prevent abuse
         self.concurrent_renders = defaultdict(int)
 
+        self.default_kira_config = KiraConfig(None, "`[%TIME%]` `[%GROUP%]` "
+            "**%PLAYER%** %ACTION% at %SNITCH% (%X%,%Y%,%Z%) %PING%",
+            "is", "logged in", "logged out", "HH:mm:ss")
+
     async def on_ready(self):
         await super().on_ready()
         print("connected to discord")
@@ -119,8 +125,12 @@ class Snitchvis(Client):
         if not snitch_channel or not snitch_channel.last_indexed_id:
             return
 
+        # this will retrieve kira configs on every snitch message...we probably
+        # want to cache these? but eh, the db hits are so cheap for now and I
+        # don't want to deal with cache invalidation.
+        kira_configs = db.get_kira_configs(message.guild.id)
         try:
-            event = Event.parse(message.content)
+            event = self.parse_event(message.content, kira_configs)
         except InvalidEventException:
             return
 
@@ -219,6 +229,8 @@ class Snitchvis(Client):
             f"guild {discord_channel.guild} / {discord_channel.guild.id}")
         events = []
         last_id = channel.last_indexed_id
+        kira_configs = db.get_kira_configs(discord_channel.guild.id)
+
         async for message_ in discord_channel.history(limit=None):
             # don't index past the last indexed message id (if we have such
             # an id stored)
@@ -226,7 +238,7 @@ class Snitchvis(Client):
                 break
 
             try:
-                event = Event.parse(message_.content)
+                event = self.parse_event(message_.content, kira_configs)
             except InvalidEventException:
                 continue
             events.append([message_, event])
@@ -242,6 +254,28 @@ class Snitchvis(Client):
             db.add_event(message_, event, commit=False)
 
         return events
+
+    def parse_event(self, raw_event, kira_configs):
+        # we'll try all the available configs in order. If none of them match
+        # the event, we'll raise an InvalidEventException.
+        # Always try the default kira config first.
+        for kira_config in [self.default_kira_config] + kira_configs:
+            snitch = kira_config.snitch_format
+            enter = kira_config.snitch_enter_message
+            login = kira_config.snitch_login_message
+            logout = kira_config.snitch_logout_message
+            time = kira_config.time_format
+
+            try:
+                event = Event.parse(raw_event, snitch, enter, login, logout,
+                    time)
+            except InvalidEventException:
+                # this config didn't work, try the next one
+                continue
+
+            return event
+
+        raise InvalidEventException()
 
     async def export_to_sql(self, path, snitches, events):
         conn = sqlite3.connect(str(path))
@@ -1110,6 +1144,76 @@ class Snitchvis(Client):
             text += f"\n`.{command.command}` - runs `{command.command_text}`"
         await message.channel.send(text)
 
+    @command("add-kira-config",
+        help="Adds a kira config to the list of formats attempted while "
+            "parsing events."
+    )
+    async def add_kira_config(self, message):
+        config_message = None
+
+        # look for a kira config message in the recent past
+        async for m in message.channel.history(limit=10):
+            if m.author.id != config.KIRA_ID:
+                continue
+
+            result = re.search("Relay config \*\*.*?\*\* is owned by .*?",
+                m.content)
+            if not result:
+                continue
+
+            config_message = m
+
+        if not config_message:
+            await message.channel.send("Could not find a recent kira config "
+                "message in this channel. Please use "
+                "`!kira relayconfig <config_name>` "
+                "immediately before running `.add-kira-config`.")
+            return
+
+        def search(pattern):
+            result = re.search(pattern, config_message.content)
+            if not result:
+                return None
+            return result.group(1)
+
+        name = search("Relay config \*\*(.*)\*\* is owned by")
+        snitch_f = search("Format used for snitch alerts \(snitchformat\): "
+            "`` (.*) ``")
+        enter_f = search("Format used for entering a snitch range "
+            "\(snitchentermessage\): `` (.*) ``")
+        login_f = search("logins within a snitch range \(snitchloginmessage\): "
+            "`` (.*) ``")
+        # yes, kira has a typo (should be snitchlogoutmessage)
+        logout_f = search("Format used for logouts within a snitch range "
+            "\(snitchloginmessage\): `` (.*) ``")
+        time_f = search("Time format used for the time stamps of messages "
+            "\(timeformat\): `` (.*) ``")
+
+        if any(v is None for v in [name, snitch_f, enter_f, login_f, time_f]):
+            await message.channel.send("Could not find all the required "
+                "information from the kira config message. Either kira has "
+                "changed its message format, or something weird is going "
+                f"on. Contact <@{config.AUTHOR_ID}> for help if the "
+                "problem persists.")
+            return
+
+        if db.kira_config_exists(message.guild.id, name):
+            verbed = "updated"
+            db.update_kira_config(message.guild.id, name, snitch_f, enter_f,
+                login_f, logout_f, time_f)
+        else:
+            verbed = "added"
+            db.add_kira_config(message.guild.id, name, snitch_f, enter_f,
+                login_f, logout_f, time_f)
+
+        await message.channel.send(f"Succesfully {verbed} config for "
+            f"`{name}`:\n\n"
+            f"snitchformat: ``{snitch_f}``\n"
+            f"snitchentermessage: ``{enter_f}``\n"
+            f"snitchloginmessage: ``{login_f}``\n"
+            f"snitchlogoutmessage: ``{logout_f}``\n"
+            f"timeformat: ``{time_f}``\n")
+
     @command("set-pixel-multiplier",
         args=[
             Arg("guild_id", convert=int, help="The guild id to set the pixel "
@@ -1139,9 +1243,11 @@ if __name__ == "__main__":
     client.run(config.TOKEN)
 
 ## required for release
-# * support custom kira message formats
 # * make livemap update every minute after the last event, instead of just once
 #   10 minutes later
+# * change .channel add to only accept a single channel at a time
+# * change fade to be a fixed number of seconds instead of a percentage, set an
+#   upper cap at some percentage of the duration instead
 
 ## maybe required for live
 # * fix permissions on .events, currently returns results for all events,

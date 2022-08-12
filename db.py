@@ -5,7 +5,8 @@ from collections import defaultdict
 import inspect
 import time
 
-from models import SnitchChannel, Event, Snitch, LivemapChannel, Command
+from models import (SnitchChannel, Event, Snitch, LivemapChannel, Command,
+    KiraConfig)
 
 db_path = Path(__file__).parent / "snitchvis.db"
 
@@ -199,6 +200,18 @@ def create_db():
     c.execute("""
         CREATE INDEX idx_command_guild
             ON command (guild_id)
+    """)
+    c.execute("""
+        CREATE TABLE kira_config (
+            name TEXT NOT NULL,
+            guild_id INTEGER NOT NULL,
+            snitch_format TEXT NOT NULL,
+            snitch_enter_message TEXT NOT NULL,
+            snitch_login_message TEXT NOT NULL,
+            snitch_logout_message TEXT NOT NULL,
+            time_format TEXT NOT NULL,
+            PRIMARY KEY(name, guild_id)
+        )
     """)
 
     conn.commit()
@@ -557,3 +570,29 @@ def update_command(guild_id, command, command_text):
         SET command_text = ?
         WHERE command = ? AND guild_id = ?
     """, [command_text, command, guild_id])
+
+## kira configs
+
+def add_kira_config(guild_id, name, format, enter, login, logout, time):
+    execute("INSERT INTO kira_config VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [name, guild_id, format, enter, login, logout, time])
+
+def get_kira_configs(guild_id):
+    rows = select("SELECT * FROM kira_config WHERE guild_id = ?", [guild_id])
+    return convert(rows, KiraConfig)
+
+def kira_config_exists(guild_id, name):
+    rows = select("SELECT * FROM kira_config WHERE guild_id = ? AND name = ?",
+        [guild_id, name])
+    return bool(rows)
+
+def update_kira_config(guild_id, name, format, enter, login, logout, time):
+    execute("""
+        UPDATE kira_config
+        SET snitch_format = ?,
+            snitch_enter_message = ?,
+            snitch_login_message = ?,
+            snitch_logout_message = ?,
+            time_format = ?
+        WHERE guild_id = ? AND name = ?
+    """, [format, enter, login, logout, time, guild_id, name])
