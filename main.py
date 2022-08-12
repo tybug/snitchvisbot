@@ -1140,15 +1140,15 @@ if __name__ == "__main__":
 
 ## required for release
 # * support custom kira message formats
+# * make livemap update every minute after the last event, instead of just once
+#   10 minutes later
+
+## maybe required for live
 # * fix permissions on .events, currently returns results for all events,
 #   need to limit to just the events the user has access to
 # * -c/--context n render option to expand the bounding box by n blocks, for
 #   when you want to see more context. MIN_BOUNDING_BOX_SIZE helps with this but
 #   isn't a perfect solution
-# * make livemap update every minute after the last event, instead of just once
-#   10 minutes later
-
-## maybe required for live
 # * tiny pop-in / ease animation for new events? hard to see where new events
 #   are on big maps sometimes. could get annoying though
 # * make lines mode in visualizer actually worth using - highlight single
