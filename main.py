@@ -581,7 +581,7 @@ class Snitchvis(Client):
                 "rendered."),
             Arg("--fade", default=1.5, convert=float, help="How many seconds "
                 "events will remain on screen for. Fade is limited to a "
-                "minimum of 500ms. Defaults to 1.5s."),
+                "minimum of 0.5s. Defaults to 1.5s."),
             Arg("-b", "--bounds", nargs="*", convert=bounds,
                 convert_mode="together", help="Sets what area of the world "
                 "will be visualized. "
@@ -595,17 +595,14 @@ class Snitchvis(Client):
                 help="If passed, all known snitches will be rendered, not "
                 "just the snitches pinged by the relevant events. Warning: "
                 "this can result in very small or unreadable event fields."),
-            Arg("-m", "--mode", choices=["line", "square", "heatmap"],
-                default="square", help="What mode to render "
-                "in. The line mode (`-m/--mode line`) draws lines "
-                "between snitch events instead of the default boxes around "
-                "individual snitch events. This option is "
-                "experimental and may not look good. It is intended to "
-                "provide an easier way to see directionality and travel "
-                "patterns than the default mode, and may eventually become the "
-                "default mode.\n"
-                "The heatmap mode (`-m/--mode heatmap`) renders an aggregate "
-                "heatmap of events instead of drawing individual users."),
+            Arg("-m", "--mode", choices=["line", "box", "heatmap"],
+                default="box", help="One of heatmap, line, or box. What mode "
+                "to render in. The heatmap mode (-m/--mode heatmap) "
+                "renders an aggregate heatmap of events instead of drawing "
+                "individual users. The line mode (-m/--mode line) draws "
+                "lines between snitch events instead of the default boxes "
+                "around individual snitch events. This option is "
+                "experimental and may not look good. Defaults to box."),
             Arg("-hp", "--heatmap-percentage", convert=float, default=20,
                 help="What percentage of the "
                 "video duration the heatmap should look backwards for events "
@@ -619,11 +616,9 @@ class Snitchvis(Client):
                 "to use for the heatmap colors. One of \"linear\" or "
                 "\"weighted\". Defaults to linear. In linear mode, heatmap "
                 "brightness scale linearly with the number of hits. In "
-                "weighted mode, snitches with low hits are made slighty "
-                "brighter and snitches with a high number of hits are made "
-                "slightly dimmer. This can help if you have a few snitches "
-                "with a very high number of hits drowning out the rest of the "
-                "heatmap."),
+                "weighted mode, snitches with a low number of hits are made "
+                "more visible. This can help if you have a few very high "
+                "frequency snitches."),
             # TODO work on svis file format
             Arg("--export", choices=["sql", "svis"],
                 help="Export the events matching the specified "
@@ -1050,11 +1045,11 @@ class Snitchvis(Client):
             Arg("channel", convert=channel, help="What channel to upload the "
                 "livemap to.")
         ],
-        help="Sets the channel to use for livemap updates. A \"livemap\" in "
-            "this context is a static image uploaded to the livemap channel, "
-            "updated every minute, or every 15 seconds if there are new snitch "
-            "hits.",
-        help_short="Sets the channel to use for livemap updates.",
+        help="Sets the channel to upload an always-up-to-date snitch "
+            "events image to. A new image is uploaded whenever there are new "
+            "snitch events.",
+        help_short="Sets the channel to upload an always-up-to-date snitch "
+            "events image to.",
         permissions=["manage_guild"]
     )
     async def set_livemap_channel(self, message, channel):
@@ -1076,7 +1071,7 @@ class Snitchvis(Client):
             Arg("command", help="The name to use to run this new command. "
                 "Don't include the bot prefix (which is `.` by default)."),
             Arg("command_text", help="This text will be run when you run this "
-                "new command, as if you had run it yourself. "
+                "custom command, as if you had run it yourself. "
                 "You can reference existing commands and pass arguments as "
                 "usual.")
         ],
@@ -1088,12 +1083,22 @@ class Snitchvis(Client):
             "always created a high quality render, you might do "
             "`.create-command rhq "
             "render --size 1200`. Now, whenever you type `.rhq`, it will be "
-            "as if you typed `.render --size 1200`. You can also pass "
+            "as if you had typed `.render --size 1200`. You can also pass "
             "additional arguments to your custom command like `.rhq --fade 3`, "
             "which will become `.render --size 1200 --fade 3`.\n\n"
             "You can call any existing command and can specify any arguments "
             "you want in your custom command. Custom commands cannot call "
-            "other custom commands, only existing base commands.",
+            "other custom commands, only existing base commands.\n\n"
+            "Examples:\n"
+            "* `.create-command rhq render --size 1200 --fps 30\n`"
+            "* `.create-command render render -d 30` - can create custom "
+            "commands with the same name as existing commands. This makes all "
+            "renders 30 seconds long\n"
+            "* `.create-command h help` - I don't know why you would do this, "
+            "but you can\n"
+            "* `.create-command city render --bounds 1700 650 2000 300` "
+            "- shorthand command to render a specific area, now you just have "
+            "to type `.city`",
         parse=False,
         permissions=["manage_guild"]
     )
@@ -1132,7 +1137,7 @@ class Snitchvis(Client):
                 f"When you run it, it will expand to `{command_text}`.")
 
     @command("commands",
-        help="View all custom commands for this server",
+        help="View all custom commands for this server.",
         permissions=["manage_guild"]
     )
     async def list_commands(self, message):
@@ -1228,7 +1233,7 @@ class Snitchvis(Client):
             Arg("multiplier", convert=int, help="The pixel limit multiplier "
                 "to set the guild to")
         ],
-        help="Set the pixel limit multiplier for a guild",
+        help="Set the pixel limit multiplier for a guild.",
         permissions=["author"]
     )
     async def set_pixel_multiplier(self, message, guild_id, multiplier):
@@ -1253,6 +1258,7 @@ if __name__ == "__main__":
 # * make livemap update every minute after the last event, instead of just once
 #   10 minutes later
 # * forced ordering of .help message
+# * write some mock data for example videos
 
 ## if I get time for release
 # * fix permissions on .events, currently returns results for all events,
