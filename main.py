@@ -1145,8 +1145,12 @@ class Snitchvis(Client):
         await message.channel.send(text)
 
     @command("add-kira-config",
-        help="Adds a kira config to the list of formats attempted while "
-            "parsing events."
+        help_short="Adds a kira config to the list of known formats.",
+        help="Adds a kira config to the list of known formats. Use this if you "
+            "have modified your kira snitch message format from the default. "
+            "To use, run "
+            "`!kira relayconfig <config_name>` first, then `.add-kira-config`. "
+            "Snitchvis will look for a recent config message by kira to parse."
     )
     async def add_kira_config(self, message):
         config_message = None
