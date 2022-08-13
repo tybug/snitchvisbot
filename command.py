@@ -25,6 +25,12 @@ class Command:
         self.parse = parse
         self.alias = alias
 
+    def __eq__(self, other):
+        return self.function == other.function and self.name == other.name
+
+    def __hash__(self):
+        return hash((self.function, self.name))
+
     def help_message(self):
         positional_args = [arg for arg in self.args if arg.positional]
         flag_args = [arg for arg in self.args if not arg.positional]
