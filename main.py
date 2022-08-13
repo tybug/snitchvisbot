@@ -453,7 +453,7 @@ class Snitchvis(Client):
                 "channels to remove. Use a proper channel mention "
                 "(eg #snitches) to specify a channel.")
         ],
-        help="Removes a snitch channel(es) from the list of snitch channels.",
+        help="Removes a snitch channel.",
         permissions=["manage_guild"]
     )
     async def channel_remove(self, message, channels):
@@ -465,7 +465,7 @@ class Snitchvis(Client):
 
 
     @command("channel list",
-        help="Lists the current snitch channels and what roles can view them.",
+        help="Lists the current snitch channels.",
         permissions=["manage_guild"]
     )
     async def channel_list(self, message):
@@ -642,8 +642,7 @@ class Snitchvis(Client):
                 "in the Snitch Vis desktop application). Pass `--export sql` "
                 "for the former and `--export svis` for the latter.")
         ],
-        help="Renders snitch events to a video. Provides options to adjust "
-            "render look and feel, events included, duration, quality, etc.",
+        help="Renders snitch events to a video.",
         aliases=["r"]
     )
     async def render(self, message, past, start, end, size, fps, duration, users,
