@@ -1281,7 +1281,6 @@ if __name__ == "__main__":
     client.run(config.TOKEN)
 
 ## required for release
-# * add examples for command --help like on readme?
 # * move to new terrain map image, except maybe for some blacklisted unmapped
 #   areas where we fall back to the old blue/white image
 # * write some mock data for example videos
