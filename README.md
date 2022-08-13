@@ -2,6 +2,7 @@
 
 A discord bot for visualizing [snitch](https://civwiki.org/wiki/Snitch) events from [Civ](https://civwiki.org/wiki/Main_Page) servers. Written for [CivMC](https://old.reddit.com/r/CivMC). Uses [SnitchVis](https://github.com/tybug/snitchvis) to render the videos.
 
+Invite: https://discord.com/oauth2/authorize?client_id=999808708131426434&permissions=0&scope=bot
 
 ## Commands
 
