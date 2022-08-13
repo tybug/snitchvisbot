@@ -586,7 +586,7 @@ class Snitchvis(Client):
             Arg("-s", "--size", default=700, convert=int, help="The resolution "
                 "of the render, in pixels. Defaults to 700. Higher values take "
                 "longer to render."),
-            Arg("-f", "--fps", default=20, convert=int, help="The frames per "
+            Arg("--fps", default=20, convert=int, help="The frames per "
                 "second of the render. Defaults to 20. Higher values take "
                 "longer to render."),
             Arg("-d", "--duration", default=5, convert=int, help="The length "
@@ -597,7 +597,7 @@ class Snitchvis(Client):
             Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
                 "events from snitches on these namelayer groups will be "
                 "rendered."),
-            Arg("--fade", default=1.5, convert=float, help="How many seconds "
+            Arg("-f", "--fade", default=1.5, convert=float, help="How many seconds "
                 "events will remain on screen for. Fade is limited to a "
                 "minimum of 0.5s. Defaults to 1.5s."),
             Arg("-b", "--bounds", nargs="*", convert=bounds,
@@ -752,7 +752,7 @@ class Snitchvis(Client):
         if num_pixels > self.PIXEL_LIMIT_VIDEO * multiplier:
             await message.channel.send("The requested render would require too "
                 "many server resources to generate. Decrease either the render "
-                "size (`-s/--size`), fps (`-f/--fps`), or duration "
+                "size (`-s/--size`), fps (`--fps`), or duration "
                 "(`-d/--duration`).")
             return
 
