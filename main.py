@@ -1237,7 +1237,7 @@ class Snitchvis(Client):
             f"`{guild_id}` to `{multiplier}`.")
 
 # we can only have one qapp active at a time, but we want to be able to
-# be rendering multiple snitch logs at the same time (ie multiple .v
+# be rendering multiple snitch logs at the same time (ie multiple .r
 # commands, potentially in different servers). We'll keep a master qapp
 # active at the top level, but never exec it, which is enough to let us
 # draw on qimages and generate videos with SnitchVisRecord and
