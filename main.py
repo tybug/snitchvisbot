@@ -573,7 +573,7 @@ class Snitchvis(Client):
             Arg("-p", "--past", convert=human_timedelta, help="How far in the "
                 "past to look for events. Specify in human-readable form, ie "
                 "-p 1y2mo5w2d3h5m2s (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
-                "minutes 2 seconds ago\"), or any combination thereof, ie "
+                "minutes 2 seconds ago\"), or any combination thereof, eg "
                 "-p 1h30m (\"1 hour 30 minutes ago\"). Use the special value "
                 "\"all\" to render all events."),
             Arg("--start", convert=human_datetime, help="The start date of "
@@ -587,18 +587,14 @@ class Snitchvis(Client):
                 "--start, *all* events before the passed end date will be "
                 "rendered."),
             Arg("-s", "--size", default=700, convert=int, help="The resolution "
-                "of the render, in pixels. Defaults to 700. Decrease if "
-                "you want faster renders, increase if you want higher quality "
-                "renders."),
+                "of the render, in pixels. Defaults to 700. Higher values take "
+                "longer to render."),
             Arg("-f", "--fps", default=20, convert=int, help="The frames per "
-                "second of the render. Defaults to 20. Decrease if you want "
-                "faster renders, increase if you want smoother renders."),
-            Arg("-d", "--duration", default=5, convert=int, help="The duration "
-                "of the render, in seconds. Defaults to 5 seconds. If you want "
-                "to take a slower, more "
-                "careful look at events, specify a higher value. If you just "
-                "want a quick glance, specify a lower value. Higher values "
-                "take longer to render."),
+                "second of the render. Defaults to 20. Higher values take "
+                "longer to render."),
+            Arg("-d", "--duration", default=5, convert=int, help="The length "
+                "of the output video, in seconds. Defaults to 5 seconds. "
+                "Higher values take longer to render."),
             Arg("-u", "--users", nargs="*", default=[], help="If passed, only "
                 "events by these users will be rendered."),
             Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
@@ -618,8 +614,7 @@ class Snitchvis(Client):
                 "area."),
             Arg("-a", "--all-snitches", default=False, store_boolean=True,
                 help="If passed, all known snitches will be rendered, not "
-                "just the snitches pinged by the relevant events. Warning: "
-                "this can result in very small or unreadable event fields."),
+                "just the snitches pinged by the relevant events."),
             Arg("-m", "--mode", choices=["line", "box", "heatmap"],
                 default="box", help="One of heatmap, line, or box. What mode "
                 "to render in. The heatmap mode (-m/--mode heatmap) "
