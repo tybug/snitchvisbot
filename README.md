@@ -5,6 +5,8 @@ A discord bot for visualizing [snitch](https://civwiki.org/wiki/Snitch) events f
 
 ## Commands
 
+### Table of Contents
+
 | Command          | Description                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | [.render](#render)          | Renders snitch events to a video. Provides options to adjust render look and feel, events included, duration, quality, etc.    |
@@ -23,8 +25,6 @@ A discord bot for visualizing [snitch](https://civwiki.org/wiki/Snitch) events f
 | [.tutorial](#tutorial)        | Walks you through an initial setup of snitchvis.                                                                               |
 | [.help](#help)            | Displays available commands.                                                                                                   |
 
-
-## Command Options
 
 ### Render
 
