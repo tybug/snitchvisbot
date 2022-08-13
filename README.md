@@ -23,6 +23,7 @@ Invite: https://discord.com/oauth2/authorize?client_id=999808708131426434&permis
 | [.permissions](#permissions)     | Lists what snitch channels you have permission to render events from.                                                          |
 | [.index](#index)          | Indexes messages in the current snitch channels.                                                                               |
 | [.full-reindex](#full-reindex)    | Drops all currently indexed snitches and re-indexes from scratch.                                                              |
+| [snitchvissetprefix](#set-prefix) | Sets a new prefix for snitchvis. The default prefix is `.`. |
 | [.tutorial](#tutorial)        | Walks you through an initial setup of snitchvis.                                                                               |
 | [.help](#help)            | Displays available commands.                                                                                                   |
 
@@ -60,14 +61,6 @@ Examples:
 | -hs/--heatmap-scale | What scale to use for the heatmap colors. One of `linear` or `weighted`. Defaults to linear. In linear mode, heatmap brightness scale linearly with the number of hits. In weighted mode, snitches with a low number of hits are made more visible. This can help if you have a few very high frequency snitches. |
 | --export | Export the events matching the specified criteria to either an sql database, or an .svis file (for use in the Snitch Vis desktop application). Pass `--export sql` for the former and `--export svis` for the latter. |
 
-### Tutorial
-
-Walks you through an initial setup of snitchvis.
-
-Example: `.tutorial`
-
-Takes no arguments.
-
 ### Channel Add
 
 Adds a snitch channel, viewable by the specified roles.
@@ -89,14 +82,6 @@ Examples:
 | ---      | ---         |
 | -r/--roles | The roles which will be able to render events from this channel. Use the name of the role (don't ping the role). Use the name `everyone` to grant all users access to render the snitches. |
 
-### Channel List
-
-Lists the current snitch channels and what roles can view them.
-
-Example: `.channel list`
-
-Takes no arguments.
-
 ### Channel Remove
 
 Removes a snitch channel(es) from the list of snitch channels.
@@ -109,59 +94,11 @@ Example: `.channel remove #snitches-citizens`
 | ---      | ---         |
 | channels | The channels to remove. Use a proper channel mention (eg #snitches) to specify a channel. |
 
-### Events
+### Channel List
 
-Lists the most recent events for the specified snitch or snitches.
+Lists the current snitch channels and what roles can view them.
 
-Example: `.events --name "shop entrance"`
-
-### Arguments
-
-| Argument | Description |
-| ---      | ---         |
-| -n/--name | List events for snitches with the specified name. |
-| -l/--location | List events for snitches at this location. Format is `-l/--location x y z` or `-l/--location x z`. The two parameter version is a convenience to avoid having to specify a y level; snitches at all y levels at that (x, z) location will be searched for events. |
-
-### Full Reindex
-
-Drops all currently indexed snitches and re-indexes from scratch. This can help with some rare issues. You probably don't want to do this unless you know what you're doing, or have been advised to do so by tybug.
-
-Example: `.full-reindex`
-
-#### Arguments
-
-| Argument | Description |
-| ---      | ---         |
-| -y | Pass to confirm you would like to reindex the server. |
-
-### Import Snitches
-
-Imports snitches from a SnitchMod database.
-
-You will likely have to use this command multiple times on the same database if you have a tiered hierarchy of snitch groups; for instance, you might run `.import-snitches -g mta-citizens mta-shops -r citizen` to import snitches citizens can render, and then `.import-snitches -g mta-cabinet -r cabinet` to import snitches only cabinet members can render.
-
-Example: `.import-snitches -g mta-citizens mta-shops -r citizen` (include a snitchvis database file upload in the same message)
-
-#### Arguments
-
-| Argument | Description |
-| ---      | ---         |
-| -g/--groups | Only snitches in the database which are reinforced to one of these groups will be imported. If you really want to import all snitches in the database, pass `-g all`. |
-| -r/--roles | Users with at least one of these roles will be able to render the imported snitches. Use the name of the role (don't ping the role). Use the name `everyone` to grant all users access to the snitches. |
-
-### Index
-
-Indexes messages in the current snitch channels.
-
-Example: `.index`
-
-Takes no arguments.
-
-### Permissions
-
-Lists what snitch channels you have have permission to render events from. This is based on your discord roles and how you set up the snitch channels (see `.channel list`).
-
-Example: `.permissions`
+Example: `.channel list`
 
 Takes no arguments.
 
@@ -192,7 +129,6 @@ Examples:
 * `.create-command h help` (I don't know why you would do this, but you can)
 * `.create-command city render --bounds 1700 650 2000 300` (shorthand command to render a specific area, now you just have to type `.city`)
 
-
 ### List Commands
 
 View all custom commands for this server.
@@ -201,11 +137,87 @@ Example: `.commands`
 
 Takes no arguments.
 
+### Import Snitches
+
+Imports snitches from a SnitchMod database.
+
+You will likely have to use this command multiple times on the same database if you have a tiered hierarchy of snitch groups; for instance, you might run `.import-snitches -g mta-citizens mta-shops -r citizen` to import snitches citizens can render, and then `.import-snitches -g mta-cabinet -r cabinet` to import snitches only cabinet members can render.
+
+Example: `.import-snitches -g mta-citizens mta-shops -r citizen` (include a snitchvis database file upload in the same message)
+
+#### Arguments
+
+| Argument | Description |
+| ---      | ---         |
+| -g/--groups | Only snitches in the database which are reinforced to one of these groups will be imported. If you really want to import all snitches in the database, pass `-g all`. |
+| -r/--roles | Users with at least one of these roles will be able to render the imported snitches. Use the name of the role (don't ping the role). Use the name `everyone` to grant all users access to the snitches. |
+
 ### Add Kira Config
 
 Adds a kira config to the list of known formats. Use this if you have modified your kira snitch message format from the default. To use, run `!kira relayconfig <config_name>` first, then `.add-kira-config`. Snitchvis will look for a recent config message by kira to parse.
 
 Example: `.add-kira-config`
+
+Takes no arguments.
+
+### Events
+
+Lists the most recent events for the specified snitch or snitches.
+
+Example: `.events --name "shop entrance"`
+
+#### Arguments
+
+| Argument | Description |
+| ---      | ---         |
+| -n/--name | List events for snitches with the specified name. |
+| -l/--location | List events for snitches at this location. Format is `-l/--location x y z` or `-l/--location x z`. The two parameter version is a convenience to avoid having to specify a y level; snitches at all y levels at that (x, z) location will be searched for events. |
+
+### Permissions
+
+Lists what snitch channels you have have permission to render events from. This is based on your discord roles and how you set up the snitch channels (see `.channel list`).
+
+Example: `.permissions`
+
+Takes no arguments.
+
+### Index
+
+Indexes messages in the current snitch channels.
+
+Example: `.index`
+
+Takes no arguments.
+
+### Full Reindex
+
+Drops all currently indexed snitches and re-indexes from scratch. This can help with some rare issues. You probably don't want to do this unless you know what you're doing, or have been advised to do so by tybug.
+
+Example: `.full-reindex`
+
+#### Arguments
+
+| Argument | Description |
+| ---      | ---         |
+| -y | Pass to confirm you would like to reindex the server. |
+
+### Set Prefix
+
+Sets a new prefix for snitchvis. The default prefix is `.`.
+
+Example: `snitchvissetprefix !` (note there is no `.` before the command)
+
+#### Positional Arguments
+
+| Name | Description |
+| ---      | ---         |
+| prefix | The new prefix to use. Must be a single character. |
+
+### Tutorial
+
+Walks you through an initial setup of snitchvis.
+
+Example: `.tutorial`
 
 Takes no arguments.
 
