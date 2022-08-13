@@ -41,8 +41,8 @@ class Client(_Client):
             self.command_log_channel = self.get_channel(config.COMMAND_LOG_CHANNEL)
         if config.JOIN_LOG_CHANNEL:
             self.join_log_channel = self.get_channel(config.JOIN_LOG_CHANNEL)
-        if config.ERORR_LOG_CHANNEL:
-            self.error_log_channel = self.get_channel(config.ERORR_LOG_CHANNEL)
+        if config.ERROR_LOG_CHANNEL:
+            self.error_log_channel = self.get_channel(config.ERROR_LOG_CHANNEL)
 
     async def on_guild_join(self, guild):
         if self.join_log_channel:
