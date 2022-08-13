@@ -71,6 +71,24 @@ class Snitchvis(Client):
         # guild id to number of currently running renders. used to limit number
         # of concurrent renders to prevent abuse
         self.concurrent_renders = defaultdict(int)
+        self.help_order = [
+            self.render,
+            self.channel_add,
+            self.channel_remove,
+            self.channel_list,
+            self.set_livemap_channel,
+            self.create_command,
+            self.list_commands,
+            self.import_snitches,
+            self.add_kira_config,
+            self.events,
+            self.permissions,
+            self.index,
+            self.full_reindex,
+            self.set_prefix,
+            self.tutorial,
+            self.help
+        ]
 
         self.default_kira_config = KiraConfig(None, "`[%TIME%]` `[%GROUP%]` "
             "**%PLAYER%** %ACTION% at %SNITCH% (%X%,%Y%,%Z%) %PING%",
@@ -1003,7 +1021,7 @@ class Snitchvis(Client):
 
     @command("help", help="Displays available commands.")
     async def help(self, message):
-        command_texts = []
+        text_by_command = {}
         for command in self.commands:
             # don't show aliases in help (yet, we probably want a separate
             # section or different display method for them)
@@ -1015,8 +1033,19 @@ class Snitchvis(Client):
                 continue
             # TODO display custom prefixes if set
             prefix = self.default_prefix if command.use_prefix else ""
-            command_texts.append(f"  {prefix}{command.name}: "
+            text_by_command[command.function] = (f"  {prefix}{command.name}: "
                 f"{command.help_short}")
+
+        # sort by order in self.help_order, and send to end if not present
+        # (we don't care about ordering if we didn't specify it, as long as it's
+        # kicked to the end)
+        def _key(command):
+            if command in self.help_order:
+                return self.help_order.index(command)
+            return 999
+
+        command_texts = [text_by_command[command] for command in
+            sorted(text_by_command, key=_key)]
 
         await message.channel.send("```\n" + "\n".join(command_texts) + "```\n")
 
@@ -1257,7 +1286,6 @@ if __name__ == "__main__":
 ## required for release
 # * make livemap update every minute after the last event, instead of just once
 #   10 minutes later
-# * forced ordering of .help message
 # * move to new terrain map image, except maybe for some blacklisted unmapped
 #   areas where we fall back to the old blue/white image
 # * write some mock data for example videos
