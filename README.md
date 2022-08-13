@@ -19,7 +19,7 @@ A discord bot for visualizing [snitch](https://civwiki.org/wiki/Snitch) events f
 | [.permissions](#permissions)     | Lists what snitch channels you have permission to render events from.                                                          |
 | [.create-command](#create-command)     |Create a custom command, which can call other commands and pass arguments.                                                          |
 | [.commands](#list-commands) | View all custom commands for this server. |
-| [.add-kira-format](#add-kira-format)     | Adds a kira config to the list of known formats.                                                          |
+| [.add-kira-config](#add-kira-config)     | Adds a kira config to the list of known formats.                                                          |
 | [.help](#help)            | Displays available commands.                                                                                                   |
 
 
