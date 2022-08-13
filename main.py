@@ -614,11 +614,10 @@ class Snitchvis(Client):
                 "just the snitches pinged by the relevant events."),
             Arg("-m", "--mode", choices=["line", "box", "heatmap"],
                 default="box", help="One of heatmap, line, or box. What mode "
-                "to render in. The heatmap mode (-m/--mode heatmap) "
+                "to render in. The heatmap mode "
                 "renders an aggregate heatmap of events instead of drawing "
-                "individual users. The line mode (-m/--mode line) draws "
-                "lines between snitch events instead of the default boxes "
-                "around individual snitch events. This option is "
+                "individual users. The line mode draws "
+                "lines between snitch events. This option is "
                 "experimental and may not look good. Defaults to box."),
             Arg("-hp", "--heatmap-percentage", convert=float, default=20,
                 help="What percentage of the "
