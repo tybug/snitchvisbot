@@ -1,2 +1,2 @@
-snitchvis
+git+https://github.com/tybug/snitchvis#egg=snitchvis
 discord.py
