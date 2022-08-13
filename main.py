@@ -1258,9 +1258,11 @@ if __name__ == "__main__":
 # * make livemap update every minute after the last event, instead of just once
 #   10 minutes later
 # * forced ordering of .help message
+# * move to new terrain map image, except maybe for some blacklisted unmapped
+#   areas where we fall back to the old blue/white image
 # * write some mock data for example videos
 
-## if I get time for release
+## if I get time before release
 # * fix permissions on .events, currently returns results for all events,
 #   need to limit to just the events the user has access to
 # * -c/--context n render option to expand the bounding box by n blocks, for
