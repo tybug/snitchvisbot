@@ -8,18 +8,19 @@ A discord bot for visualizing [snitch](https://civwiki.org/wiki/Snitch) events f
 | Command          | Description                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | [.render](#render)          | Renders snitch events to a video. Provides options to adjust render look and feel, events included, duration, quality, etc.    |
-| [.tutorial](#tutorial)        | Walks you through an initial setup of snitchvis.                                                                               |
 | [.channel add](#channel-add)     | Adds a snitch channel, viewable by the specified roles.                                                                    |
-| [.channel list](#channel-list)    | Lists the current snitch channels and what roles can view them.                                                                |
 | [.channel remove](#channel-remove) | Removes a snitch channel(es) from the list of snitch channels.                                                                 |
-| [.events](#events)          | Lists the most recent events for the specified snitch or snitches.                                                             |
-| [.full-reindex](#full-reindex)    | Drops all currently indexed snitches and re-indexes from scratch.                                                              |
-| [.import-snitches](#import-snitches) | Imports snitches from a SnitchMod database.                                                                                    |
-| [.index](#index)          | Indexes messages in the current snitch channels.                                                                               |
-| [.permissions](#permissions)     | Lists what snitch channels you have permission to render events from.                                                          |
+| [.channel list](#channel-list)    | Lists the current snitch channels and what roles can view them.                                                                |
+| [.set-livemap-channel](#set-livemap-channel) | Sets the channel to upload an always-up-to-date snitch events image to. A new image is uploaded whenever there are new snitch events. |
 | [.create-command](#create-command)     |Create a custom command, which can call other commands and pass arguments.                                                          |
 | [.commands](#list-commands) | View all custom commands for this server. |
+| [.import-snitches](#import-snitches) | Imports snitches from a SnitchMod database.                                                                                    |
 | [.add-kira-config](#add-kira-config)     | Adds a kira config to the list of known formats.                                                          |
+| [.events](#events)          | Lists the most recent events for the specified snitch or snitches.                                                             |
+| [.permissions](#permissions)     | Lists what snitch channels you have permission to render events from.                                                          |
+| [.index](#index)          | Indexes messages in the current snitch channels.                                                                               |
+| [.full-reindex](#full-reindex)    | Drops all currently indexed snitches and re-indexes from scratch.                                                              |
+| [.tutorial](#tutorial)        | Walks you through an initial setup of snitchvis.                                                                               |
 | [.help](#help)            | Displays available commands.                                                                                                   |
 
 
