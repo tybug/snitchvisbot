@@ -578,13 +578,9 @@ class Snitchvis(Client):
             Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
                 "events from snitches on these namelayer groups will be "
                 "rendered."),
-            Arg("--fade", default=10, convert=float, help="What percentage of "
-                "the video duration event highlighting will be visible for. At "
-                "--fade 100, every event will remain on screen for the entire "
-                "render. At --fade 50, events will remain on screen for half "
-                "the render. Fade duration is limited to a minimum of 1.5 "
-                "seconds regardless of what you specify for --fade. Defaults "
-                "to 10% of video duration (equivalent to --fade 10)."),
+            Arg("--fade", default=1.5, convert=float, help="How many seconds "
+                "events will remain on screen for. Fade is limited to a "
+                "minimum of 500ms. Defaults to 1.5s."),
             Arg("-b", "--bounds", nargs="*", convert=bounds,
                 convert_mode="together", help="Sets what area of the world "
                 "will be visualized. "
@@ -768,6 +764,7 @@ class Snitchvis(Client):
 
             # seconds to ms
             duration *= 1000
+            fade *= 1000
 
             # if we run this in the default executor (ThreadPoolExecutor), we
             # get a pretty bad memory leak. We spike to ~700mb on a default
@@ -1252,8 +1249,6 @@ if __name__ == "__main__":
 ## required for release
 # * make livemap update every minute after the last event, instead of just once
 #   10 minutes later
-# * change fade to be a fixed number of seconds instead of a percentage, set an
-#   upper cap at some percentage of the duration instead
 
 ## maybe required for live
 # * fix permissions on .events, currently returns results for all events,
