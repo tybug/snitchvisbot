@@ -478,13 +478,13 @@ class Snitchvis(Client):
         if message.guild.id in self.indexing_guilds:
             await message.channel.send("Indexing is already in progress for "
                 "this server. Please be patient - due to discord api "
-                "limitations, this process could take hours, depending on the "
-                "size of your network.")
+                "limitations, this process could take hours, depending how "
+                "many snitch hits you have stored.")
             return
 
         await message.channel.send("Indexing the following snitch channels: "
             f"{utils.channel_str(channels)}. This could take a LONG time "
-            "(hours) if you have lots of snitch hits.")
+            "(hours) if you have lots of snitch hits stored.")
 
         for channel in channels:
             # make sure we can read all the snitch channels
