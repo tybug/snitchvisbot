@@ -1079,18 +1079,20 @@ class Snitchvis(Client):
                 "You can reference existing commands and pass arguments as "
                 "usual.")
         ],
-        help_short="Create a new command, which can call other commands and "
+        help_short="Creates a custom command, which can call other commands and "
             "pass arguments.",
-        help="Create a new command, which can call other commands and "
+        help="Create a custom command, which can call other commands and "
             "pass arguments.\n\n"
             "For instance, if you wanted to have a render command which "
             "always created a high quality render, you might do "
             "`.create-command rhq "
             "render --size 1200`. Now, whenever you type `.rhq`, it will be "
-            "as if you typed `.render --size 1200`.\n\n"
-            "You can call any existing command in your new command, not just "
-            "`.render`. You can also specify any arguments you want to those "
-            "commands.",
+            "as if you typed `.render --size 1200`. You can also pass "
+            "additional arguments to your custom command like `.rhq --fade 3`, "
+            "which will become `.render --size 1200 --fade 3`.\n\n"
+            "You can call any existing command and can specify any arguments "
+            "you want in your custom command. Custom commands cannot call "
+            "other custom commands, only existing base commands.",
         parse=False,
         permissions=["manage_guild"]
     )
@@ -1116,7 +1118,7 @@ class Snitchvis(Client):
         if not command_matches:
             await message.channel.send("No existing command found matching "
                 f"`{command_text}`. The first part of this argument must be "
-                "an existing command")
+                "an existing command.")
             return
 
         if db.command_exists(message.guild.id, new_command):
