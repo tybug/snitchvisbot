@@ -321,7 +321,7 @@ def role(message, val):
         # people don't want to ping roles when specifying them as arguments, so
         # also allow specifying the role's name instead of mentioning it.
         for role in message.guild.roles:
-            if role.name == val:
+            if role.name.lower() == val.lower():
                 return role
         raise ParseError(f"Invalid role `{val}`.")
     role_id = int(match.group(1))

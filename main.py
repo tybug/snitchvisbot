@@ -396,30 +396,32 @@ class Snitchvis(Client):
 
     @command("channel add",
         args=[
-            Arg("channels", nargs="+", convert=channel, help="The "
-                "channels to add. Use a proper channel mention "
+            Arg("channel", convert=channel, help="The "
+                "channel to add. Use a proper channel mention "
                 "(eg #snitches) to specify a channel."),
-            Arg("-r", "--roles", nargs="+", convert=role, help="The roles "
-                "which will be able to render events from this channel. Use the "
-                "name of the role (don't ping the role). Use the name "
-                "`everyone` to grant all users access to render the snitches.")
+            Arg("roles", nargs="+", convert=role, help="The roles "
+                "which will be able to render events from this channel. Use "
+                "the name of the role (don't ping the role). Use the name "
+                "`everyone` to grant all users access to render the snitches. "
+                "Surround role in quotes to specify roles with spaces in them.")
         ],
-        help="Adds a snitch channel(es), viewable by the specified roles.",
+        help="Adds a snitch channel, viewable by the specified roles.\n\n"
+            "Example: `.channel add #snitches citizen \"lieutenant governor\" "
+            "governor`",
         permissions=["manage_guild"]
     )
-    async def channel_add(self, message, channels, roles):
-        for channel in channels:
-            if db.snitch_channel_exists(channel.id):
-                await message.channel.send(f"{channel.mention} is already a "
-                    "snitch channel. If you would like to change which roles "
-                    f"have access to {channel.mention}, first remove it "
-                    "(`.channel remove`) then re-add it (`.channel add`) with "
-                    "the desired roles.")
-                return
-            db.add_snitch_channel(channel, roles)
+    async def channel_add(self, message, channel, roles):
+        if db.snitch_channel_exists(channel.id):
+            await message.channel.send(f"{channel.mention} is already a "
+                "snitch channel. If you would like to change which roles "
+                f"have access to {channel.mention}, first remove it "
+                "(`.channel remove`) then re-add it (`.channel add`) with "
+                "the desired roles.")
+            return
+        db.add_snitch_channel(channel, roles)
 
-        await message.channel.send(f"Added {utils.channel_str(channels)} to "
-            f"snitch channels.")
+        await message.channel.send(f"Added {channel.mention} to snitch "
+            f"channels, viewable by users with any of {utils.role_str(roles)}")
 
 
     @command("channel remove",
@@ -826,7 +828,8 @@ class Snitchvis(Client):
                 "least one of these roles will be able to render the "
                 "imported snitches. Use the name of the role (don't ping the "
                 "role). Use the name `everyone` to grant all users access to "
-                "the snitches.")
+                "the snitches. Surround role in quotes to specify roles "
+                "with spaces in them.")
         ],
         help="Imports snitches from a SnitchMod database.\n"
             "You will likely have to use this command multiple times on the "
@@ -1249,7 +1252,6 @@ if __name__ == "__main__":
 ## required for release
 # * make livemap update every minute after the last event, instead of just once
 #   10 minutes later
-# * change .channel add to only accept a single channel at a time
 # * change fade to be a fixed number of seconds instead of a percentage, set an
 #   upper cap at some percentage of the duration instead
 
