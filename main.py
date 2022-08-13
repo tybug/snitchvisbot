@@ -61,7 +61,7 @@ class Snitchvis(Client):
         self.indexing_queue = Queue()
         # channel id to datetime
         self.livemap_last_uploaded = {}
-        # channel id to datetime
+        # channel id to list of datetimes
         self.livemaps_refresh_at = {}
         # currently updating livemap ids, so we don't double-update on quick
         # successive snitch hits
@@ -165,9 +165,14 @@ class Snitchvis(Client):
     async def check_outdated_livemaps(self):
         now = datetime.utcnow()
         for channel_id, refresh_at in self.livemaps_refresh_at.copy().items():
-            if now < refresh_at:
+            # if any of the datetimes in `refresh_at` have passed - no matter
+            # how many - we'll refresh the livemap. Afterwards, we'll remove
+            # them from the list so we don't refresh on them again.
+            future_dts = [dt for dt in refresh_at if now < dt]
+            if future_dts == refresh_at:
                 continue
-            del self.livemaps_refresh_at[channel_id]
+
+            self.livemaps_refresh_at[channel_id] = future_dts
             lm_channel = db.get_livemap_channel_from_channel(channel_id)
             await self.update_livemap_channel(lm_channel, refresh=False)
 
@@ -176,17 +181,19 @@ class Snitchvis(Client):
 
         # avoid infinite refresh chains
         if refresh:
-            # TODO "refresh in worst case to get blank canvas again"
-            refresh_at = datetime.utcnow() + timedelta(minutes=10)
+            refresh_at = []
+            # generate a new livemap every 20 seconds for the next 10 minutes,
+            # so we get the nice fade effect even if there aren't any new events
+            for i in range(1, 10 * 3):
+                dt = datetime.utcnow() + timedelta(seconds=i * 20)
+                refresh_at.append(dt)
+
             self.livemaps_refresh_at[channel_id] = refresh_at
 
         if channel_id in self.livemap_last_uploaded:
             last_uploaded = self.livemap_last_uploaded[channel_id]
-            # only update livemap every 10 seconds, even if we get new events
-            # TODO the event which caused this update_livemaps call could
-            # potentially never get visualized if it causes a delay and then no
-            # more events come in the near future. We should probably check
-            # again after a delay whether we should re-update the livemaps.
+            # debounce of 10 seconds so people don't get annoyed at the image
+            # they're looking at getting deleted every 2 seconds
             if last_uploaded > datetime.utcnow() - timedelta(seconds=10):
                 return
 
@@ -1284,8 +1291,7 @@ if __name__ == "__main__":
     client.run(config.TOKEN)
 
 ## required for release
-# * make livemap update every minute after the last event, instead of just once
-#   10 minutes later
+# * add examples for command --help like on readme?
 # * move to new terrain map image, except maybe for some blacklisted unmapped
 #   areas where we fall back to the old blue/white image
 # * write some mock data for example videos
