@@ -1254,7 +1254,7 @@ if __name__ == "__main__":
 #   10 minutes later
 # * forced ordering of .help message
 
-## maybe required for live
+## if I get time for release
 # * fix permissions on .events, currently returns results for all events,
 #   need to limit to just the events the user has access to
 # * -c/--context n render option to expand the bounding box by n blocks, for
@@ -1266,7 +1266,7 @@ if __name__ == "__main__":
 #   events, distinguish actual events and the lines, add arrows to indicate
 #   directionality
 
-## nice to have
+## nice to have eventually
 # * maybe add "centered at (x, y)" coordinates to info text, can be confusing
 #   where the vis is sometimes. Might need a different solution to this (coords at
 #   corners? gets cluttered though...)
