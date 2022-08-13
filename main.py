@@ -1297,6 +1297,7 @@ if __name__ == "__main__":
 # * write some mock data for example videos
 
 ## if I get time before release
+# * handle overlapping events on the same snitch
 # * fix permissions on .events, currently returns results for all events,
 #   need to limit to just the events the user has access to
 # * -c/--context n render option to expand the bounding box by n blocks, for
@@ -1309,6 +1310,9 @@ if __name__ == "__main__":
 #   directionality
 
 ## nice to have eventually
+# * pad the first event like we did the last event? less of a concern but
+#   will probably make it look nicer due to seeing the fade in
+# * .visits
 # * maybe add "centered at (x, y)" coordinates to info text, can be confusing
 #   where the vis is sometimes. Might need a different solution to this (coords at
 #   corners? gets cluttered though...)
