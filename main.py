@@ -483,8 +483,8 @@ class Snitchvis(Client):
             return
 
         await message.channel.send("Indexing the following snitch channels: "
-            f"{utils.channel_str(channels)}. This could take a LONG time if "
-            "they have lots of messages in them.")
+            f"{utils.channel_str(channels)}. This could take a LONG time "
+            "(hours) if you have lots of snitch hits.")
 
         for channel in channels:
             # make sure we can read all the snitch channels
