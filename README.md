@@ -129,6 +129,13 @@ Examples:
 * `.create-command h help` (I don't know why you would do this, but you can)
 * `.create-command city render --bounds 1700 650 2000 300` (shorthand command to render a specific area, now you just have to type `.city`)
 
+#### Positional Arguments
+
+| Name | Description |
+| ---      | ---         |
+| command | The name to use to run this new command. Don't include the bot prefix (which is `.` by default). |
+| command_text | This text will be run when you run this custom command, as if you had run it yourself. You can reference existing commands and pass arguments as usual. |
+
 ### List Commands
 
 View all custom commands for this server.
