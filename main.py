@@ -1124,11 +1124,11 @@ class Snitchvis(Client):
         if db.command_exists(message.guild.id, new_command):
             db.update_command(message.guild.id, new_command, command_text)
             await message.channel.send(f"Updated existing command "
-            f"`.{new_command}`. It will now run `{command_text}` when run.")
+            f"`.{new_command}`. It will expand to `{command_text}` when run.")
         else:
             db.add_command(message.guild.id, new_command, command_text)
             await message.channel.send(f"Added new command `.{new_command}`. "
-                f"When you run it, it will run `{command_text}`.")
+                f"When you run it, it will expand to `{command_text}`.")
 
     @command("commands",
         help="View all custom commands for this server",
