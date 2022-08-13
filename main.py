@@ -405,6 +405,7 @@ class Snitchvis(Client):
                 "`everyone` to grant all users access to render the snitches. "
                 "Surround role in quotes to specify roles with spaces in them.")
         ],
+        help_short="Adds a snitch channel, viewable by the specified roles.",
         help="Adds a snitch channel, viewable by the specified roles.\n\n"
             "Example: `.channel add #snitches citizen \"lieutenant governor\" "
             "governor`",
@@ -1251,6 +1252,7 @@ if __name__ == "__main__":
 ## required for release
 # * make livemap update every minute after the last event, instead of just once
 #   10 minutes later
+# * forced ordering of .help message
 
 ## maybe required for live
 # * fix permissions on .events, currently returns results for all events,
