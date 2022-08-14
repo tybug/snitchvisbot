@@ -182,9 +182,12 @@ class Snitchvis(Client):
         # avoid infinite refresh chains
         if refresh:
             refresh_at = []
-            # generate a new livemap every 20 seconds for the next 10 minutes,
-            # so we get the nice fade effect even if there aren't any new events
-            for i in range(1, 10 * 3):
+            # generate a new livemap every minute seconds for the next 10
+            # minutes, so we get the nice fade effect even if there aren't any
+            # new events. Also generate a new livemap 12 seconds from now to
+            # clean up any missed events from debounce.
+            refresh_at.append(datetime.utcnow() + timedelta(seconds=12))
+            for i in range(1, 10):
                 dt = datetime.utcnow() + timedelta(seconds=i * 20)
                 refresh_at.append(dt)
 
