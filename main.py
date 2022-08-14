@@ -188,7 +188,7 @@ class Snitchvis(Client):
             # clean up any missed events from debounce.
             refresh_at.append(datetime.utcnow() + timedelta(seconds=12))
             for i in range(1, 10):
-                dt = datetime.utcnow() + timedelta(seconds=i * 20)
+                dt = datetime.utcnow() + timedelta(seconds=i * 60)
                 refresh_at.append(dt)
 
             self.livemaps_refresh_at[channel_id] = refresh_at
@@ -1287,6 +1287,7 @@ if __name__ == "__main__":
 # * move to new terrain map image, except maybe for some blacklisted unmapped
 #   areas where we fall back to the old blue/white image
 # * write some mock data for example videos
+# -a not working?
 
 ## if I get time before release
 # * handle overlapping events on the same snitch
