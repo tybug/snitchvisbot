@@ -187,7 +187,7 @@ class Snitchvis(Client):
             # new events. Also generate a new livemap 12 seconds from now to
             # clean up any missed events from debounce.
             refresh_at.append(datetime.utcnow() + timedelta(seconds=12))
-            for i in range(1, 10):
+            for i in range(1, 10 + 1):
                 dt = datetime.utcnow() + timedelta(seconds=i * 60)
                 refresh_at.append(dt)
 
