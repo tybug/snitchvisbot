@@ -1287,7 +1287,6 @@ if __name__ == "__main__":
 # * move to new terrain map image, except maybe for some blacklisted unmapped
 #   areas where we fall back to the old blue/white image
 # * write some mock data for example videos
-# -a not working?
 
 ## if I get time before release
 # * handle overlapping events on the same snitch
