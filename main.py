@@ -1300,6 +1300,7 @@ if __name__ == "__main__":
 # * make lines mode in visualizer actually worth using - highlight single
 #   events, distinguish actual events and the lines, add arrows to indicate
 #   directionality
+# * add notification on certain users pinging snitches
 
 ## nice to have eventually
 # * pad the first event like we did the last event? less of a concern but
