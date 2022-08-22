@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 from datetime import datetime
 
+from discord import User, Guild
+from discord.abc import Messageable
+
 @dataclass
 class SnitchChannel:
     guild_id: int
@@ -103,3 +106,12 @@ class KiraConfig:
     snitch_login_message: str
     snitch_logout_message: str
     time_format: str
+
+# used when we want to fake a discord message with our own
+# user/channel/guild/content.
+@dataclass
+class FakeMessage:
+    author: User
+    channel: Messageable
+    guild: Guild
+    content: str

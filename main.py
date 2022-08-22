@@ -18,8 +18,7 @@ from PyQt6.QtWidgets import QApplication
 import db
 import utils
 import config
-from models import KiraConfig
-
+from models import KiraConfig, FakeMessage
 from command import (command, Arg, channel, role, human_timedelta,
     human_datetime, bounds)
 from client import Client
@@ -1269,6 +1268,36 @@ class Snitchvis(Client):
         db.set_guild_multiplier(guild_id, multiplier)
         await message.channel.send("Updated mutliplier for guild "
             f"`{guild_id}` to `{multiplier}`.")
+
+    @command("as",
+        args=[
+            Arg("user_id", help="What user to run this command as."),
+            Arg("guild_id", help="What guild to run this command in."),
+            Arg("command", help="The command to run as the given user in the "
+                "given guild.")
+        ],
+        parse=False,
+        help="issue a command as another user/guild.",
+        permissions=["author"]
+    )
+    async def as_(self, message, args):
+        user_id = int(args[0])
+        guild_id = int(args[1])
+        command = " ".join(args[2:])
+
+        guild = self.get_guild(guild_id)
+        if not guild:
+            await message.channel.send(f"Invalid guild {guild_id}.")
+            return
+
+        author = await guild.fetch_member(user_id)
+        if not author:
+            await message.channel.send(f"Invalid user {user_id}.")
+            return
+
+        message = FakeMessage(author, message.channel, guild, command)
+        await self.maybe_handle_command(message, message.content,
+            override_testing_ignore=True)
 
 # we can only have one qapp active at a time, but we want to be able to
 # be rendering multiple snitch logs at the same time (ie multiple .r

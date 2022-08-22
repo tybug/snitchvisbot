@@ -63,15 +63,16 @@ class Client(_Client):
         await self.maybe_handle_command(message, message.content)
 
     async def maybe_handle_command(self, message, content, *,
-        include_custom=True
+        include_custom=True, override_testing_ignore=False
     ):
         author = message.author
         guild = message.guild
 
         # only respond to messages from whitelisted guilds if testing, to avoid
         # responding from commands from actual users
-        if config.TESTING and guild.id not in config.TESTING_GUILDS:
-            return
+        if not override_testing_ignore:
+            if config.TESTING and guild.id not in config.TESTING_GUILDS:
+                return
 
         if guild.id not in self.prefixes:
             prefix = db.get_snitch_prefix(guild.id)
