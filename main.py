@@ -218,6 +218,11 @@ class Snitchvis(Client):
         self.livemap_updating_channels.append(lm_channel.channel_id)
 
         channel = self.get_channel(lm_channel.channel_id)
+        if not channel:
+            # livemap channel was deleted or we were kicked from the guild,
+            # ignore
+            return
+
         guild = channel.guild
         # for now we'll just render all events to the livemap, eventually we may
         # want to support different livemap channels with granular role-based
