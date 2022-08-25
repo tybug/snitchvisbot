@@ -1245,6 +1245,8 @@ class Snitchvis(Client):
                 continue
 
             config_message = m
+            # only use most recent config message
+            break
 
         if not config_message:
             await message.channel.send("Could not find a recent kira config "
