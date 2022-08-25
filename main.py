@@ -405,7 +405,8 @@ class Snitchvis(Client):
             "then renders the past 30 minutes of previous events. This is "
             "meant to be a quick way to take a look at your most recent snitch "
             "hits.")
-        await message.channel.send("`.r` a huge number of options, and you "
+        await message.channel.send("`.r` has a large number of options, and "
+            "you "
             "should take some time to read through `.r --help` and try them "
             "out. To give the very short version, you can: "
             "\n* filter by time (`-p/--past 1d12h`, `--start 07/01/22`, `--end "
