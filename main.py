@@ -176,6 +176,11 @@ class Snitchvis(Client):
 
                 self.livemaps_refresh_at[channel_id] = future_dts
                 lm_channel = db.get_livemap_channel_from_channel(channel_id)
+                if not lm_channel:
+                    # I think this can happen if the livemap channel is deleted /
+                    # changed while livemaps_refresh_at still has entries for that
+                    # channel.
+                    continue
                 await self.update_livemap_channel(lm_channel, refresh=False)
         except Exception as e:
             err = "".join(traceback.format_exception(e))
