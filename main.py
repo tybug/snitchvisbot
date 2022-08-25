@@ -1345,10 +1345,6 @@ if __name__ == "__main__":
     client = Snitchvis()
     client.run(config.TOKEN)
 
-## required for release
-# * add option to use old terrain map, for places where new terrain map data
-#   isn't available yet
-
 ## next priorities
 # * handle overlapping events on the same snitch
 # * fix permissions on .events, currently returns results for all events,
