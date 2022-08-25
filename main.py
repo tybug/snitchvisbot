@@ -8,6 +8,7 @@ from functools import partial
 import gzip
 from collections import defaultdict
 import re
+import traceback
 
 from discord import File
 from discord.ext.tasks import loop
@@ -163,18 +164,23 @@ class Snitchvis(Client):
 
     @loop(seconds=10)
     async def check_outdated_livemaps(self):
-        now = datetime.utcnow()
-        for channel_id, refresh_at in self.livemaps_refresh_at.copy().items():
-            # if any of the datetimes in `refresh_at` have passed - no matter
-            # how many - we'll refresh the livemap. Afterwards, we'll remove
-            # them from the list so we don't refresh on them again.
-            future_dts = [dt for dt in refresh_at if now < dt]
-            if future_dts == refresh_at:
-                continue
+        try:
+            now = datetime.utcnow()
+            for channel_id, refresh_at in self.livemaps_refresh_at.copy().items():
+                # if any of the datetimes in `refresh_at` have passed - no matter
+                # how many - we'll refresh the livemap. Afterwards, we'll remove
+                # them from the list so we don't refresh on them again.
+                future_dts = [dt for dt in refresh_at if now < dt]
+                if future_dts == refresh_at:
+                    continue
 
-            self.livemaps_refresh_at[channel_id] = future_dts
-            lm_channel = db.get_livemap_channel_from_channel(channel_id)
-            await self.update_livemap_channel(lm_channel, refresh=False)
+                self.livemaps_refresh_at[channel_id] = future_dts
+                lm_channel = db.get_livemap_channel_from_channel(channel_id)
+                await self.update_livemap_channel(lm_channel, refresh=False)
+        except Exception as e:
+            err = "".join(traceback.format_exception(e))
+            await self.error_log_channel.send(f"Ignoring exception in event "
+                f"loop `check_outdated_livemaps`: \n```\n{err}\n```")
 
     async def update_livemap_channel(self, lm_channel, refresh=True):
         channel_id = lm_channel.channel_id
