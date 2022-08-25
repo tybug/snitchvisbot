@@ -472,7 +472,7 @@ class Snitchvis(Client):
         db.add_snitch_channel(channel, roles)
 
         await message.channel.send(f"Added {channel.mention} to snitch "
-            f"channels, viewable by users with roles {utils.role_str(roles)}")
+            f"channels, accessible by {utils.role_str(roles)}")
 
 
     @command("channel remove",
