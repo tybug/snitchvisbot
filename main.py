@@ -23,7 +23,7 @@ from command import (command, Arg, channel, role, human_timedelta,
     human_datetime, bounds)
 from client import Client
 
-INVITE_URL = ("https://discord.com/oauth2/authorize?client_id="
+INVITE_LINK = ("https://discord.com/oauth2/authorize?client_id="
     "999808708131426434&permissions=0&scope=bot")
 
 def run_snitch_vis(*args):
@@ -86,6 +86,7 @@ class Snitchvis(Client):
             self.full_reindex,
             self.set_prefix,
             self.tutorial,
+            self.invite,
             self.help
         ]
 
@@ -1254,6 +1255,12 @@ class Snitchvis(Client):
             f"snitchloginmessage: ``{login_f}``\n"
             f"snitchlogoutmessage: ``{logout_f}``\n"
             f"timeformat: ``{time_f}``\n")
+
+    @command("invite",
+        help="Sends the invite link for snitchvis."
+    )
+    async def invite(self, message):
+        await message.channel.send(INVITE_LINK)
 
     @command("set-pixel-multiplier",
         args=[
