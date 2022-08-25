@@ -416,7 +416,7 @@ class Snitchvis(Client):
             "\n* change duration (`-d/--duration 20`), fps (`--fps 30`), or "
             "quality (`-s/--size 1000`)"
             "\n* change rendering mode (`-m/--mode heatmap`)"
-            "\nAnd more. All of this is thoroughly documented in `.r --help`.")
+            "\nAnd more. All of this is documented in `.r --help`.")
 
 
     @command("channel add",
