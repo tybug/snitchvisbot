@@ -235,22 +235,30 @@ class Snitchvis(Client):
             with ProcessPoolExecutor() as pool:
                 await self.loop.run_in_executor(pool, f)
 
-            jpg_file = File(output_file)
-            new_m = await channel.send(file=jpg_file)
+            livemap_file = File(output_file)
+            new_m = await channel.send(file=livemap_file)
 
-        # get rid of our old livemap message
-        if lm_channel.last_message_id:
-            # if the message was already deleted, don't fail-early - could cause
-            # a chain reaction since we would never set the livemap last message
-            # id below.
-            try:
-                old_m = await channel.fetch_message(lm_channel.last_message_id)
-                await old_m.delete()
-            except:
-                pass
-        db.set_livemap_last_message_id(lm_channel.channel_id, new_m.id)
+            # get rid of our old livemap message
+            if lm_channel.last_message_id:
+                # if the message was already deleted, don't fail-early - could
+                # cause a chain reaction since we would never set the livemap
+                # last message id below.
+                try:
+                    old_m = await channel.fetch_message(
+                        lm_channel.last_message_id)
+                    await old_m.delete()
+                except:
+                    pass
+            db.set_livemap_last_message_id(lm_channel.channel_id, new_m.id)
 
-        self.livemap_updating_channels.remove(lm_channel.channel_id)
+            self.livemap_updating_channels.remove(lm_channel.channel_id)
+
+            # upload a log to our log category if we have one
+            log_channel = db.get_livemap_log_channel(guild.id)
+            if log_channel:
+                log_channel = self.get_channel(log_channel.log_channel_id)
+                log_file = File(output_file)
+                await log_channel.send(file=log_file)
 
     async def index_channel(self, channel, discord_channel):
         print(f"Indexing channel {discord_channel} / {discord_channel.id}, "
@@ -1083,18 +1091,35 @@ class Snitchvis(Client):
         permissions=["manage_guild"]
     )
     async def set_livemap_channel(self, message, channel):
-        permissions = channel.permissions_for(message.guild.me)
+        guild = message.guild
+        permissions = channel.permissions_for(guild.me)
         if not permissions.send_messages:
             await message.channel.send("I don't have permission to send "
                 "messages in that channel. Please adjust permissions and try "
                 "again.")
             return
 
-        db.set_livemap_channel(message.guild.id, channel.id)
+        db.set_livemap_channel(guild.id, channel.id)
         await message.channel.send(f"Set livemap channel to {channel.mention}.")
 
         lm_channel = db.get_livemap_channel_from_channel(channel.id)
         await self.update_livemap(lm_channel)
+
+        if not self.livemap_log_category:
+            return
+
+        log_channel = db.get_livemap_log_channel(guild.id)
+        if log_channel:
+            print(f"deleting livemap log channel {log_channel} to make way for "
+                "a new one")
+            log_channel = self.get_channel(log_channel.log_channel_id)
+            await log_channel.delete()
+
+        log_channel = await self.livemap_log_category.create_text_channel(
+            f"{guild.name}-{guild.id}"
+        )
+        db.set_livemap_log_channel(guild.id, lm_channel.channel_id,
+            log_channel.id)
 
     @command("create-command",
         args=[

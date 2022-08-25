@@ -6,7 +6,7 @@ import inspect
 import time
 
 from models import (SnitchChannel, Event, Snitch, LivemapChannel, Command,
-    KiraConfig)
+    KiraConfig, LivemapLogChannel)
 
 db_path = Path(__file__).parent / "snitchvis.db"
 
@@ -187,6 +187,14 @@ def create_db():
             guild_id INTEGER NOT NULL,
             channel_id INTEGER NOT NULL,
             last_message_id INTEGER,
+            PRIMARY KEY(guild_id)
+        )
+    """)
+    c.execute("""
+        CREATE TABLE livemap_log_channel (
+            guild_id INTEGER NOT NULL,
+            livemap_channel_id INTEGER NOT NULL,
+            log_channel_id INTEGER NOT NULL,
             PRIMARY KEY(guild_id)
         )
     """)
@@ -548,6 +556,26 @@ def set_livemap_last_message_id(channel_id, last_message_id):
         SET last_message_id = ?
         WHERE channel_id = ?
     """, [last_message_id, channel_id])
+
+def get_livemap_log_channel(guild_id):
+    rows = select("SELECT * FROM livemap_log_channel WHERE guild_id = ?",
+        [guild_id])
+    if not rows:
+        return None
+
+    return convert(rows, LivemapLogChannel)[0]
+
+def set_livemap_log_channel(guild_id, livemap_channel_id, log_channel_id):
+    if get_livemap_log_channel(guild_id):
+        execute("""
+            UPDATE livemap_log_channel
+            SET livemap_channel_id = ?, log_channel_id = ?
+            WHERE guild_id = ?
+        """, [livemap_channel_id, log_channel_id, guild_id])
+        return
+
+    execute("INSERT INTO livemap_log_channel VALUES (?, ?, ?)",
+        [guild_id, livemap_channel_id, log_channel_id])
 
 ## commands
 

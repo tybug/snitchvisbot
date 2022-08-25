@@ -85,6 +85,12 @@ class LivemapChannel:
     last_message_id: int
 
 @dataclass
+class LivemapLogChannel:
+    guild_id: int
+    livemap_channel_id: int
+    log_channel_id: int
+
+@dataclass
 class Command:
     guild_id: int
     command: str

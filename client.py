@@ -17,6 +17,7 @@ class Client(_Client):
         self.command_log_channel = None
         self.join_log_channel = None
         self.error_log_channel = None
+        self.livemap_log_category = None
 
         # collect all registered commands
         for func in inspect.getmembers(self, predicate=inspect.ismethod):
@@ -43,6 +44,9 @@ class Client(_Client):
             self.join_log_channel = self.get_channel(config.JOIN_LOG_CHANNEL)
         if config.ERROR_LOG_CHANNEL:
             self.error_log_channel = self.get_channel(config.ERROR_LOG_CHANNEL)
+        if config.LIVEMAP_LOG_CATEGORY:
+            # categories are a special type of channel
+            self.livemap_log_category = self.get_channel(config.LIVEMAP_LOG_CATEGORY)
 
     async def on_guild_join(self, guild):
         if self.join_log_channel:
