@@ -1346,9 +1346,8 @@ if __name__ == "__main__":
     client.run(config.TOKEN)
 
 ## required for release
-# * move to new terrain map image, except maybe for some blacklisted unmapped
-#   areas where we fall back to the old blue/white image
-# * write some mock data for example videos
+# * add option to use old terrain map, for places where new terrain map data
+#   isn't available yet
 
 ## if I get time before release
 # * handle overlapping events on the same snitch
