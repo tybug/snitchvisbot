@@ -256,6 +256,7 @@ python main.py
 
 Database is created on first run. There's currently no way to deal with database migrations.
 
+Make sure to provide the bot the `Message Content` intent on the developer portal so the bot can read Kira's messages. 
 ### Headless
 
 If you're running on a headless server, or somewhere without an X server, you'll need to wrap the call in a virtual X server:
