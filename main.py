@@ -104,6 +104,9 @@ class Snitchvis(Client):
         # index any messages sent while we were down
         for channel in db.get_snitch_channels(None):
             c = self.get_channel(channel.id)
+            if c is None:
+                # we were kicked from the guild or the channel was deleted
+                continue
             permissions = c.permissions_for(c.guild.me)
             if not permissions.read_messages:
                 print(f"Couldn't index {c} / {c.id} (guild {c.guild} / "
