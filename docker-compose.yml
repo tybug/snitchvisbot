@@ -1,0 +1,12 @@
+version: "3.8"
+
+services:
+  snitchvis:
+    build: .
+    environment:
+      TOKEN: ""
+      AUTHOR_ID: ""
+      TESTING_GUILD: ""
+    stdin_open: true
+    tty: true
+    init: true
