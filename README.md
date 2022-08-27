@@ -268,3 +268,7 @@ xvfb-run python main.py
 ```
 
 SnitchVis doesn't actually use an X server to render, but we do need to trick Qt into thinking an X server is available, or it will complain and crash.
+
+### Docker
+
+If you want to use docker, there is a dockerfile in this repository which may be useful as a reference. However, I don't use it myself and don't guarantee that it works. Use at your own risk. Please don't report that it's broken unless you're also willing to PR a fix.
