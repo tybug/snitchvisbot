@@ -38,7 +38,7 @@ def run_image_render(*args):
 class Snitchvis(Client):
     # for reference, a 5 second video of 700 pixels at 30 fps is 70 million
     # pixels. A 60 second video of 1000 pixels at 30 fps is 1.8 billion pixels.
-    PIXEL_LIMIT_VIDEO =   10_000_000_000
+    PIXEL_LIMIT_VIDEO =    7_500_000_000
     # 500 billion pixels is roughly an hour of 1080p @ 60fps.
     PIXEL_LIMIT_DAY   =  500_000_000_000
     # number of maximum concurrent renders allowed per guild
