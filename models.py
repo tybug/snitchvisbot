@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timezone
 
 from discord import User, Guild
 from discord.abc import Messageable
@@ -45,7 +45,7 @@ class Event:
     t: datetime
 
     def __post_init__(self):
-        self.t = datetime.fromtimestamp(self.t)
+        self.t = datetime.fromtimestamp(self.t, timezone.utc)
 
 @dataclass
 class Snitch:

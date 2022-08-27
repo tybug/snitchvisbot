@@ -11,6 +11,7 @@ import re
 import traceback
 
 from discord import File
+from discord.utils import utcnow
 from discord.ext.tasks import loop
 from snitchvis import (Event, InvalidEventException, SnitchVisRecord,
     create_users, snitches_from_events, Snitch, Config, SnitchVisImage)
@@ -168,7 +169,7 @@ class Snitchvis(Client):
     @loop(seconds=10)
     async def check_outdated_livemaps(self):
         try:
-            now = datetime.utcnow()
+            now = utcnow()
             for channel_id, refresh_at in self.livemaps_refresh_at.copy().items():
                 # if any of the datetimes in `refresh_at` have passed - no matter
                 # how many - we'll refresh the livemap. Afterwards, we'll remove
@@ -200,9 +201,9 @@ class Snitchvis(Client):
             # minutes, so we get the nice fade effect even if there aren't any
             # new events. Also generate a new livemap 12 seconds from now to
             # clean up any missed events from debounce.
-            refresh_at.append(datetime.utcnow() + timedelta(seconds=12))
+            refresh_at.append(utcnow() + timedelta(seconds=12))
             for i in range(1, 10 + 1):
-                dt = datetime.utcnow() + timedelta(seconds=i * 60)
+                dt = utcnow() + timedelta(seconds=i * 60)
                 refresh_at.append(dt)
 
             self.livemaps_refresh_at[channel_id] = refresh_at
@@ -211,11 +212,11 @@ class Snitchvis(Client):
             last_uploaded = self.livemap_last_uploaded[channel_id]
             # debounce of 10 seconds so people don't get annoyed at the image
             # they're looking at getting deleted every 2 seconds
-            if last_uploaded > datetime.utcnow() - timedelta(seconds=10):
+            if last_uploaded > utcnow() - timedelta(seconds=10):
                 return
 
         await self.update_livemap(lm_channel)
-        self.livemap_last_uploaded[channel_id] = datetime.utcnow()
+        self.livemap_last_uploaded[channel_id] = utcnow()
 
 
     async def update_livemap(self, lm_channel):
@@ -235,8 +236,9 @@ class Snitchvis(Client):
         # for now we'll just render all events to the livemap, eventually we may
         # want to support different livemap channels with granular role-based
         # snitch vision
-        start = (datetime.utcnow() - timedelta(minutes=10)).timestamp()
+        start = (utcnow() - timedelta(minutes=10)).timestamp()
         events = db.get_events(guild.id, "all", start=start)
+        print("eee", events)
 
         # use all events to construct snitches instead of the filtered subset
         # above
@@ -704,7 +706,7 @@ class Snitchvis(Client):
             return
 
         if past:
-            end = datetime.utcnow().timestamp()
+            end = utcnow().timestamp()
             if past == "all":
                 # conveniently, start of epoch is 0 ms
                 start = 0
@@ -730,7 +732,7 @@ class Snitchvis(Client):
             elif start and not end:
                 # only start set. Set end to current date
                 start = start.timestamp()
-                end = datetime.utcnow().timestamp()
+                end = utcnow().timestamp()
             elif end and not start:
                 # only end set. Set start to beginning of time
                 start = 0
@@ -800,8 +802,8 @@ class Snitchvis(Client):
                 "(`-d/--duration`).")
             return
 
-        start = (datetime.utcnow() - timedelta(days=1)).timestamp()
-        end = datetime.utcnow().timestamp()
+        start = (utcnow() - timedelta(days=1)).timestamp()
+        end = utcnow().timestamp()
         usage = db.get_pixel_usage(message.guild.id, start, end)
         if usage > self.PIXEL_LIMIT_DAY * multiplier:
             await message.channel.send("You've rendered more than 500 billion "
@@ -875,7 +877,7 @@ class Snitchvis(Client):
                     await self.command_log_channel.send(file=vis_file)
 
         db.add_render_history(message.guild.id, num_pixels,
-            datetime.utcnow().timestamp())
+            utcnow().timestamp())
 
     @command("import-snitches",
         args=[
