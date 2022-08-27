@@ -61,7 +61,7 @@ class Command:
                     return
                 continue
 
-            permissions = message.author.permissions_in(message.channel)
+            permissions = message.channel.permissions_for(message.author)
             if not getattr(permissions, permission):
                 await message.channel.send("You do not have permission to do "
                     f"that (requires `{permission}`).")
