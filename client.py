@@ -1,7 +1,7 @@
 import inspect
 import traceback
 
-from discord import Client as _Client
+from discord import Client as _Client, Intents
 
 from command import Command
 import db
@@ -9,7 +9,11 @@ import config
 
 class Client(_Client):
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        intents = Intents.default()
+        intents.message_content = True
+
+        super().__init__(*args, **kwargs, intents=intents)
+
         self.default_prefix = config.DEFAULT_PREFIX
         # guild id to prefix. cache snitch prefix to avoid unecessary db hits
         self.prefixes = {}

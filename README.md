@@ -248,6 +248,8 @@ cp config.example.py config.py
 
 You'll need to open `config.py` and set your bot token and author id. You can set the other fields if you want, but you don't have to. When deploying, you should set `Testing` to `False`, or else it will only respond to commands on guilds in `TESTING_GUILDS`.
 
+You'll also need to enable the "Message Content" intent on the developer portal so the bot can read commands and kira messages.
+
 To start the bot:
 
 ```
