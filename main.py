@@ -783,7 +783,8 @@ class Snitchvis(Client):
         num_pixels = duration * fps * (size * size)
         if num_pixels > self.PIXEL_LIMIT_VIDEO * multiplier:
             await message.channel.send("The requested render would require too "
-                "many server resources to generate. Decrease either the render "
+                "many server resources to generate (and would probably be over "
+                "discord's 8mb file size limit). Decrease either the render "
                 "size (`-s/--size`), fps (`--fps`), or duration "
                 "(`-d/--duration`).")
             return
