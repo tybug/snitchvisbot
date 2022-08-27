@@ -238,7 +238,6 @@ class Snitchvis(Client):
         # snitch vision
         start = (utcnow() - timedelta(minutes=10)).timestamp()
         events = db.get_events(guild.id, "all", start=start)
-        print("eee", events)
 
         # use all events to construct snitches instead of the filtered subset
         # above
