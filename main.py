@@ -912,7 +912,7 @@ class Snitchvis(Client):
                         "avoid this error.")
                     await message.channel.send("Import aborted. You may "
                         "safely re-run this import with different "
-                        "parameters.")
+                        "arguments.")
                     return
 
             await message.channel.send("Importing snitches from snitchmod "
