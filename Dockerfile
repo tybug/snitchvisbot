@@ -5,8 +5,6 @@ FROM python:3.10-bullseye
 WORKDIR /app
 
 ENV DISPLAY :99
-# ENV DEBIAN_FRONTEND=noninteractive
-# ENV LIBGL_ALWAYS_INDIRECT=1
 
 RUN apt-get update && apt-get install -y libgl1 python3-pyqt5 xvfb
 
