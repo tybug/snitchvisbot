@@ -7,12 +7,13 @@ from command import Command
 import db
 import config
 
-intents = Intents.default()
-intents.message_content = True
-
 class Client(_Client):
     def __init__(self, *args, **kwargs):
+        intents = Intents.default()
+        intents.message_content = True
+
         super().__init__(*args, **kwargs, intents=intents)
+
         self.default_prefix = config.DEFAULT_PREFIX
         # guild id to prefix. cache snitch prefix to avoid unecessary db hits
         self.prefixes = {}
