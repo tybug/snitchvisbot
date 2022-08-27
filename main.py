@@ -813,7 +813,7 @@ class Snitchvis(Client):
             return
 
         with TemporaryDirectory() as d:
-            output_file = str(Path(d) / "render.mp4")
+            output_file = Path(d) / "render.mp4"
 
             m = await message.channel.send("rendering video...")
 
@@ -850,8 +850,8 @@ class Snitchvis(Client):
                 show_all_snitches=all_snitches, mode=mode,
                 heatmap_percentage=heatmap_percentage,
                 heatmap_scale=heatmap_scale, bounds=bounds)
-            f = partial(run_snitch_vis, duration, size, fps, fade, output_file,
-                config_)
+            f = partial(run_snitch_vis, duration, size, fps, fade,
+                str(output_file), config_)
 
             self.concurrent_renders[message.guild.id] += 1
             with ProcessPoolExecutor() as pool:
@@ -859,13 +859,20 @@ class Snitchvis(Client):
             self.concurrent_renders[message.guild.id] -= 1
 
             vis_file = File(output_file)
-            await message.channel.send(file=vis_file)
-            await m.delete()
+            if output_file.stat().st_size >= 8_000_000:
+                await message.channel.send("The resulting render was over 8mb "
+                    "in size and couldn't be uploaded. To decrease file sizes, "
+                    "you should use lower values for `-s/--size`, `--fps`, "
+                    "and/or `-d/--duration`.")
+                await m.delete()
+            else:
+                await message.channel.send(file=vis_file)
+                await m.delete()
 
-            # don't log tests by myself
-            if message.author.id != config.AUTHOR_ID and self.command_log_channel:
-                vis_file = File(output_file)
-                await self.command_log_channel.send(file=vis_file)
+                # don't log tests by myself
+                if message.author.id != config.AUTHOR_ID and self.command_log_channel:
+                    vis_file = File(output_file)
+                    await self.command_log_channel.send(file=vis_file)
 
         db.add_render_history(message.guild.id, num_pixels,
             datetime.utcnow().timestamp())
