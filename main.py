@@ -42,7 +42,7 @@ class Snitchvis(Client):
     # 500 billion pixels is roughly an hour of 1080p @ 60fps.
     PIXEL_LIMIT_DAY   =  500_000_000_000
     # number of maximum concurrent renders allowed per guild
-    MAXIMUM_CONCURRENT_RENDERS = 3
+    MAXIMUM_CONCURRENT_RENDERS = 2
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
