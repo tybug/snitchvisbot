@@ -298,7 +298,8 @@ class Snitchvis(Client):
                 continue
             events.append([message_, event])
 
-        last_messages = await discord_channel.history(limit=1).flatten()
+        last_messages = [m async for m in discord_channel.history(limit=1)]
+
         # only update if the channel has messages
         if last_messages:
             last_message = last_messages[0]
