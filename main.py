@@ -792,7 +792,7 @@ class Snitchvis(Client):
         end = datetime.utcnow().timestamp()
         usage = db.get_pixel_usage(message.guild.id, start, end)
         if usage > self.PIXEL_LIMIT_DAY * multiplier:
-            await message.channel.send("You've rendered more than 100 billion "
+            await message.channel.send("You've rendered more than 500 billion "
                 "pixels in the past 24 hours. I have limited server resources "
                 "and cannot allow servers to render more than this (already "
                 "extremely high) limit per day. You will have to wait up to "
