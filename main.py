@@ -653,6 +653,10 @@ class Snitchvis(Client):
                 "individual users. The line mode draws "
                 "lines between snitch events. This option is "
                 "experimental and may not look good. Defaults to box."),
+            Arg("-o", "--opacity", help="The opacity of the background "
+                "terrain map, "
+                "between 0 and 1. Higher is more visible. Defaults to 0.15.",
+                convert=float),
             Arg("-hp", "--heatmap-percentage", convert=float, default=20,
                 help="What percentage of the "
                 "video duration the heatmap should look backwards for events "
@@ -680,7 +684,7 @@ class Snitchvis(Client):
         aliases=["r"]
     )
     async def render(self, message, past, start, end, size, fps, duration, users,
-        groups, fade, bounds, all_snitches, mode, heatmap_percentage,
+        groups, fade, bounds, all_snitches, mode, opacity, heatmap_percentage,
         heatmap_scale, export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
@@ -851,7 +855,8 @@ class Snitchvis(Client):
             config_ = Config(snitches=snitches, events=events, users=users,
                 show_all_snitches=all_snitches, mode=mode,
                 heatmap_percentage=heatmap_percentage,
-                heatmap_scale=heatmap_scale, bounds=bounds)
+                heatmap_scale=heatmap_scale, bounds=bounds,
+                world_map_opacity=opacity)
             f = partial(run_snitch_vis, duration, size, fps, fade,
                 str(output_file), config_)
 
