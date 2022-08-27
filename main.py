@@ -916,7 +916,7 @@ class Snitchvis(Client):
             if any(group == "all" for group in groups):
                 group_filter = "1"
             else:
-                group_filter = f"group_name IN ({('?, ' * len(groups))[:-2]}"
+                group_filter = f"group_name IN ({('?, ' * len(groups))[:-2]})"
 
             rows = cur.execute("SELECT * FROM snitches_v2 WHERE "
                 f"{group_filter}").fetchall()
