@@ -423,6 +423,10 @@ def get_events(guild_id, roles, *, start=None, end=None, users=[], groups=[]):
 
     where = Where()
     where.add("guild_id = ", guild_id)
+    # few days before start date of civmc. prevent events from other civ servers
+    # like civclassic being included and causing the visualizer to crash because
+    # it tries to draw things off-screen
+    where.add("t >= ", 1653596605)
     where.add("t >= ", start)
     where.add("t <= ", end)
     # compare case insensitive
