@@ -4,9 +4,9 @@ services:
   snitchvis:
     build: .
     environment:
-      TOKEN: ""
-      AUTHOR_ID: ""
-      TESTING_GUILD: ""
+      SNITCHVIS_TOKEN: ""
+      SNITCHVIS_AUTHOR_ID: ""
+      SNITCHVIS_TESTING_GUILD: ""
     stdin_open: true
     tty: true
     init: true
