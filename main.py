@@ -698,6 +698,11 @@ class Snitchvis(Client):
                 "please wait for one to finish before starting a new one.")
             return
 
+        if (past is not None) and (start is not None or end is not None):
+            await message.channel.send("`-p/--past` is incomptaible with "
+                "`--start` and `--end`. You cannot pass both.")
+            return
+
         if past:
             end = datetime.utcnow().timestamp()
             if past == "all":
