@@ -1387,6 +1387,9 @@ if __name__ == "__main__":
     client.run(config.TOKEN)
 
 ## next priorities
+# * enable (opacity) players when they have any events on screen and disable
+#   when they don't, helps people narrow down exactly who is on screen at any
+#   given moment
 # * handle overlapping events on the same snitch
 # * fix permissions on .events, currently returns results for all events,
 #   need to limit to just the events the user has access to
@@ -1402,6 +1405,7 @@ if __name__ == "__main__":
 # * filter events by bounds before rendering, avoids players which aren't ever
 #   rendered being displayed on the left, also speeds up rendering for small
 #   bounds
+# * break after a certain distance for line mode? avoids crazy spider web
 
 ## nice to have eventually
 # * pad the first event like we did the last event? less of a concern but
