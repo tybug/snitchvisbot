@@ -383,7 +383,7 @@ def human_timedelta(val):
             val_ = int(current_int_str)
         except ValueError:
             raise ParseError(f"Expected a valid integer to preceed `{char}`, "
-                f"got {current_int_str}")
+                f"got `{current_int_str}`")
 
         if char in unit_vals:
             raise ParseError(f"Cannot specify `{char}` twice")
