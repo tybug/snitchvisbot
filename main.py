@@ -761,6 +761,10 @@ class Snitchvis(Client):
         # instead of just the events returned by the filter
         all_events = db.get_events(message.guild.id, message.author.roles)
         snitches = snitches_from_events(all_events)
+        # reclaim some memory since we don't need all_events anymore.
+        # TODO we may want to load events one by one
+        # instead of holding them all in memory at once.
+        del all_events
         # if the guild has any snitches uploaded (via .import-snitches), use
         # those as well, even if they've never been pinged.
         # Only retrieve snitches which the author has access to via their roles
