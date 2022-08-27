@@ -38,11 +38,11 @@ def run_image_render(*args):
 class Snitchvis(Client):
     # for reference, a 5 second video of 700 pixels at 30 fps is 70 million
     # pixels. A 60 second video of 1000 pixels at 30 fps is 1.8 billion pixels.
-    PIXEL_LIMIT_VIDEO =   10_000_000_000
+    PIXEL_LIMIT_VIDEO =    7_500_000_000
     # 500 billion pixels is roughly an hour of 1080p @ 60fps.
     PIXEL_LIMIT_DAY   =  500_000_000_000
     # number of maximum concurrent renders allowed per guild
-    MAXIMUM_CONCURRENT_RENDERS = 3
+    MAXIMUM_CONCURRENT_RENDERS = 2
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -298,7 +298,8 @@ class Snitchvis(Client):
                 continue
             events.append([message_, event])
 
-        last_messages = await discord_channel.history(limit=1).flatten()
+        last_messages = [m async for m in discord_channel.history(limit=1)]
+
         # only update if the channel has messages
         if last_messages:
             last_message = last_messages[0]
@@ -782,7 +783,8 @@ class Snitchvis(Client):
         num_pixels = duration * fps * (size * size)
         if num_pixels > self.PIXEL_LIMIT_VIDEO * multiplier:
             await message.channel.send("The requested render would require too "
-                "many server resources to generate. Decrease either the render "
+                "many server resources to generate (and would probably be over "
+                "discord's 8mb file size limit). Decrease either the render "
                 "size (`-s/--size`), fps (`--fps`), or duration "
                 "(`-d/--duration`).")
             return
@@ -791,7 +793,7 @@ class Snitchvis(Client):
         end = datetime.utcnow().timestamp()
         usage = db.get_pixel_usage(message.guild.id, start, end)
         if usage > self.PIXEL_LIMIT_DAY * multiplier:
-            await message.channel.send("You've rendered more than 100 billion "
+            await message.channel.send("You've rendered more than 500 billion "
                 "pixels in the past 24 hours. I have limited server resources "
                 "and cannot allow servers to render more than this (already "
                 "extremely high) limit per day. You will have to wait up to "
@@ -915,7 +917,7 @@ class Snitchvis(Client):
             if any(group == "all" for group in groups):
                 group_filter = "1"
             else:
-                group_filter = f"group_name IN ({('?, ' * len(groups))[:-2]}"
+                group_filter = f"group_name IN ({('?, ' * len(groups))[:-2]})"
 
             rows = cur.execute("SELECT * FROM snitches_v2 WHERE "
                 f"{group_filter}").fetchall()
