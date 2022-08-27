@@ -925,7 +925,7 @@ class Snitchvis(Client):
                 group_filter = f"group_name IN ({('?, ' * len(groups))[:-2]})"
 
             rows = cur.execute("SELECT * FROM snitches_v2 WHERE "
-                f"{group_filter}").fetchall()
+                f"{group_filter}", groups).fetchall()
 
             for row in rows:
                 snitch = Snitch.from_snitchmod(row)
