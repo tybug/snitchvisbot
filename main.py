@@ -655,7 +655,7 @@ class Snitchvis(Client):
             Arg("-o", "--opacity", help="The opacity of the background "
                 "terrain map, "
                 "between 0 and 1. Higher is more visible. Defaults to 0.15.",
-                convert=float),
+                convert=float, default=0.15),
             Arg("-hp", "--heatmap-percentage", convert=float, default=20,
                 help="What percentage of the "
                 "video duration the heatmap should look backwards for events "
