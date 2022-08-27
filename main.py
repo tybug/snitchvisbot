@@ -777,7 +777,13 @@ class Snitchvis(Client):
                         f_out.writelines(f_in)
 
                 sql_file = File(zipped_p)
-                await message.channel.send(file=sql_file)
+                # 8mb in bytes
+                if zipped_p.stat().st_size >= 8_000_000:
+                    await message.channel.send("The sql file is over 8mb in "
+                        "size and can't be uploaded, sorry! Please contact "
+                        "tybug and ask for a manual export.")
+                else:
+                    await message.channel.send(file=sql_file)
             return
         if export == "svis":
             await message.channel.send("Exporting to a .svis file is not "
