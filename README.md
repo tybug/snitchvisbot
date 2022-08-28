@@ -239,6 +239,8 @@ Takes no arguments.
 
 ## Setup Guide
 
+Snitchvis requires python 3.10.
+
 ```
 git clone https://github.com/tybug/snitchvisbot
 cd snitchvisbot
