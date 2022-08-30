@@ -806,7 +806,9 @@ class Snitchvis(Client):
                 "many server resources to generate (and would probably be over "
                 "discord's 8mb file size limit). Decrease either the render "
                 "size (`-s/--size`), fps (`--fps`), or duration "
-                "(`-d/--duration`).")
+                "(`-d/--duration`)."
+                "\n\nYou can request increased render limits by contacting "
+                "tybug.")
             return
 
         start = (utcnow() - timedelta(days=1)).timestamp()
