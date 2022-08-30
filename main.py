@@ -333,7 +333,7 @@ class Snitchvis(Client):
 
             return event
 
-        raise InvalidEventException()
+        raise InvalidEventException("all kira configs failed")
 
     async def export_to_sql(self, path, snitches, events):
         conn = sqlite3.connect(str(path))
