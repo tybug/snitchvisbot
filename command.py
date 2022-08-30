@@ -188,8 +188,14 @@ class Command:
                 while i < len(arg_strings) and not is_flag(arg_strings[i]):
                     val.append(arg.process(message, arg_strings[i]))
                     i += 1
-            # TODO implement ? and n (1/2/3/etc) nargs, I'm not sure I'll ever
-            # use them
+            elif arg.nargs == "?":
+                if i < len(arg_strings) and not is_flag(arg_strings[i]):
+                    val = arg.process(message, arg_strings[i])
+                    i += 1
+                else:
+                    val = arg.const
+            # TODO implement n (1/2/3/etc) nargs, I'm not sure I'll ever use
+            # them
             else:
                 raise Exception(f"unimplemented nargs option {arg.nargs}")
 
@@ -245,7 +251,7 @@ def command(name, *, args=[], help=None, help_short=None, permissions=[],
 class Arg:
     def __init__(self, short, long=None, *, default=None, convert=None,
         nargs=None, store_boolean=False, required=False, dest=None, help=None,
-        choices=None, convert_mode="individual"
+        choices=None, convert_mode="individual", const=None
     ):
         if not short.startswith("-"):
             positional = True
@@ -282,6 +288,7 @@ class Arg:
         self.choices = choices
         # one of "individual" or "together"
         self.convert_mode = convert_mode
+        self.const = const
 
         if help is None:
             raise Exception("Help text is required for all arguments.")
