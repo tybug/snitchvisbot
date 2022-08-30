@@ -1442,6 +1442,9 @@ if __name__ == "__main__":
     client.run(config.TOKEN)
 
 ## next priorities
+# * change --randomize to snap to a grid to avoid probabilistic attacks on
+#   snitch locations
+# * add a `server` column to events / snitches
 # * enable (opacity) players when they have any events on screen and disable
 #   when they don't, helps people narrow down exactly who is on screen at any
 #   given moment
