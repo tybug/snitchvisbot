@@ -646,6 +646,9 @@ class Snitchvis(Client):
             Arg("-a", "--all-snitches", default=False, store_boolean=True,
                 help="If passed, all known snitches will be rendered, not "
                 "just the snitches pinged by the relevant events."),
+            Arg("-op", "--only-pinged", help="Only render snitches which were "
+                "pinged at least once in the render.", store_boolean=True,
+                default=False),
             Arg("-m", "--mode", choices=["line", "box", "heatmap"],
                 default="box", help="One of heatmap, line, or box. What mode "
                 "to render in. The heatmap mode "
@@ -689,8 +692,8 @@ class Snitchvis(Client):
         aliases=["r"]
     )
     async def render(self, message, past, start, end, size, fps, duration, users,
-        groups, fade, bounds, all_snitches, mode, opacity, anonymize,
-        heatmap_percentage, heatmap_scale, export
+        groups, fade, bounds, all_snitches, only_pinged, mode, opacity,
+        anonymize, heatmap_percentage, heatmap_scale, export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
@@ -803,6 +806,12 @@ class Snitchvis(Client):
                 _anonymize(event)
             for snitch in snitches:
                 _anonymize(snitch)
+
+        if only_pinged:
+            # filter snitches to only those with at least one associated
+            # event.
+            event_locs = set((e.x, e.y, e.z) for e in events)
+            snitches = [s for s in snitches if (s.x, s.y, s.z) in event_locs]
 
         if export == "sql":
             await message.channel.send("Exporting specified events to a "
