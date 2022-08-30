@@ -1457,9 +1457,6 @@ if __name__ == "__main__":
 #   events, distinguish actual events and the lines, add arrows to indicate
 #   directionality
 # * add notification on certain users pinging snitches
-# * filter events by bounds before rendering, avoids players which aren't ever
-#   rendered being displayed on the left, also speeds up rendering for small
-#   bounds
 # * break after a certain distance for line mode? avoids crazy spider web
 
 ## nice to have eventually
