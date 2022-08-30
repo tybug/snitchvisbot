@@ -800,7 +800,7 @@ class Snitchvis(Client):
 
             # anonymize both events and snitches - we can't just anonymize
             # events because snitches can come straight from the database as
-            # well and not be created from existing snitches. We'll just modify
+            # well and not be created from existing events. We'll just modify
             # after all creation has taken place.
             for event in events:
                 _anonymize(event)
