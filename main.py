@@ -9,6 +9,7 @@ import gzip
 from collections import defaultdict
 import re
 import traceback
+import random
 
 from discord import File
 from discord.utils import utcnow
@@ -656,6 +657,11 @@ class Snitchvis(Client):
                 "terrain map, "
                 "between 0 and 1. Higher is more visible. Defaults to 0.15.",
                 convert=float, default=0.15),
+            Arg("--anonymize", help="Randomizes snitch locations within a "
+                "certain number of blocks. Defaults to 10 blocks. Pass "
+                "`--anonymize n` to change anonymization radius, eg "
+                "`--anonymize 20`.",
+                convert=int, const=10, nargs="?"),
             Arg("-hp", "--heatmap-percentage", convert=float, default=20,
                 help="What percentage of the "
                 "video duration the heatmap should look backwards for events "
@@ -683,8 +689,8 @@ class Snitchvis(Client):
         aliases=["r"]
     )
     async def render(self, message, past, start, end, size, fps, duration, users,
-        groups, fade, bounds, all_snitches, mode, opacity, heatmap_percentage,
-        heatmap_scale, export
+        groups, fade, bounds, all_snitches, mode, opacity, anonymize,
+        heatmap_percentage, heatmap_scale, export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
             "channels with `.channel add #channel`, indexing with `.index`, or "
@@ -770,6 +776,33 @@ class Snitchvis(Client):
         # Only retrieve snitches which the author has access to via their roles
         snitches |= set(db.get_snitches(message.guild.id, message.author.roles))
         users = create_users(events)
+
+        if anonymize is not None:
+            # associate each unique (x, y) with a specific randomzied x offset
+            # and y offset. We want every event (and snitch) at the same
+            # location to be anonymized in the same way so that they all line
+            # up. We want the x and y offset to be uncoupled so we get full
+            # randomness in the (-anonymize, anonymize) square.
+            offsets = defaultdict(
+                lambda: (
+                    random.randint(-anonymize, anonymize),
+                    random.randint(-anonymize, anonymize)
+                )
+            )
+
+            def _anonymize(obj):
+                (offset_x, offset_y) = offsets[(obj.x, obj.y)]
+                obj.x += offset_x
+                obj.y += offset_y
+
+            # anonymize both events and snitches - we can't just anonymize
+            # events because snitches can come straight from the database as
+            # well and not be created from existing snitches. We'll just modify
+            # after all creation has taken place.
+            for event in events:
+                _anonymize(event)
+            for snitch in snitches:
+                _anonymize(snitch)
 
         if export == "sql":
             await message.channel.send("Exporting specified events to a "
