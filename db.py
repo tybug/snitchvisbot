@@ -178,7 +178,7 @@ def create_db():
         CREATE TABLE guild (
             guild_id INTEGER NOT NULL,
             prefix TEXT,
-            pixel_limit_multiplier INTEGER DEFAULT 1,
+            pixel_limit_multiplier REAL DEFAULT 1,
             PRIMARY KEY(guild_id)
         )
     """)
