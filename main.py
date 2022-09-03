@@ -131,7 +131,7 @@ class Snitchvis(Client):
 
         # on_ready can be called multiple times by discordpy, not just when
         # the bot starts. Avoid an error by starting an already-started task.
-        if not self.check_outdated_livemaps.is_running: # pylint: disable=no-member
+        if not self.check_outdated_livemaps.is_running(): # pylint: disable=no-member
             self.check_outdated_livemaps.start() # pylint: disable=no-member
 
     async def on_message(self, message):
