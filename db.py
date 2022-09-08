@@ -1,6 +1,6 @@
 from pathlib import Path
 import sqlite3
-from sqlite3 import Row
+from sqlite3 import Row, Error as SqliteError
 from collections import defaultdict
 import inspect
 import time
@@ -239,7 +239,15 @@ def select(query, params=[]):
 
 def execute(query, params, commit_=True):
     t1 = time.time()
-    cur_ = cur.execute(query, params)
+    # print some debug information on sql queries so we know exactly what
+    # query caused it to error. Our performance logging below prints this as
+    # well, but only after the error would have been thrown.
+    try:
+        cur_ = cur.execute(query, params)
+    except SqliteError:
+        print(f"error on query {query} params {params}", flush=True)
+        raise
+
     t2 = time.time()
     # performance logging for sql queries
     print(f"[db] {t2 - t1} {query} {params}")
