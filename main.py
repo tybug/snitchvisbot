@@ -992,11 +992,14 @@ class Snitchvis(Client):
             snitches_added = 0
             if any(group == "all" for group in groups):
                 group_filter = "1"
+                # don't pass ["all"] if our filter doesn't have any params
+                groups_params = []
             else:
                 group_filter = f"group_name IN ({('?, ' * len(groups))[:-2]})"
+                groups_params = groups
 
             rows = cur.execute("SELECT * FROM snitches_v2 WHERE "
-                f"{group_filter}", groups).fetchall()
+                f"{group_filter}", groups_params).fetchall()
 
             for row in rows:
                 snitch = Snitch.from_snitchmod(row)
