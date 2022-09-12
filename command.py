@@ -276,7 +276,12 @@ class Arg:
         self.dest = dest.removeprefix("-").removeprefix("-").replace("-", "_")
         # some (all? at least ios) phones replace two dashes with an em dash, so
         # also add an em dash flag to account for this.
-        self.flags = [short, long, long.replace("--", "—")] if long else [short]
+
+        short_em = short.replace("--", "—")
+        self.flags = [short, short_em]
+        if long:
+            self.flags += [long, long.replace("--", "—")]
+
         self.short = short
         self.long = long
         self.default = default
