@@ -123,6 +123,28 @@ class Snitchvis(Client):
         # queue.
         while not self.indexing_queue.empty():
             message = await self.indexing_queue.get()
+            snitch_channel = db.get_snitch_channel(message.channel.id)
+
+            # consider the following:
+            # * bot starts and on_ready is called. current snitch channels:
+            #   [A B C].
+            # * self.defer_indexing = True
+            # * snitch channels A B are indexed, but while they're indexed a
+            #   new message M is sent to C. Since we're deferring indexing, M
+            #   is added to indexing_queue.
+            # * snitch channel C is indexed, which also indexes M.
+            # * all snitch channels are indxed now and we move on to indexing
+            #   messages in indexing_queue. M has already been indexed, but
+            #   it's still in the indexing_queue. It gets indexed for the second
+            #   time and causes a pk violation.
+            #
+            # There are several ways to solve this, but the simplest is to
+            # not index any messages earlier than our last_indexed_id.
+            # A more robust solution may be to remove messages from
+            # indexing_queue when they get indexed by index_channel.
+            if message.id <= snitch_channel.last_indexed_id:
+                continue
+
             await self.maybe_index_message(message)
 
         # now that we've indexed the channels and fully processed the queue, we
