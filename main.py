@@ -142,7 +142,7 @@ class Snitchvis(Client):
             # not index any messages earlier than our last_indexed_id.
             # A more robust solution may be to remove messages from
             # indexing_queue when they get indexed by index_channel.
-            if message.id <= snitch_channel.last_indexed_id:
+            if snitch_channel and message.id <= snitch_channel.last_indexed_id:
                 continue
 
             await self.maybe_index_message(message)
