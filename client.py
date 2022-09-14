@@ -1,7 +1,7 @@
 import inspect
 import traceback
 
-from discord import Client as _Client, Intents
+from discord import Client as _Client, Intents, Member
 
 from command import Command
 import db
@@ -75,6 +75,12 @@ class Client(_Client):
     ):
         author = message.author
         guild = message.guild
+
+        # some messages, like webhooks, don't have member authors.
+        # running a command for a non-member would make no sense (and cause
+        # errors).
+        if not isinstance(author, Member):
+            return
 
         # only respond to messages from whitelisted guilds if testing, to avoid
         # responding from commands from actual users
