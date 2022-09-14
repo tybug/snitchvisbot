@@ -419,23 +419,27 @@ def human_timedelta(val):
 # 24 hour clock, or support both)
 def human_datetime(val):
 
-    # month, day, year
-    parts = ["", "", ""]
+    # month, day, year, hour, minute, second
+    parts = ["", "", "", "", "", ""]
     parsing_i = 0
     for char in val:
         if char == "/":
             parsing_i += 1
             continue
         if parsing_i > 2:
-            raise ParseError(f"Invalid date `{val}`. Expected format "
-                "`mm/dd/yyy`.")
+            if parsing_i > 5:
+                raise ParseError(f"Invalid date `{val}`. Expected format "
+                    "`mm/dd/yyyy` or `mm/dd/yyyy/hh/mm/ss`.")
         if char == " ":
             break
         parts[parsing_i] = parts[parsing_i] + char
 
     # make sure we've parsed at least one char for all of month/day/year
-    if parsing_i != 2:
-        raise ParseError(f"Invalid date `{val}`. Expected format `mm/dd/yyyy`.")
+    if parsing_i != 5:
+        if parsing_i != 2:
+            raise ParseError(f"Invalid date `{val}`. Expected format `mm/dd/yyyy` "
+                "or `mm/dd/yyyy/hh/mm/ss`.")
+        
 
     try:
         month = int(parts[0])
@@ -458,7 +462,33 @@ def human_datetime(val):
                 "digits.")
     except ValueError:
         raise ParseError(f"Invalid year `{parts[2]}`.")
+    if len(parts[3]) == 0:
+        hour=0
+    else:    
+        try:
+            hour = int(parts[3])
+        
+        except ValueError:
+            raise ParseError(f"Invalid hour `{parts[3]}`.")
+    
+    if len(parts[5]) == 0:
+        second=0
+    else:    
+        try:
+            minute = int(parts[4])
+        
+        except ValueError:
+            raise ParseError(f"Invalid minute `{parts[4]}`.")
 
+    if len(parts[5]) == 0:
+        second=0
+    else:    
+        try:
+            second = int(parts[5])
+        
+        except ValueError:
+            raise ParseError(f"Invalid second `{parts[5]}`.")
+   
     if not 1 <= month <= 12:
         raise ParseError(f"Invalid month `{month}`. Must be between `1` and "
             "`12` inclusive.")
@@ -467,7 +497,21 @@ def human_datetime(val):
         raise ParseError(f"Invalid day `{day}`. Must be between `1` and `31` "
             "inclusive.")
 
-    return datetime(year=year, month=month, day=day)
+    if not 0 <= hour <= 23:
+        raise ParseError(f"Invalid hour `{hour}`. Must be between `0` and `23` "
+            "inclusive.")
+
+    if not 0 <= minute <= 59:
+        raise ParseError(f"Invalid minute `{minute}`. Must be between `0` and `59` "
+            "inclusive.")
+
+    if not 0 <= second <= 59:
+        raise ParseError(f"Invalid second `{second}`. Must be between `0` and `59` "
+            "inclusive.")
+    if parsing_i == 2:
+        return datetime(year=year, month=month, day=day)
+    else:
+        return datetime(year=year, month=month, day=day, hour=hour, minute=minute, second=second)
 
 def bounds(val):
     if len(val) != 4:
