@@ -252,6 +252,24 @@ class Snitchvis(Client):
             return
         self.livemap_updating_channels.append(lm_channel.channel_id)
 
+        try:
+            await self._update_livemap(lm_channel)
+        finally:
+            # make sure we don't block out a guild from livemap updates on
+            # errors. Errors can happen even when it's not our fault. For
+            # instance, here's an error I got when trying to upload a file:
+            #
+            # ```
+            # discord.errors.DiscordServerError: 503 Service Unavailable (error
+            # code: 0): upstream connect error or disconnect/reset before
+            # headers. reset reason: connection termination
+            # ```
+            #
+            # since livemaps run so often, it's important they're robust to
+            # rare discord errors.
+            self.livemap_updating_channels.remove(lm_channel.channel_id)
+
+    async def _update_livemap(self, lm_channel):
         channel = self.get_channel(lm_channel.channel_id)
         if not channel:
             # livemap channel was deleted or we were kicked from the guild,
@@ -296,8 +314,6 @@ class Snitchvis(Client):
                 except:
                     pass
             db.set_livemap_last_message_id(lm_channel.channel_id, new_m.id)
-
-            self.livemap_updating_channels.remove(lm_channel.channel_id)
 
             # upload a log to our log category if we have one
             log_channel = db.get_livemap_log_channel(guild.id)
