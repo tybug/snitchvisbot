@@ -52,6 +52,7 @@ class Command:
         return text
 
     async def invoke(self, message, arg_string):
+        permissions = message.channel.permissions_for(message.author)
         for permission in self.permissions:
             # handle custom permissions
             if permission == "author":
@@ -61,7 +62,6 @@ class Command:
                     return
                 continue
 
-            permissions = message.channel.permissions_for(message.author)
             if not getattr(permissions, permission):
                 await message.channel.send("You do not have permission to do "
                     f"that (requires `{permission}`).")
