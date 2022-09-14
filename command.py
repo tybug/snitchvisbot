@@ -472,7 +472,7 @@ def human_datetime(val):
             raise ParseError(f"Invalid hour `{parts[3]}`.")
     
     if len(parts[5]) == 0:
-        second=0
+        minute=0
     else:    
         try:
             minute = int(parts[4])
