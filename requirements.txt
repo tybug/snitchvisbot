@@ -1,2 +1,3 @@
 git+https://github.com/tybug/snitchvis#egg=snitchvis
 discord.py
+dateparser~=1.1

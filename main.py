@@ -659,12 +659,12 @@ class Snitchvis(Client):
                 "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
                 "eg 7/18/2022 or 12/31/21. If --start is passed but not "
                 "--end, *all* events after the passed start date will be "
-                "rendered."),
+                "rendered.", convert_mode="together", nargs="*"),
             Arg("--end", convert=human_datetime, help="The end date of "
                 "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
                 "eg 7/18/2022 or 12/31/21. If --end is passed but not "
                 "--start, *all* events before the passed end date will be "
-                "rendered."),
+                "rendered.", convert_mode="together", nargs="*"),
             Arg("-s", "--size", default=700, convert=int, help="The resolution "
                 "of the render, in pixels. Defaults to 700. Higher values take "
                 "longer to render."),
@@ -760,7 +760,7 @@ class Snitchvis(Client):
                 "please wait for one to finish before starting a new one.")
             return
 
-        if (past is not None) and (start is not None or end is not None):
+        if (past is not None) and (start != [] or end != []):
             await message.channel.send("`-p/--past` is incomptaible with "
                 "`--start` and `--end`. You cannot pass both.")
             return
