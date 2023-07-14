@@ -231,6 +231,13 @@ conn = sqlite3.connect(str(db_path))
 conn.row_factory = Row
 cur = conn.cursor()
 
+# if the sqlite file exists, but has no tables, initialize it anyway.
+# Added to support docker volumes which require the file to exist beforehand.
+tables = (cur.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    .fetchall())
+if not tables:
+    create_db()
+
 def commit():
     conn.commit()
 
