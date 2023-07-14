@@ -596,17 +596,24 @@ class Snitchvis(Client):
                 return
 
         self.indexing_guilds.append(message.guild.id)
-        for channel in channels:
-            await message.channel.send(f"Indexing {channel.mention}...")
-            c = channel.to_discord(message.guild)
-            events = await self.index_channel(channel, c)
-            db.commit()
+        try:
+            for channel in channels:
+                await message.channel.send(f"Indexing {channel.mention}...")
+                c = channel.to_discord(message.guild)
+                events = await self.index_channel(channel, c)
+                db.commit()
 
-            await message.channel.send(f"Added {len(events)} new events from "
-                f"{channel.mention}")
+                await message.channel.send(f"Added {len(events)} new events from "
+                    f"{channel.mention}")
 
-        await message.channel.send("Finished indexing snitch channels")
-        self.indexing_guilds.remove(message.guild.id)
+            await message.channel.send("Finished indexing snitch channels")
+        finally:
+            # ensure that indexing_guilds doesn't get stuck in an inconsistent
+            # state. Despite my best efforts, it is possible for pk violation
+            # errors to occur when indexing here. We probably need to defer
+            # indexing for a specific guild while an .index command is running
+            # in that guild.
+            self.indexing_guilds.remove(message.guild.id)
 
     @command("full-reindex",
         args=[
