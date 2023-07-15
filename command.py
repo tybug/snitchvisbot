@@ -94,9 +94,15 @@ class Command:
         # ideally we'll raise ParseErrors with nice error messages, but in the
         # worst case of a python-level error, catch anyway so we don't just
         # silently fail.
-        except (ParseError, ValueError) as e:
+        except ParseError as e:
             await message.channel.send(f"{e}\nRun `.{self.name} --help` for "
                 "more information.")
+        except Exception as e:
+            await message.channel.send("Encountered fatal error shown below "
+                "while running command. Contact tybug if the issue persists."
+                "\n```\n"
+                f"{e}\n"
+                "```")
 
     async def _invoke(self, message, arg_strings):
         if not self.parse:
