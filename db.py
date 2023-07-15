@@ -265,6 +265,10 @@ def execute(query, params, commit_=True):
 
 def convert(rows, Class):
     instances = []
+    # Extraneous parameters not relevant to `Class` can sneak in via sql
+    # joins. Filter this out to avoid errors on instantation.
+    parameters = list(inspect.signature(Class.__init__).parameters)
+
     for row in rows:
         if isinstance(row, Row):
             values = list(row)
@@ -273,9 +277,6 @@ def convert(rows, Class):
 
         kwargs = dict(zip(row.keys(), values))
 
-        # Extraneous parameters not relevant to `Class` can sneak in via sql
-        # joins. Filter this out to avoid errors on instantation.
-        parameters = list(inspect.signature(Class.__init__).parameters)
         kwargs_ = {}
         for k, v in kwargs.items():
             if k in parameters:
