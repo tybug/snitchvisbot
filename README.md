@@ -262,11 +262,4 @@ Database is created on first run. There's currently no way to deal with database
 
 ### Headless
 
-If you're running on a headless server, or somewhere without an X server, you'll need to wrap the call in a virtual X server:
-
-```
-sudo apt install xvfb
-xvfb-run python main.py
-```
-
-SnitchVis doesn't actually use an X server to render, but we do need to trick Qt into thinking an X server is available, or it will complain and crash.
+If you're running on a headless server, or somewhere without an X server, you'll need to set the `QT_QPA_PLATFORM=offscreen` environment variable before running snitchvis.
