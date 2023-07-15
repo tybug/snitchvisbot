@@ -269,6 +269,7 @@ def execute(query, params, commit_=True, log=True):
     return cur_
 
 def convert(rows, Class):
+    t = time.time()
     instances = []
     # Extraneous parameters not relevant to `Class` can sneak in via sql
     # joins. Filter this out to avoid errors on instantation.
@@ -282,6 +283,7 @@ def convert(rows, Class):
 
         kwargs = {k: v for k, v in zip(row.keys(), values) if k in parameters}
         instances.append(Class(**kwargs))
+    print(f"[convert] {time.time() - t}")
     return instances
 
 ## snitches
