@@ -242,9 +242,14 @@ def commit():
     conn.commit()
 
 def select(query, params=[]):
-    return execute(query, params, commit_=False).fetchall()
+    t1 = time.time()
+    ret = execute(query, params, commit_=False, log=False).fetchall()
+    # perform our own performance logging to account for potential fetchall
+    # overheads.
+    print(f"[db] {time.time() - t1} {query} {params} (commit? {False})")
+    return ret
 
-def execute(query, params, commit_=True):
+def execute(query, params, commit_=True, log=True):
     t1 = time.time()
     # print some debug information on sql queries so we know exactly what
     # query caused it to error. Our performance logging below prints this as
@@ -255,12 +260,12 @@ def execute(query, params, commit_=True):
         print(f"error on query {query} params {params}", flush=True)
         raise
 
-    t2 = time.time()
-    # performance logging for sql queries
-    print(f"[db] {t2 - t1} {query} {params}")
-
     if commit_:
         commit()
+
+    if log:
+        # performance logging for sql queries
+        print(f"[db] {time.time() - t1} {query} {params} (commit? {commit_})")
     return cur_
 
 def convert(rows, Class):
