@@ -1,9 +1,11 @@
 import re
 import shlex
-from datetime import timedelta, datetime
 import inspect
 
+from discord.utils import utcnow
+
 import config
+from utils import try_dateparser
 
 class ParseError(Exception):
     pass
@@ -346,128 +348,20 @@ def role(message, val):
     return message.guild.get_role(role_id)
 
 
-# a command converter from a human-readable timedelta string representation
-# (eg "4d1h30m20s") to seconds.
 def human_timedelta(val):
-    # special-case value. shorthand for 999999y, or some other ridiculously
-    # big number. The calling code is responsible for handling this as a special
+    # special-case value. The calling code is responsible for handling this
     # case.
     # TODO could we get clever here by returning the current datetime? probably
-    # would be susceptible to deviations due to computation time. maybe the
-    # entire api (ie return value/type) of this function needs to be rethought?
+    # would be susceptible to deviations due to computation time.
     if val == "all":
         return "all"
 
-    # Small handwritten lexer. There might be a better way to do this.
+    datetime = try_dateparser(val)
+    return utcnow() - datetime
 
-    # year, month, week, day, hour, minute, second
-    units = ["y", "mo", "w", "d", "h", "m", "s"]
-    # unit to integer
-    unit_vals = {}
-    # buffer for current integer string
-    current_int_str = ""
-
-    # handle `mo` case with val[-2:]
-    if val[-1] not in units and val[-2:] not in units:
-        raise ParseError("Expected last character to be one of "
-            f"`{', '.join(units)}`, got `{val[-1]}`")
-
-    i = 0
-    while i < len(val):
-        char = val[i]
-        i += 1
-
-        # peak ahead one char to resolve ambiguity between `m` and `mo`.
-        if i != len(val) and char + val[i] in units:
-            char = char + val[i]
-            # extra increment to handle extra char
-            i += 1
-        elif char not in units:
-            # integer validity will be checked later, when we can give a better
-            # error message
-            current_int_str += char
-            continue
-
-        if not current_int_str:
-            raise ParseError(f"`{char}` must be preceeded by an integer")
-
-        try:
-            val_ = int(current_int_str)
-        except ValueError:
-            raise ParseError(f"Expected a valid integer to preceed `{char}`, "
-                f"got `{current_int_str}`")
-
-        if char in unit_vals:
-            raise ParseError(f"Cannot specify `{char}` twice")
-
-        unit_vals[char] = val_
-        current_int_str = ""
-
-    y = unit_vals.get("y", 0)
-    mo = unit_vals.get("mo", 0)
-    w = unit_vals.get("w", 0)
-    d = unit_vals.get("d", 0)
-    h = unit_vals.get("h", 0)
-    m = unit_vals.get("m", 0)
-    s = unit_vals.get("s", 0)
-
-    # is this accurate? no. will it be good enough? probably.
-    weeks = (y * 52) + (mo * 4) + w
-    return timedelta(weeks=weeks, days=d, hours=h, minutes=m, seconds=s)
-
-# TODO parse time as well, not just date (eg 7/12/2022 8:02:20 PM, or probably
-# 24 hour clock, or support both)
-def human_datetime(val):
-
-    # month, day, year
-    parts = ["", "", ""]
-    parsing_i = 0
-    for char in val:
-        if char == "/":
-            parsing_i += 1
-            continue
-        if parsing_i > 2:
-            raise ParseError(f"Invalid date `{val}`. Expected format "
-                "`mm/dd/yyy`.")
-        if char == " ":
-            break
-        parts[parsing_i] = parts[parsing_i] + char
-
-    # make sure we've parsed at least one char for all of month/day/year
-    if parsing_i != 2:
-        raise ParseError(f"Invalid date `{val}`. Expected format `mm/dd/yyyy`.")
-
-    try:
-        month = int(parts[0])
-    except ValueError:
-        raise ParseError(f"Invalid month `{parts[0]}`.")
-
-    try:
-        day = int(parts[1])
-    except ValueError:
-        raise ParseError(f"Invalid day `{parts[1]}`.")
-
-    try:
-        year = int(parts[2])
-        # allow users to specify short years with just two digits. Yes, this
-        # will break in a century. I'm not worried about it.
-        if len(parts[2]) == 2:
-            year += 2000
-        if len(parts[2]) not in [2, 4]:
-            raise ParseError(f"Invalid year `{year}`. Must be either 2 or 4 "
-                "digits.")
-    except ValueError:
-        raise ParseError(f"Invalid year `{parts[2]}`.")
-
-    if not 1 <= month <= 12:
-        raise ParseError(f"Invalid month `{month}`. Must be between `1` and "
-            "`12` inclusive.")
-
-    if not 1 <= day <= 31:
-        raise ParseError(f"Invalid day `{day}`. Must be between `1` and `31` "
-            "inclusive.")
-
-    return datetime(year=year, month=month, day=day)
+def human_datetime(vals):
+    val = " ".join(vals)
+    return try_dateparser(val)
 
 def bounds(val):
     if len(val) != 4:
