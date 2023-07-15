@@ -41,10 +41,12 @@ class Event:
     x: int
     y: int
     z: int
-    # gets passed as ms since epoch and converted on post_init
-    t: datetime
+    t: float | datetime
 
-    def __post_init__(self):
+    # as an optimization, defer converting t into a datetime until requested.
+    # snitchvis (the underlying rendering library) expects this to be a
+    # datetime, but most/all of snitchvisbot does not.
+    def convert_t(self):
         self.t = datetime.fromtimestamp(self.t, timezone.utc)
 
 @dataclass

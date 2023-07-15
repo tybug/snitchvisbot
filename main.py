@@ -285,8 +285,10 @@ class Snitchvis(Client):
 
         # use all events to construct snitches instead of the filtered subset
         # above
-        all_events = db.get_events(guild.id, "all")
+        all_events = db.get_events(guild.id, "all", convert_t=False)
         snitches = snitches_from_events(all_events)
+        # reclaim memory.
+        del all_events
         snitches |= set(db.get_snitches(guild.id, "all"))
         users = create_users(events)
 
@@ -816,7 +818,8 @@ class Snitchvis(Client):
 
         # use all events this author has access to to construct snitches,
         # instead of just the events returned by the filter
-        all_events = db.get_events(message.guild.id, message.author.roles)
+        all_events = db.get_events(message.guild.id, message.author.roles,
+            convert_t=False)
         snitches = snitches_from_events(all_events)
         # reclaim some memory since we don't need all_events anymore.
         # TODO we may want to load events one by one

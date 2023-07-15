@@ -431,9 +431,14 @@ def most_recent_event(guild_id):
     if not rows:
         return None
 
-    return convert(rows, Event)[0]
+    event = convert(rows, Event)[0]
+    event.convert_t()
+    return event
 
-def get_events(guild_id, roles, *, start=None, end=None, users=[], groups=[]):
+def get_events(
+    guild_id, roles, *, start=None, end=None, users=[], groups=[],
+    convert_t=True
+):
     users = [user.lower() for user in users]
 
     where = Where()
@@ -484,7 +489,15 @@ def get_events(guild_id, roles, *, start=None, end=None, users=[], groups=[]):
         """,
         [*where.params]
     )
-    return convert(rows, Event)
+    events = convert(rows, Event)
+
+    # as an optimization, only convert t into a datetime when necessary.
+    # Frankly, I'm not sure how much this helps, but may make a difference when
+    # retrieving all events in particular, wher we don't care about t.
+    if convert_t:
+        for event in events:
+            event.convert_t()
+    return events
 
 ## render history
 
