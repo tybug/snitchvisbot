@@ -103,6 +103,7 @@ class Command:
                 "\n```\n"
                 f"{e}\n"
                 "```")
+            raise e
 
     async def _invoke(self, message, arg_strings):
         if not self.parse:
