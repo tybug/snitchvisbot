@@ -130,7 +130,7 @@ class ForwardingChannel(Messageable):
         self.__forward_to = forward_to
 
     def __getattr__(self, val):
-        # then transparently forward any accesses to our authenticated object.
+        # transparently forward any accesses to our backing messageable object.
         return getattr(self.__messageable, val)
 
     async def send(self, content=None, *args, file=None, **kwargs):
