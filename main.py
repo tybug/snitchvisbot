@@ -167,7 +167,7 @@ class Snitchvis(Client):
         snitch_channel = db.get_snitch_channel(message.channel.id)
         # only index messages in snitch channels which have been fully indexed
         # by `.index` already. If someone adds a snitch channel with
-        # `.channel add #snitches`, and then a snitch ping is immediately sent
+        # `.add-channel #snitches`, and then a snitch ping is immediately sent
         # in that channel, we don't want to update the last indexed id (or
         # index the message at all) until the channel has been fully indexed
         # manually.
@@ -462,11 +462,11 @@ class Snitchvis(Client):
             "time to retrieve all the snitch messages from discord due to "
             "ratelimiting.")
         await message.channel.send("To add a snitch channel, do something like "
-            "`.channel add #snitches citizens governor` (see also `.channel "
-            "add --help`). The arguments after the channel should be names of "
+            "`.add-channel #snitches citizens governor` (see also `.add-channel "
+            "--help`). The arguments after the channel should be names of "
             "discord roles which you want to be able to render events from "
             "this channel. If you mess up the roles when adding a "
-            "snitch channel, you can use `.channel remove` to remove it, then "
+            "snitch channel, you can use `.remove-channel` to remove it, then "
             "re-add it with the correct roles.")
         await message.channel.send("Once you've added all your snitch "
             "channels, tell snitchvis to store events in those channels with "
@@ -493,7 +493,7 @@ class Snitchvis(Client):
             "\nAnd more. All of this is documented in `.r --help`.")
 
 
-    @command("channel add",
+    @command("add-channel",
         args=[
             Arg("channel", convert=channel, help="The "
                 "channel to add. Use a proper channel mention "
@@ -506,16 +506,17 @@ class Snitchvis(Client):
         ],
         help_short="Adds a snitch channel, viewable by the specified roles.",
         help="Adds a snitch channel, viewable by the specified roles.\n\n"
-            "Example: `.channel add #snitches citizen \"lieutenant governor\" "
+            "Example: `.add-channel #snitches citizen \"lieutenant governor\" "
             "governor`",
-        permissions=["manage_guild"]
+        permissions=["manage_guild"],
+        aliases=["channel add", "channel-add", "add channel"]
     )
     async def channel_add(self, message, channel, roles):
         if db.snitch_channel_exists(channel.id):
             await message.channel.send(f"{channel.mention} is already a "
                 "snitch channel. If you would like to change which roles "
                 f"have access to {channel.mention}, first remove it "
-                "(`.channel remove`) then re-add it (`.channel add`) with "
+                "(`.remove-channel`) then re-add it (`.add-channel`) with "
                 "the desired roles.")
             return
         db.add_snitch_channel(channel, roles)
@@ -524,14 +525,15 @@ class Snitchvis(Client):
             f"channels, accessible by {utils.role_str(roles)}")
 
 
-    @command("channel remove",
+    @command("remove-channel",
         args=[
             Arg("channels", nargs="+", convert=channel, help="The "
                 "channels to remove. Use a proper channel mention "
                 "(eg #snitches) to specify a channel.")
         ],
         help="Removes a snitch channel.",
-        permissions=["manage_guild"]
+        permissions=["manage_guild"],
+        aliases=["channel remove", "channel-remove", "remove channel"]
     )
     async def channel_remove(self, message, channels):
         for channel in channels:
@@ -541,15 +543,19 @@ class Snitchvis(Client):
             "from snitch channels.")
 
 
-    @command("channel list",
+    @command("list-channels",
         help="Lists the current snitch channels.",
-        permissions=["manage_guild"]
+        permissions=["manage_guild"],
+        aliases=[
+            "channel list", "channel-list", "channels list", "list-channel",
+            "list channels"
+        ]
     )
     async def channel_list(self, message):
         channels = db.get_snitch_channels(message.guild.id)
         if not channels:
             await message.channel.send("No snitch channels set. You can add "
-                "snitch channels with `.channel add`.")
+                "snitch channels with `.add-channel`.")
             return
 
         m = "Current snitch channels:\n"
@@ -567,7 +573,7 @@ class Snitchvis(Client):
 
         if not channels:
             await message.channel.send("No snitch channels to index. Use "
-                "`.channel add #channel` to add snitch channels.")
+                "`.add-channel #channel` to add snitch channels.")
             return
 
         # running multiple concurrent index commands is NOT safe and will result
@@ -594,7 +600,7 @@ class Snitchvis(Client):
                     f"to read messages in {channel.mention}. Either give "
                     "snitchvis enough permissions to read messages there, or "
                     "remove it from the list of snitch channels (with "
-                    "`.channel remove`).")
+                    "`.remove-channel`).")
                 return
 
         self.indexing_guilds.append(message.guild.id)
@@ -746,7 +752,7 @@ class Snitchvis(Client):
         anonymize, heatmap_percentage, heatmap_scale, export
     ):
         NO_EVENTS = ("No events match those criteria. Try adding snitch "
-            "channels with `.channel add #channel`, indexing with `.index`, or "
+            "channels with `.add-channel #channel`, indexing with `.index`, or "
             "adjusting your parameters to include more snitch events.")
 
         if heatmap_percentage < 1:
@@ -1063,7 +1069,7 @@ class Snitchvis(Client):
     @command("permissions",
         help="Lists what snitch channels you have "
         "have permission to render events from. This is based on your discord "
-        "roles and how you set up the snitch channels (see `.channel list`).",
+        "roles and how you set up the snitch channels (see `.list-channels`).",
         help_short="Lists what snitch channels you have permission to render "
             "events from."
     )

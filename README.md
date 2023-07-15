@@ -11,9 +11,9 @@ Invite: https://discord.com/oauth2/authorize?client_id=999808708131426434&permis
 | Command          | Description                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | [.render](#render)          | Renders snitch events to a video. Provides options to adjust render look and feel, events included, duration, quality, etc.    |
-| [.channel add](#channel-add)     | Adds a snitch channel, viewable by the specified roles.                                                                    |
-| [.channel remove](#channel-remove) | Removes a snitch channel(es) from the list of snitch channels.                                                                 |
-| [.channel list](#channel-list)    | Lists the current snitch channels and what roles can view them.                                                                |
+| [.add-channgel](#channel-add)     | Adds a snitch channel, viewable by the specified roles.                                                                    |
+| [.remove-channel](#channel-remove) | Removes a snitch channel(es) from the list of snitch channels.                                                                 |
+| [.list-channels](#channel-list)    | Lists the current snitch channels and what roles can view them.                                                                |
 | [.set-livemap-channel](#set-livemap-channel) | Sets the channel to upload an always-up-to-date snitch events image to. A new image is uploaded whenever there are new snitch events. |
 | [.create-command](#create-command)     |Create a custom command, which can call other commands and pass arguments.                                                          |
 | [.commands](#list-commands) | View all custom commands for this server. |
@@ -67,8 +67,8 @@ Adds a snitch channel, viewable by the specified roles.
 
 Examples:
 
-* `.channel add #snitches-citizens citizens`
-* `.channel add #snitches-government "lieutenant governor" governor`
+* `.add-channel #snitches-citizens citizens`
+* `.add-channel #snitches-government "lieutenant governor" governor`
 
 #### Positional Arguments
 
@@ -86,7 +86,7 @@ Examples:
 
 Removes a snitch channel(es) from the list of snitch channels.
 
-Example: `.channel remove #snitches-citizens`
+Example: `.remove-channel #snitches-citizens`
 
 #### Positional Arguments
 
@@ -98,7 +98,7 @@ Example: `.channel remove #snitches-citizens`
 
 Lists the current snitch channels and what roles can view them.
 
-Example: `.channel list`
+Example: `.list-channels`
 
 Takes no arguments.
 
@@ -182,7 +182,7 @@ Example: `.events --name "shop entrance"`
 
 ### Permissions
 
-Lists what snitch channels you have have permission to render events from. This is based on your discord roles and how you set up the snitch channels (see `.channel list`).
+Lists what snitch channels you have have permission to render events from. This is based on your discord roles and how you set up the snitch channels (see `.list-channels`).
 
 Example: `.permissions`
 
