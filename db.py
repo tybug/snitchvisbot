@@ -280,14 +280,8 @@ def convert(rows, Class):
         else:
             values = row.values()
 
-        kwargs = dict(zip(row.keys(), values))
-
-        kwargs_ = {}
-        for k, v in kwargs.items():
-            if k in parameters:
-                kwargs_[k] = v
-
-        instances.append(Class(**kwargs_))
+        kwargs = {k: v for k, v in zip(row.keys(), values) if k in parameters}
+        instances.append(Class(**kwargs))
     return instances
 
 ## snitches
