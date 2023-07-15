@@ -6,6 +6,8 @@ from discord import Client as _Client, Intents, Member
 from command import Command
 import db
 import config
+from models import ForwardingChannel
+from utils import message_log_prefix
 
 class Client(_Client):
     def __init__(self, *args, **kwargs):
@@ -112,8 +114,12 @@ class Client(_Client):
 
             # don't log commands by the author, gets annoying for testing
             if author.id != config.AUTHOR_ID and self.command_log_channel:
-                await self.command_log_channel.send(f"[`{guild.name}`] "
-                    f"[{author.mention} / `{author.name}`] `{content}`")
+                log_prefix = message_log_prefix(guild, author)
+                await self.command_log_channel.send(f"{log_prefix} `{content}`")
+                # wait until here to monkey-patch this so only messages sent as
+                # a result of non-author commands are forwaded.
+                message.channel = ForwardingChannel(message.channel,
+                    log_prefix=log_prefix, forward_to=self.command_log_channel)
 
             # also strip any whitespace, particularly after the command name
             args = content.removeprefix(command_name).strip()

@@ -23,3 +23,6 @@ def try_dateparser(val):
         raise ParseError(f"Invalid time `{val}`.")
 
     return datetime.replace(tzinfo=timezone.utc)
+
+def message_log_prefix(guild, author):
+    return f"[`{guild.name}`] [{author.mention} / `{author.name}`]"
