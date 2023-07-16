@@ -81,6 +81,8 @@ def create_db():
         CREATE INDEX idx_event_snitch_namelayer_group
         ON event (namelayer_group)
     """)
+    # TODO we probably will want an index on `world` if/when we start consuming
+    # that column.
     c.execute("""
         CREATE INDEX idx_event_snitch_location
         ON event (x, y, z)
