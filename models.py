@@ -38,6 +38,7 @@ class Event:
     username: str
     snitch_name: str
     namelayer_group: str
+    world: str
     x: int
     y: int
     z: int

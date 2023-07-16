@@ -52,6 +52,7 @@ def create_db():
             `username` TEXT NOT NULL,
             `snitch_name` TEXT,
             `namelayer_group` TEXT NOT NULL,
+            `world` TEXT NOT NULL,
             `x` INTEGER NOT NULL,
             `y` INTEGER NOT NULL,
             `z` INTEGER NOT NULL,
@@ -418,10 +419,10 @@ def add_event(message, event, commit=True):
     # they actually occurred, or potentially more if kira got desynced or
     # backlogged.
     t = message.created_at.timestamp()
-    return execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    return execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [message.id, message.channel.id, message.guild.id, event.username,
-         event.snitch_name, event.namelayer_group, event.x, event.y, event.z,
-         t], commit)
+         event.snitch_name, event.namelayer_group, event.world, event.x,
+         event.y, event.z, t], commit)
 
 def event_exists(message_id):
     rows = select("SELECT * FROM event WHERE message_id = ?", [message_id])
