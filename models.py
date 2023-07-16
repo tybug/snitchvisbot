@@ -124,8 +124,12 @@ class FakeMessage:
     guild: Guild
     content: str
 
-# subclass Messageable for correct typing.
-class ForwardingChannel(Messageable):
+# XXX don't subclass Messageable here, even for correct typing. Causes
+# _get_channel to be forwarded to ForwardingChannel._get_channel and not
+# __getattr__ since the attr already exists.
+# If correct typing is absolutely necessary, will likely need to override
+# isinstance.
+class ForwardingChannel:
     def __init__(self, messageable, *, log_prefix, forward_to):
         self.__messageable = messageable
         self.__log_prefix = log_prefix
