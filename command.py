@@ -380,15 +380,13 @@ def bounds(val):
     x2 = int(val[2])
     y2 = int(val[3])
 
-    if x1 >= x2:
-        raise ParseError(f"x1 ({x1}) must be less than x2 ({x2}). Remember "
-            "that the first two "
-            "values specify the bottom left corner, and the last two values "
-            "specify the top right corner.")
-    if y1 <= y2:
-        raise ParseError(f"z1 ({y1}) must be greater than z2 ({y2}). Remember "
-            "that the first "
-            "two values specify the bottom left corner, and the last two "
-            "values specify the top right corner.")
+    # assume (x1, y1) and (x2, y2) are opposing vertices on a rectangle.
+    # compute the lower left and upper right vertices (which might in fact be
+    # the original points).
 
-    return [x1, y1, x2, y2]
+    ll_x = min(x1, x2)
+    ll_y = min(y1, y2)
+    ur_x = max(x1, x2)
+    ur_y = max(y1, y2)
+
+    return [ll_x, ll_y, ur_x, ur_y]
