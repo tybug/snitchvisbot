@@ -69,8 +69,18 @@ class Command:
                     f"that (requires `{permission}`).")
                 return
 
-        # preserve quoted arguments with spaces as a single argument
-        arg_strings = shlex.split(arg_string)
+        try:
+            # preserve quoted arguments with spaces as a single argument
+            arg_strings = shlex.split(arg_string)
+        except ValueError:
+            # lone single quotations break things. apparently single quotes are
+            # valid identifiers in namelayer groups. sigh.
+            await message.channel.send("No matching parenthesis found. If you "
+                "are passing a parameter which contains a single quote "
+                "(e.g. `my_nation's_group`), wrap that parameter in double "
+                "quotes instead (e.g. `\"my_nation's_group\"`)")
+            return
+
         # inlude em dash special case for phones
         if any(arg_string in ["--help", "-h", "—help"] for arg_string in arg_strings):
             help_message = self.help_message()
