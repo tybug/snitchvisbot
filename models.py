@@ -85,7 +85,6 @@ class Snitch:
 class LivemapChannel:
     guild_id: int
     channel_id: int
-    last_message_id: int
 
 @dataclass
 class LivemapLogChannel:

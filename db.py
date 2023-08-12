@@ -189,7 +189,6 @@ def create_db():
         CREATE TABLE livemap_channel (
             guild_id INTEGER NOT NULL,
             channel_id INTEGER NOT NULL,
-            last_message_id INTEGER,
             PRIMARY KEY(guild_id)
         )
     """)
