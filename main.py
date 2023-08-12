@@ -247,7 +247,7 @@ class Snitchvis(Client):
 
     async def update_livemap(self, lm_channel):
         # we're currently updating the livemap for this channel already, don't
-        # duplicate events (which can cause last_message_id to get messed up)
+        # duplicate events
         if lm_channel.channel_id in self.livemap_updating_channels:
             return
         self.livemap_updating_channels.append(lm_channel.channel_id)
@@ -302,20 +302,7 @@ class Snitchvis(Client):
                 await self.loop.run_in_executor(pool, f)
 
             livemap_file = File(output_file)
-            new_m = await channel.send(file=livemap_file)
-
-            # get rid of our old livemap message
-            if lm_channel.last_message_id:
-                # if the message was already deleted, don't fail-early - could
-                # cause a chain reaction since we would never set the livemap
-                # last message id below.
-                try:
-                    old_m = await channel.fetch_message(
-                        lm_channel.last_message_id)
-                    await old_m.delete()
-                except:
-                    pass
-            db.set_livemap_last_message_id(lm_channel.channel_id, new_m.id)
+            await channel.send(file=livemap_file)
 
             # upload a log to our log category if we have one
             log_channel = db.get_livemap_log_channel(guild.id)

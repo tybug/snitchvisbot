@@ -587,13 +587,6 @@ def set_livemap_channel(guild_id, channel_id):
     execute("INSERT INTO livemap_channel (guild_id, channel_id) VALUES (?, ?)",
         [guild_id, channel_id])
 
-def set_livemap_last_message_id(channel_id, last_message_id):
-    execute("""
-        UPDATE livemap_channel
-        SET last_message_id = ?
-        WHERE channel_id = ?
-    """, [last_message_id, channel_id])
-
 def get_livemap_log_channel(guild_id):
     rows = select("SELECT * FROM livemap_log_channel WHERE guild_id = ?",
         [guild_id])
