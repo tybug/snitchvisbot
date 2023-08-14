@@ -1015,8 +1015,10 @@ class Snitchvis(Client):
             for group in groups:
                 if group == "all":
                     continue
+                # case insensitive group compare. nl groups are case insensitive
+                # in game.
                 row = cur.execute("SELECT COUNT(*) FROM snitches_v2 WHERE "
-                    "group_name = ?", [group]).fetchone()
+                    "group_name = ? COLLATE NOCASE", [group]).fetchone()
                 if row[0] == 0:
                     await message.channel.send("No snitches on namelayer "
                         f"group `{group}` found in this database. If the "
@@ -1036,7 +1038,8 @@ class Snitchvis(Client):
                 # don't pass ["all"] if our filter doesn't have any params
                 groups_params = []
             else:
-                group_filter = f"group_name IN ({('?, ' * len(groups))[:-2]})"
+                # match case insensitive compare above.
+                group_filter = f"group_name COLLATE NOCASE IN ({('?, ' * len(groups))[:-2]})"
                 groups_params = groups
 
             rows = cur.execute("SELECT * FROM snitches_v2 WHERE "
