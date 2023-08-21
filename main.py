@@ -1289,7 +1289,7 @@ class Snitchvis(Client):
             "you want in your custom command. Custom commands cannot call "
             "other custom commands, only existing base commands.\n\n"
             "Examples:\n"
-            "* `.create-command rhq render --size 1200 --fps 30\n`"
+            "* `.create-command rhq render --size 1200 --fps 30`\n"
             "* `.create-command render render -d 30` - can create custom "
             "commands with the same name as existing commands. This makes all "
             "renders 30 seconds long\n"
