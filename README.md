@@ -11,8 +11,8 @@ Invite: https://discord.com/oauth2/authorize?client_id=999808708131426434&permis
 | Command          | Description                                                                                                                    |
 | ---------------- | ------------------------------------------------------------------------------------------------------------------------------ |
 | [.render](#render)          | Renders snitch events to a video. Provides options to adjust render look and feel, events included, duration, quality, etc.    |
-| [.add-channgel](#channel-add)     | Adds a snitch channel, viewable by the specified roles.                                                                    |
-| [.remove-channel](#channel-remove) | Removes a snitch channel(es) from the list of snitch channels.                                                                 |
+| [.add-channel](#channel-add)     | Adds a snitch channel, viewable by the specified roles.                                                                    |
+| [.remove-channel](#channel-remove) | Removes a snitch channel(s) from the list of snitch channels.                                                                 |
 | [.list-channels](#channel-list)    | Lists the current snitch channels and what roles can view them.                                                                |
 | [.set-livemap-channel](#set-livemap-channel) | Sets the channel to upload an always-up-to-date snitch events image to. A new image is uploaded whenever there are new snitch events. |
 | [.create-command](#create-command)     |Create a custom command, which can call other commands and pass arguments.                                                          |
@@ -84,7 +84,7 @@ Examples:
 
 ### Channel Remove
 
-Removes a snitch channel(es) from the list of snitch channels.
+Removes a snitch channel(s) from the list of snitch channels.
 
 Example: `.remove-channel #snitches-citizens`
 
