@@ -324,6 +324,12 @@ class Snitchvis(Client):
             if last_id and message_.id <= last_id:
                 break
 
+            if len(events) % 10000:
+                await discord_channel.send(f"Found {len(events)} new events so far from "
+                    f"{discord_channel.mention}")
+                print(f"Found {len(events)} new events so far from  {discord_channel} / {discord_channel.id}, "
+                    f"guild {discord_channel.guild} / {discord_channel.guild.id}")
+
             try:
                 event = self.parse_event(message_.content, kira_configs)
             except InvalidEventException:
