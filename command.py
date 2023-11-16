@@ -69,6 +69,11 @@ class Command:
                     f"that (requires `{permission}`).")
                 return
 
+        # smart quotes strike again! you will be shocked to hear that shlex does
+        # not split on these.
+        arg_string = arg_string.replace("“", "\"")
+        arg_string = arg_string.replace("”", "\"")
+
         try:
             # preserve quoted arguments with spaces as a single argument
             arg_strings = shlex.split(arg_string)
