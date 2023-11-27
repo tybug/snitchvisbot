@@ -311,7 +311,7 @@ class Snitchvis(Client):
                 log_file = File(output_file)
                 await log_channel.send(file=log_file)
 
-    async def index_channel(self, channel, discord_channel, msg=None):
+    async def index_channel(self, channel, discord_channel, *, update_message=None):
         print(f"Indexing channel {discord_channel} / {discord_channel.id}, "
             f"guild {discord_channel.guild} / {discord_channel.guild.id}")
         events = []
@@ -330,13 +330,10 @@ class Snitchvis(Client):
                 continue
             events.append([message_, event])
 
-            if len(events) % 2500 == 0:
-
-                if msg is not None:
-                    await msg.edit( content = f"Indexing {discord_channel.mention}... \nFound {len(events)} new events so far " )
-                    
-                print(f"Found {len(events)} new events so far from  {discord_channel} / {discord_channel.id}, "
-                    f"guild {discord_channel.guild} / {discord_channel.guild.id}")
+            if len(events) % 1_000 == 0:
+                content = f"Indexing {discord_channel.mention}... added {len(events):,} new events so far"
+                if update_message:
+                    await update_message.edit(content=content)
 
         last_messages = [m async for m in discord_channel.history(limit=1)]
 
@@ -601,13 +598,13 @@ class Snitchvis(Client):
         self.indexing_guilds.append(message.guild.id)
         try:
             for channel in channels:
-                msg = await message.channel.send(f"Indexing {channel.mention}...")
+                update_message = await message.channel.send(f"Indexing {channel.mention}...")
                 c = channel.to_discord(message.guild)
-                events = await self.index_channel(channel, c, msg)
+                events = await self.index_channel(channel, c, update_message=update_message)
                 db.commit()
 
-                await msg.edit(content = f"Added {len(events)} new events from "
-                    f"{channel.mention}")
+                await update_message.edit(content=f"Finished indexing {channel.mention} "
+                    f"({len(events):,} new events added)")
 
             await message.channel.send("Finished indexing snitch channels")
         finally:
