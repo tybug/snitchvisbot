@@ -420,7 +420,7 @@ def add_event(message, event, commit=True):
     # they actually occurred, or potentially more if kira got desynced or
     # backlogged.
     t = message.created_at.timestamp()
-    return execute("INSERT INTO event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+    return execute("INSERT OR IGNORE INTO event VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
         [message.id, message.channel.id, message.guild.id, event.username,
          event.snitch_name, event.namelayer_group, event.world, event.x,
          event.y, event.z, t], commit)
