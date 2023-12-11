@@ -37,21 +37,50 @@ class Command:
         positional_args = [arg for arg in self.args if arg.positional]
         flag_args = [arg for arg in self.args if not arg.positional]
 
-        text = f"{self.help}\n"
-
-        arg_text = ""
-        for arg in positional_args:
-            arg_text += f"\n  {arg}: {arg.help}"
+        padding = max(len(arg.str_full) for arg in self.args)
+        # dont let a single very long arg cause extremely long help messages.
+        padding = min(padding, 20)
+        text = f"{self.help}"
         if positional_args:
-            text += f"\nPositional Arguments:\n```{arg_text}\n```"
+            text += f"\n\nArguments:\n{self.align_args(positional_args, max_size=padding)}"
 
-        arg_text = ""
-        for arg in flag_args:
-            arg_text += f"\n  {arg}: {arg.help}"
         if flag_args:
-            text += f"\nOptions:\n```{arg_text}\n```"
+            text += f"\n\nOptions:\n{self.align_args(flag_args, max_size=padding)}"
 
         return text
+
+    def align_args(self, args, *, max_size):
+        left_spacing = " " * 2
+        middle_spacing = " " * 4
+        help_newline_after = 60
+
+        def align_help(val, *, newline_after, spacing, offset):
+            i = 0
+            v = ""
+            for i, c in enumerate(val, 1):
+                # skip the first iteration
+                if i > offset + 1 and i % (newline_after - offset) == 1:
+                    v += f"\n{' ' * spacing}"
+                v += c
+
+            return v
+
+        def align_arg(arg):
+            total_spacing = len(left_spacing) + max_size + len(middle_spacing)
+            # offset caused by arg going out of bounds of max_size. need to
+            # inset our aligned help to account for this
+            offset = max(0, len(arg.str_full) - max_size)
+
+            aligned_help = align_help(
+                arg.help,
+                newline_after=help_newline_after,
+                spacing=total_spacing,
+                offset=offset
+            )
+
+            return f"{left_spacing}{arg.str_full:{max_size}}{middle_spacing}{aligned_help}"
+
+        return"\n".join(align_arg(arg) for arg in args)
 
     async def invoke(self, message, arg_string):
         permissions = message.channel.permissions_for(message.author)
@@ -88,20 +117,7 @@ class Command:
 
         # inlude em dash special case for phones
         if any(arg_string in ["--help", "-h", "—help"] for arg_string in arg_strings):
-            help_message = self.help_message()
-            # ugly hardcode hack.
-            # things will get messy if we ever split somewhere other than in
-            # the middle of a code block, but only `.r -h` invokes this edge
-            # case for now.
-            if len(help_message) >= 2000:
-                # few hundred chars of buffer
-                message1 = help_message[:1800] + "\n```"
-                message2 = "```\n" + help_message[1800:]
-                await message.channel.send(message1)
-                await message.channel.send(message2)
-                return
-
-            await message.channel.send(self.help_message())
+            await message.channel.send(self.help_message(), type="code")
             return
 
         try:
@@ -275,7 +291,7 @@ def command(name, *, args=[], help=None, help_short=None, permissions=[],
 class Arg:
     def __init__(self, short, long=None, *, default=None, convert=None,
         nargs=None, store_boolean=False, required=False, dest=None, help=None,
-        choices=None, convert_mode="individual", const=None
+        choices=None, convert_mode="individual", const=None, arg_help=None
     ):
         if not short.startswith("-"):
             positional = True
@@ -318,14 +334,22 @@ class Arg:
         # one of "individual" or "together"
         self.convert_mode = convert_mode
         self.const = const
+        # TODO we could automatically compute this for e.g. choices.
+        self.arg_help = arg_help
+
+        self.str = self.short
+        if self.short and self.long:
+            self.str = f"{self.short}|{self.long}"
+
+        self.str_full = self.str
+        if self.arg_help is not None:
+            self.str_full += f" {self.arg_help}"
 
         if help is None:
             raise Exception("Help text is required for all arguments.")
 
     def __str__(self):
-        if self.short and self.long:
-            return f"{self.short}/{self.long}"
-        return self.short
+        return self.str
 
     def process(self, message, val):
         if self.convert:
