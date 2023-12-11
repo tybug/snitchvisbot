@@ -475,13 +475,13 @@ class Snitchvis(Client):
             "you "
             "should take some time to read through `.r --help` and try them "
             "out. To give the very short version, you can: "
-            "\n* filter by time (`-p/--past 1d12h`, `--start 07/01/22`, `--end "
+            "\n* filter by time (`--past 1d12h`, `--start 07/01/22`, `--end "
             "08/30/22`)"
-            "\n* filter by users (`-u/--users gregy165`) or nl groups "
-            "(`-g/--groups boundary-snitches`)"
-            "\n* change duration (`-d/--duration 20`), fps (`--fps 30`), or "
-            "quality (`-s/--size 1000`)"
-            "\n* change rendering mode (`-m/--mode heatmap`)"
+            "\n* filter by users (`--users gregy165`) or nl groups "
+            "(`--groups boundary-snitches`)"
+            "\n* change duration (`--duration 20`), fps (`--fps 30`), or "
+            "quality (`--size 1000`)"
+            "\n* change rendering mode (`--mode heatmap`)"
             "\nAnd more. All of this is documented in `.r --help`.")
 
 
@@ -650,91 +650,70 @@ class Snitchvis(Client):
     @command("render",
         args=[
             Arg("-p", "--past", convert=human_timedelta, help="How far in the "
-                "past to look for events. Specify in human-readable form, ie "
-                "-p 1y2mo5w2d3h5m2s (\"1 year 2 months 5 weeks 2 days 3 hours 5 "
-                "minutes 2 seconds ago\"), or any combination thereof, eg "
-                "-p 1h30m (\"1 hour 30 minutes ago\"). Use the special value "
-                "\"all\" to render all events."),
+                "past to render events. Any human-recognizable format will work, "
+                "such as --past \"2 months and 1 week\" or --past 2h. "
+                "Use --past all to render all events.", arg_help="<duration>"),
             Arg("--start", convert=human_datetime, help="The start date of "
-                "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
-                "eg 7/18/2022 or 12/31/21. If --start is passed but not "
-                "--end, *all* events after the passed start date will be "
-                "rendered.", convert_mode="together", nargs="*"),
+                "events to include. Use the format mm/dd/yy.",
+                convert_mode="together", nargs="*", arg_help="<date>"),
             Arg("--end", convert=human_datetime, help="The end date of "
-                "events to include. Use the format `mm/dd/yyyy` or `mm/dd/yy`, "
-                "eg 7/18/2022 or 12/31/21. If --end is passed but not "
-                "--start, *all* events before the passed end date will be "
-                "rendered.", convert_mode="together", nargs="*"),
+                "events to include. Use the format mm/dd/yy.",
+                convert_mode="together", nargs="*", arg_help="<date>"),
             Arg("-s", "--size", default=700, convert=int, help="The resolution "
-                "of the render, in pixels. Defaults to 700. Higher values take "
-                "longer to render."),
+                "of the render, in pixels. Defaults to 700x700.", arg_help="<size>"),
             Arg("--fps", default=20, convert=int, help="The frames per "
-                "second of the render. Defaults to 20. Higher values take "
-                "longer to render."),
+                "second of the render. Defaults to 20.", arg_help="<fps>"),
             Arg("-d", "--duration", default=5, convert=int, help="The length "
-                "of the output video, in seconds. Defaults to 5 seconds. "
-                "Higher values take longer to render."),
-            Arg("-u", "--users", nargs="*", default=[], help="If passed, only "
-                "events by these users will be rendered."),
-            Arg("-g", "--groups", nargs="*", default=[], help="If passed, only "
-                "events from snitches on these namelayer groups will be "
-                "rendered."),
+                "of the output video, in seconds. Defaults to 5 seconds.",
+                arg_help="<duration>"),
+            Arg("-u", "--users", nargs="*", default=[],
+                help="Only render events by these users.", arg_help="<users>"),
+            Arg("-g", "--groups", nargs="*", default=[], help="Only render "
+                "events from snitches on these namelayer groups.", arg_help="<groups>"),
             Arg("-f", "--fade", default=1.5, convert=float, help="How many seconds "
-                "events will remain on screen for. Fade is limited to a "
-                "minimum of 0.5s. Defaults to 1.5s."),
+                "events will remain on screen for. Limited to a "
+                "minimum of 0.5s. Defaults to 1.5s.", arg_help="<fade>"),
             Arg("-b", "--bounds", nargs="*", convert=bounds,
-                convert_mode="together", help="Sets what area of the world "
-                "will be visualized. "
-                "This will override the automatic detection, which tries to "
-                "include all events without making the area too large. Format "
-                "is "
-                "-b/--bounds x1 z1 x2 z2, where (x1, z1) is the bottom left "
-                "corner and (x2, z2) is the top right corner of the desired "
-                "area."),
+                convert_mode="together", help="What area of the world "
+                "to visualize. This will override the automatic detection, "
+                "which is the smallest area that includes all events",
+                arg_help="<x1> <z1> <x2> <z2>"),
             Arg("-a", "--all-snitches", default=False, store_boolean=True,
-                help="If passed, all known snitches will be rendered, not "
-                "just the snitches pinged by the relevant events."),
+                help="Includes all snitches in the render, instead of only "
+                "those in view."),
             Arg("-op", "--only-pinged", help="Only render snitches which were "
                 "pinged at least once in the render.", store_boolean=True,
                 default=False),
             Arg("-m", "--mode", choices=["line", "box", "heatmap"],
-                default="box", help="One of heatmap, line, or box. What mode "
-                "to render in. The heatmap mode "
+                default="box", help="What mode to render in. The heatmap mode "
                 "renders an aggregate heatmap of events instead of drawing "
                 "individual users. The line mode draws "
-                "lines between snitch events. This option is "
-                "experimental and may not look good. Defaults to box."),
+                "lines between snitch events. Defaults to box.",
+                arg_help="<line|box|heatmap>"),
             Arg("-o", "--opacity", help="The opacity of the background "
                 "terrain map, "
                 "between 0 and 1. Higher is more visible. Defaults to 0.15.",
-                convert=float, default=0.15),
+                convert=float, default=0.15, arg_help="<opacity>"),
             Arg("--anonymize", help="Randomizes snitch locations within a "
-                "certain number of blocks. Defaults to 10 blocks. Pass "
-                "`--anonymize n` to change anonymization radius, eg "
-                "`--anonymize 20`.",
+                "certain number of blocks. Defaults to 10 blocks.",
+                arg_help="[blocks]",
                 convert=int, const=10, nargs="?"),
-            Arg("-hp", "--heatmap-percentage", convert=float, default=20,
+            Arg("-hp", convert=float, default=20,
                 help="What percentage of the "
                 "video duration the heatmap should look backwards for events "
                 "for. For instance, with `-hp 30` the render will only "
                 "consider events in the most recent 30% of the video when "
-                "rendering the heatmap. With `-hp 100`, the heatmap will be "
-                "static for the entire video (because it always considers all "
-                "of the events). Defaults to 20."),
-            Arg("-hs", "--heatmap-scale", choices=["linear", "weighted"],
+                "rendering the heatmap. Defaults to 20.", arg_help="<percentage>"),
+            Arg("-hs", choices=["linear", "weighted"],
                 default="linear", help="What scale "
-                "to use for the heatmap colors. One of \"linear\" or "
-                "\"weighted\". Defaults to linear. In linear mode, heatmap "
-                "brightness scale linearly with the number of hits. In "
-                "weighted mode, snitches with a low number of hits are made "
-                "more visible. This can help if you have a few very high "
-                "frequency snitches."),
+                "to use for the heatmap colors. Defaults to linear. "
+                "Weighted mode can look better if you have a few very high "
+                "frequency snitches.",
+                arg_help="<linear|weighted>"),
             # TODO work on svis file format
             Arg("--export", choices=["sql", "svis"],
-                help="Export the events matching the specified "
-                "criteria to either an sql database, or an .svis file (for use "
-                "in the Snitch Vis desktop application). Pass `--export sql` "
-                "for the former and `--export svis` for the latter.")
+                help="Export the matching events to an sql database or .svis "
+                "file.", arg_help="<sql|svis>")
         ],
         help="Renders snitch events to a video.",
         aliases=["r"]
@@ -1205,7 +1184,7 @@ class Snitchvis(Client):
         command_texts = [text_by_command[command] for command in
             sorted(text_by_command, key=_key)]
 
-        await message.channel.send("```\n" + "\n".join(command_texts) + "```\n")
+        await message.channel.send("\n".join(command_texts))
 
     @command("snitchvissetprefix",
         help="Sets a new prefix for snitchvis. The default prefix is `.`.",
