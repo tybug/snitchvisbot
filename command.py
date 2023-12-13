@@ -37,7 +37,7 @@ class Command:
         positional_args = [arg for arg in self.args if arg.positional]
         flag_args = [arg for arg in self.args if not arg.positional]
 
-        padding = max(len(arg.str_full) for arg in self.args)
+        padding = max(len(arg.str_full) for arg in self.args) if self.args else 0
         # dont let a single very long arg cause extremely long help messages.
         padding = min(padding, 20)
         text = f"{self.help}"
