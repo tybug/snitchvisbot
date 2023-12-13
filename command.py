@@ -1,11 +1,12 @@
 import re
 import shlex
 import inspect
+import itertools
 
 from discord.utils import utcnow
 
 import config
-from utils import try_dateparser
+from utils import try_dateparser, ANSI
 
 class ParseError(Exception):
     pass
@@ -49,21 +50,45 @@ class Command:
 
         return text
 
+    def align_help(self, val, *, newline_after, spacing, offset):
+        newline_points = []
+        potential_newline_point = None
+        chars_seen = 0
+        i = 0
+        for c in val:
+            # only allow newlines on whitespace. Only add a newline at the
+            # latest possible point.
+            if c == " ":
+                potential_newline_point = i
+            # skip the first iteration
+            if i > offset and chars_seen % (newline_after - offset) == 0:
+                newline_points.append(potential_newline_point)
+                # we might have added a newline early and have spillover
+                # chars.
+                chars_seen = i - potential_newline_point
+            i += 1
+            chars_seen += 1
+
+        for idx in reversed(newline_points):
+            newline = f"\n{' ' * spacing}"
+            assert val[idx] == " "
+            # replace val[idx] (a space) with the newline
+            val = val[:idx] + newline + val[idx + 1:]
+        return val
+
     def align_args(self, args, *, max_size):
         left_spacing = " " * 2
         middle_spacing = " " * 4
         help_newline_after = 60
 
-        def align_help(val, *, newline_after, spacing, offset):
-            i = 0
-            v = ""
-            for i, c in enumerate(val, 1):
-                # skip the first iteration
-                if i > offset + 1 and i % (newline_after - offset) == 1:
-                    v += f"\n{' ' * spacing}"
-                v += c
+        # uncomment for a sampling of ansi colors
+        # colors = itertools.cycle([None] + [getattr(ANSI, attr) for attr in dir(ANSI) if not attr.startswith("__")])
+        # print([attr for attr in dir(ANSI) if not attr.startswith("__")])
 
-            return v
+        # None of the ansi choices are very good for a zebra striped table.
+        # plain coloring combined with ANSI.GREEN or ANSI.BROWN seems like the
+        # best combination.
+        colors = itertools.cycle([None, ANSI.GREEN])
 
         def align_arg(arg):
             total_spacing = len(left_spacing) + max_size + len(middle_spacing)
@@ -71,14 +96,19 @@ class Command:
             # inset our aligned help to account for this
             offset = max(0, len(arg.str_full) - max_size)
 
-            aligned_help = align_help(
+            aligned_help = self.align_help(
                 arg.help,
                 newline_after=help_newline_after,
                 spacing=total_spacing,
                 offset=offset
             )
 
-            return f"{left_spacing}{arg.str_full:{max_size}}{middle_spacing}{aligned_help}"
+            v = f"{left_spacing}{arg.str_full:{max_size}}{middle_spacing}{aligned_help}"
+            color = next(colors)
+            if color is not None:
+                v = f"{color}{v}{ANSI.END}"
+
+            return v
 
         return"\n".join(align_arg(arg) for arg in args)
 
