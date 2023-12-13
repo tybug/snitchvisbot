@@ -1,7 +1,18 @@
 import dateparser
 from datetime import timezone
+import asyncio
 
 from discord import Color
+
+queue = asyncio.Queue()
+
+def fire_later(awaitable):
+    loop = asyncio.get_running_loop()
+    future = loop.create_future()
+
+    # queue has no max size, so put_nowait is safe
+    queue.put_nowait((future, awaitable))
+    return future
 
 embed_grey = Color.from_rgb(156, 156, 156)
 

@@ -2,12 +2,13 @@ import inspect
 import traceback
 
 from discord import Client as _Client, Intents, Member
+from discord.ext import tasks
 
 from command import Command
 import db
 import config
 from models import ForwardingChannel
-from utils import message_log_prefix
+from utils import message_log_prefix, queue, fire_later
 
 class Client(_Client):
     def __init__(self, *args, **kwargs):
@@ -41,6 +42,22 @@ class Client(_Client):
                     func._help_short, func._permissions, func._use_prefix,
                     func._parse, alias=True)
                 self.commands.append(command)
+
+    async def setup_hook(self):
+        self.check_queue.start()
+
+    @tasks.loop(seconds=0.1)
+    async def check_queue(self):
+        while not queue.empty():
+            # this access is singlethreaded, so should never have a race
+            # condition with the empty check above.
+            (future, awaitable) = queue.get_nowait()
+            r = await awaitable
+            future.set_result(r)
+
+    @check_queue.before_loop
+    async def before_check_queue(self):
+        await self.wait_until_ready()
 
     async def on_ready(self):
         # convert to discord object once we're connected to discord
@@ -129,7 +146,7 @@ class Client(_Client):
 
             # don't log commands by the author, gets annoying for testing
             if author.id != config.AUTHOR_ID and self.command_log_channel:
-                await self.command_log_channel.send(f"{log_prefix} `{content}`") # TODO separate thread
+                fire_later(self.command_log_channel.send(f"{log_prefix} `{content}`"))
 
             # also strip any whitespace, particularly after the command name
             args = content.removeprefix(command_name).strip()

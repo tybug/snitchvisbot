@@ -4,7 +4,7 @@ from datetime import datetime, timezone
 from discord import User, Guild, Embed
 from discord.abc import Messageable
 
-from utils import embed_grey
+from utils import embed_grey, fire_later
 
 @dataclass
 class SnitchChannel:
@@ -182,6 +182,6 @@ class ForwardingChannel:
             if not content and file:
                 content = "<attachment>"
             log_message = f"{self.__log_prefix} [response]\n{content}"
-            await self.__forward_to.send(log_message)
+            fire_later(self.__forward_to.send(log_message))
 
         return ret

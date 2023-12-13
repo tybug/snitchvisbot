@@ -20,6 +20,7 @@ from PyQt6.QtWidgets import QApplication
 
 import db
 import utils
+from utils import fire_later
 import config
 from models import KiraConfig, FakeMessage
 from command import (command, Arg, channel, role, human_timedelta,
@@ -898,7 +899,7 @@ class Snitchvis(Client):
         with TemporaryDirectory() as d:
             output_file = Path(d) / "render.mp4"
 
-            m = await message.channel.send("rendering video...")
+            m_future = fire_later(message.channel.send("rendering video..."))
 
             # seconds to ms
             duration *= 1000
@@ -948,15 +949,17 @@ class Snitchvis(Client):
                     "in size and couldn't be uploaded. To decrease file sizes, "
                     "you should use lower values for `--size`, `--fps`, "
                     "and/or `--duration`.")
+                m = await m_future
                 await m.delete()
             else:
                 await message.channel.send(file=vis_file)
+                m = await m_future
                 await m.delete()
 
                 # don't log tests by myself
                 if message.author.id != config.AUTHOR_ID and self.command_log_channel:
                     vis_file = File(output_file)
-                    await self.command_log_channel.send(file=vis_file)
+                    fire_later(self.command_log_channel.send(file=vis_file))
 
         db.add_render_history(message.guild.id, num_pixels,
             utcnow().timestamp())
