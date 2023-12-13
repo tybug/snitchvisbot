@@ -1205,7 +1205,7 @@ class Snitchvis(Client):
         # update cached prefix immediately, this updates on bot restart normally
         self.prefixes[message.guild.id] = prefix
 
-        await message.channel.send(f"Successfully set prefix to `{prefix}`.")
+        await message.channel.send(f"Successfully set prefix to `{prefix}`")
 
     @command("set-livemap-channel",
         args=[
