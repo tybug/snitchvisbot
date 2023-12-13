@@ -382,11 +382,6 @@ def snitch_channel_exists(channel_id):
         [channel_id])
     return bool(rows)
 
-def is_snitch_channel(channel_id):
-    rows = select("SELECT * FROM snitch_channel WHERE id = ?",
-        [channel_id])
-    return bool(rows)
-
 def allowed_roles(channel_id):
     rows = select("SELECT * FROM snitch_channel_allowed_roles WHERE "
         "channel_id = ?", [channel_id])
