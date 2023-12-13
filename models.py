@@ -1,10 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from discord import User, Guild, Embed
+from discord import User, Guild
 from discord.abc import Messageable
 
-from utils import embed_grey, fire_later
+from utils import embed_grey, fire_later, create_embed
 
 @dataclass
 class SnitchChannel:
@@ -165,7 +165,7 @@ class ForwardingChannel:
         embed = None
 
         if type == "embed":
-            embed = Embed(description=content, color=embed_grey)
+            embed = create_embed(content, color=embed_grey)
         if type == "code":
             # support ansi colors in code messages.
             content = f"```ansi\n{content}\n```"

@@ -3,7 +3,7 @@ from datetime import timezone
 import asyncio
 import itertools
 
-from discord import Color
+from discord import Color, Embed
 
 queue = asyncio.Queue()
 
@@ -108,6 +108,10 @@ def align_two_column_table(values, *, max_left_size):
         return v
 
     return"\n".join(align_value(left, right) for (left, right) in values)
+
+
+def create_embed(content, *, color=embed_grey):
+    return Embed(description=content, color=color)
 
 # https://gist.github.com/kkrypt0nn/a02506f3712ff2d1c8ca7c9e0aed7c06
 class ANSI:
