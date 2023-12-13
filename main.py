@@ -760,7 +760,8 @@ class Snitchvis(Client):
                 # `x` ms, go back to the most recent event (however long ago
                 # that may be) and *then* go back `x` ms and grab all those
                 # events.
-                event = db.most_recent_event(message.guild.id)
+                event = db.most_recent_event(message.guild.id, users=users,
+                    groups=groups)
                 # if the guild doesn't have any events at all yet, complain and
                 # exit.
                 if not event:

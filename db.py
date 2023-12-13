@@ -424,9 +424,20 @@ def event_exists(message_id):
     rows = select("SELECT * FROM event WHERE message_id = ?", [message_id])
     return bool(rows)
 
-def most_recent_event(guild_id):
-    rows = select("SELECT * FROM event WHERE guild_id = ? ORDER BY t DESC "
-        "LIMIT 1", [guild_id])
+def most_recent_event(guild_id, *, users=[], groups=[]):
+    where = Where()
+    where.add("guild_id = ", guild_id)
+    where.add("LOWER(username) IN ", users)
+    where.add("LOWER(namelayer_group) IN ", groups)
+
+    rows = select(
+        f"""
+        SELECT * FROM event
+        {where.query}
+        ORDER BY t DESC
+        LIMIT 1""",
+        [*where.params]
+    )
     if not rows:
         return None
 
