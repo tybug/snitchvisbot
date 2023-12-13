@@ -707,8 +707,8 @@ class Snitchvis(Client):
             Arg("-hs", choices=["linear", "weighted"],
                 default="linear", help="What scale "
                 "to use for the heatmap colors. Defaults to linear. "
-                "Weighted mode can look better if you have a few very high "
-                "frequency snitches.",
+                "Weighted mode can look better if you have some snitches that "
+                "get pinged a lot.",
                 arg_help="<linear|weighted>"),
             # TODO work on svis file format
             Arg("--export", choices=["sql", "svis"],
