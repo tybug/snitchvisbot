@@ -1,7 +1,6 @@
 import re
 import shlex
 import inspect
-import itertools
 
 from discord.utils import utcnow
 
