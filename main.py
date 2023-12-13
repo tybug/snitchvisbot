@@ -741,7 +741,7 @@ class Snitchvis(Client):
             return
 
         if (past is not None) and (start != [] or end != []):
-            await message.channel.send("`-p/--past` is incomptaible with "
+            await message.channel.send("`--past` is incomptaible with "
                 "`--start` and `--end`. You cannot pass both.")
             return
 
