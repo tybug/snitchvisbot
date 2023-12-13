@@ -1,6 +1,10 @@
 import dateparser
 from datetime import timezone
 
+from discord import Color
+
+embed_grey = Color.from_rgb(156, 156, 156)
+
 def channel_str(channels):
     return ", ".join(channel.mention for channel in channels)
 
