@@ -315,6 +315,7 @@ class Snitchvis(Client):
     async def index_channel(self, channel, discord_channel, *, update_message=None):
         print(f"Indexing channel {discord_channel} / {discord_channel.id}, "
             f"guild {discord_channel.guild} / {discord_channel.guild.id}")
+        num_events = 0
         events = []
         last_id = channel.last_indexed_id
         kira_configs = db.get_kira_configs(discord_channel.guild.id)
@@ -330,25 +331,28 @@ class Snitchvis(Client):
             except InvalidEventException:
                 continue
             events.append([message_, event])
+            num_events += 1
 
-            if len(events) % 1_000 == 0:
-                content = f"Indexing {discord_channel.mention}... added {len(events):,} new events so far"
+            if len(events) >= 1_000:
+                content = f"Indexing {discord_channel.mention}... added {num_events:,} new events so far"
                 embed = utils.create_embed(content)
                 if update_message:
                     await update_message.edit(embed=embed)
+
+                # batch commit
+                for (message_, event) in events:
+                    db.add_event(message_, event, commit=False)
+                db.commit()
+                events = []
 
         last_messages = [m async for m in discord_channel.history(limit=1)]
 
         # only update if the channel has messages
         if last_messages:
             last_message = last_messages[0]
-            db.update_last_indexed(channel.id, last_message.id, commit=False)
+            db.update_last_indexed(channel.id, last_message.id)
 
-        for (message_, event) in events:
-            # caller is responsible for committing
-            db.add_event(message_, event, commit=False)
-
-        return events
+        return num_events
 
     def parse_event(self, raw_event, kira_configs):
         # we'll try all the available configs in order. If none of them match
@@ -602,11 +606,10 @@ class Snitchvis(Client):
             for channel in channels:
                 update_message = await message.channel.send(f"Indexing {channel.mention}...")
                 c = channel.to_discord(message.guild)
-                events = await self.index_channel(channel, c, update_message=update_message)
-                db.commit()
+                num_events = await self.index_channel(channel, c, update_message=update_message)
 
                 content = (f"Finished indexing {channel.mention} "
-                    f"({len(events):,} new events added)")
+                    f"({num_events:,} new events added)")
                 embed = utils.create_embed(content)
                 await update_message.edit(embed=embed)
 
