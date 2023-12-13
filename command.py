@@ -323,7 +323,7 @@ def command(name, *, args=[], help=None, help_short=None, permissions=[],
 class Arg:
     def __init__(self, short, long=None, *, default=None, convert=None,
         nargs=None, store_boolean=False, required=False, dest=None, help=None,
-        choices=None, convert_mode="individual", const=None, arg_help=None
+        choices=None, convert_mode="individual", const=None, arg_help=None, aliases=[]
     ):
         if not short.startswith("-"):
             positional = True
@@ -353,6 +353,10 @@ class Arg:
         self.flags = [short, short_em]
         if long:
             self.flags += [long, long.replace("--", "—")]
+        for alias in aliases:
+            # only support long switch aliases for now
+            assert alias.startswith("--")
+            self.flags += [alias, alias.replace("--", "—")]
 
         self.short = short
         self.long = long
@@ -368,6 +372,7 @@ class Arg:
         self.const = const
         # TODO we could automatically compute this for e.g. choices.
         self.arg_help = arg_help
+        self.aliases = aliases
 
         self.str = self.short
         if self.short and self.long:

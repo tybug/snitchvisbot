@@ -668,9 +668,11 @@ class Snitchvis(Client):
                 "of the output video, in seconds. Defaults to 5 seconds.",
                 arg_help="<duration>"),
             Arg("-u", "--users", nargs="*", default=[],
-                help="Only render events by these users.", arg_help="<users>"),
+                help="Only render events by these users.", arg_help="<users>",
+                aliases=["--user"]),
             Arg("-g", "--groups", nargs="*", default=[], help="Only render "
-                "events from snitches on these namelayer groups.", arg_help="<groups>"),
+                "events from snitches on these namelayer groups.", arg_help="<groups>",
+                aliases=["--group"]),
             Arg("-f", "--fade", default=1.5, convert=float, help="How many seconds "
                 "events will remain on screen for. Limited to a "
                 "minimum of 0.5s. Defaults to 1.5s.", arg_help="<fade>"),
@@ -678,7 +680,8 @@ class Snitchvis(Client):
                 convert_mode="together", help="What area of the world "
                 "to visualize. This will override the automatic detection, "
                 "which is the smallest area that includes all events",
-                arg_help="<x1> <z1> <x2> <z2>"),
+                arg_help="<x1> <z1> <x2> <z2>",
+                aliases=["--bound"]),
             Arg("-a", "--all-snitches", default=False, store_boolean=True,
                 help="Includes all snitches in the render, instead of only "
                 "those in view."),
@@ -970,13 +973,13 @@ class Snitchvis(Client):
             Arg("-g", "--groups", nargs="+", help="Only snitches in the "
                 "database which are reinforced to one of these groups will be "
                 "imported. If you really want to import all snitches in the "
-                "database, pass `-g all`."),
+                "database, pass `-g all`.", aliases=["--group"]),
             Arg("-r", "--roles", nargs="+", convert=role, help="Users with at "
                 "least one of these roles will be able to render the "
                 "imported snitches. Use the name of the role (don't ping the "
                 "role). Use the name \"everyone\" to grant all users access to "
                 "the snitches. Surround role in quotes to specify roles "
-                "with spaces in them.")
+                "with spaces in them.", aliases=["--role"])
         ],
         help="Imports snitches from a SnitchMod database.\n"
             "You will likely have to use this command multiple times on the "
