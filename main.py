@@ -703,13 +703,14 @@ class Snitchvis(Client):
                 "video duration the heatmap should look backwards for events "
                 "for. For instance, with `-hp 30` the render will only "
                 "consider events in the most recent 30% of the video when "
-                "rendering the heatmap. Defaults to 20.", arg_help="<percentage>"),
+                "rendering the heatmap. Defaults to 20.", arg_help="<percentage>",
+                dest="heatmap_percentage"),
             Arg("-hs", choices=["linear", "weighted"],
                 default="linear", help="What scale "
                 "to use for the heatmap colors. Defaults to linear. "
                 "Weighted mode can look better if you have some snitches that "
                 "get pinged a lot.",
-                arg_help="<linear|weighted>"),
+                arg_help="<linear|weighted>", dest="heatmap_scale"),
             # TODO work on svis file format
             Arg("--export", choices=["sql", "svis"],
                 help="Export the matching events to an sql database or .svis "
