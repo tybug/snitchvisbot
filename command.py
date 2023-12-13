@@ -83,7 +83,9 @@ class Command:
         return"\n".join(align_arg(arg) for arg in args)
 
     async def invoke(self, message, arg_string):
-        permissions = message.channel.permissions_for(message.author)
+        if self.permissions:
+            # only make a request if the command has a possible permission
+            permissions = message.channel.permissions_for(message.author)
         for permission in self.permissions:
             # handle custom permissions
             if permission == "author":
