@@ -1165,7 +1165,7 @@ class Snitchvis(Client):
 
     @command("help", help="Displays available commands.")
     async def help(self, message):
-        text_by_command = {}
+        values_by_command = {}
         for command in self.commands:
             # don't show aliases in help (yet, we probably want a separate
             # section or different display method for them)
@@ -1177,8 +1177,7 @@ class Snitchvis(Client):
                 continue
             # TODO display custom prefixes if set
             prefix = self.default_prefix if command.use_prefix else ""
-            text_by_command[command.function] = (f"  {prefix}{command.name}: "
-                f"{command.help_short}")
+            values_by_command[command.function] = (f"{prefix}{command.name}", command.help_short)
 
         # sort by order in self.help_order, and send to end if not present
         # (we don't care about ordering if we didn't specify it, as long as it's
@@ -1188,10 +1187,13 @@ class Snitchvis(Client):
                 return self.help_order.index(command)
             return 999
 
-        command_texts = [text_by_command[command] for command in
-            sorted(text_by_command, key=_key)]
-
-        await message.channel.send("\n".join(command_texts), type="code")
+        values = [
+            values_by_command[command]
+            for command in
+            sorted(values_by_command, key=_key)
+        ]
+        aligned = utils.align_two_column_table(values, max_left_size=20)
+        await message.channel.send(aligned, type="code")
 
     @command("snitchvissetprefix",
         help="Sets a new prefix for snitchvis. The default prefix is `.`.",
