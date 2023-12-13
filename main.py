@@ -1185,7 +1185,7 @@ class Snitchvis(Client):
         command_texts = [text_by_command[command] for command in
             sorted(text_by_command, key=_key)]
 
-        await message.channel.send("\n".join(command_texts))
+        await message.channel.send("\n".join(command_texts), type="code")
 
     @command("snitchvissetprefix",
         help="Sets a new prefix for snitchvis. The default prefix is `.`.",
