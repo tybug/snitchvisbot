@@ -477,7 +477,7 @@ class Snitchvis(Client):
             "out. To give the very short version, you can: "
             "\n* filter by time (`--past 1d12h`, `--start 07/01/22`, `--end "
             "08/30/22`)"
-            "\n* filter by users (`--users gregy165`) or nl groups "
+            "\n* filter by users (`--users tybug`) or nl groups "
             "(`--groups boundary-snitches`)"
             "\n* change duration (`--duration 20`), fps (`--fps 30`), or "
             "quality (`--size 1000`)"
@@ -493,13 +493,13 @@ class Snitchvis(Client):
             Arg("roles", nargs="+", convert=role, help="The roles "
                 "which will be able to render events from this channel. Use "
                 "the name of the role (don't ping the role). Use the name "
-                "`everyone` to grant all users access to render the snitches. "
-                "Surround role in quotes to specify roles with spaces in them.")
+                "\"everyone\" to grant all users access to render the snitches. "
+                "Surround a role in quotes to specify roles with spaces in them.")
         ],
         help_short="Adds a snitch channel, viewable by the specified roles.",
         help="Adds a snitch channel, viewable by the specified roles.\n\n"
-            "Example: `.add-channel #snitches citizen \"lieutenant governor\" "
-            "governor`",
+            "Example: .add-channel #snitches citizen \"lieutenant governor\" "
+            "governor",
         permissions=["manage_guild"],
         aliases=["channel add", "channel-add", "add channel"]
     )
@@ -876,8 +876,8 @@ class Snitchvis(Client):
             await message.channel.send("The requested render would require too "
                 "many server resources to generate (and would probably be over "
                 "discord's 8mb file size limit). Decrease either the render "
-                "size (`-s/--size`), fps (`--fps`), or duration "
-                "(`-d/--duration`)."
+                "size (`--size`), fps (`--fps`), or duration "
+                "(`--duration`)."
                 "\n\nI'm happy to increase render limits for servers that "
                 "promise not to abuse it. You can request increased render "
                 "limits by contacting tybug.")
@@ -946,8 +946,8 @@ class Snitchvis(Client):
             if output_file.stat().st_size >= 8_000_000:
                 await message.channel.send("The resulting render was over 8mb "
                     "in size and couldn't be uploaded. To decrease file sizes, "
-                    "you should use lower values for `-s/--size`, `--fps`, "
-                    "and/or `-d/--duration`.")
+                    "you should use lower values for `--size`, `--fps`, "
+                    "and/or `--duration`.")
                 await m.delete()
             else:
                 await message.channel.send(file=vis_file)
@@ -970,16 +970,16 @@ class Snitchvis(Client):
             Arg("-r", "--roles", nargs="+", convert=role, help="Users with at "
                 "least one of these roles will be able to render the "
                 "imported snitches. Use the name of the role (don't ping the "
-                "role). Use the name `everyone` to grant all users access to "
+                "role). Use the name \"everyone\" to grant all users access to "
                 "the snitches. Surround role in quotes to specify roles "
                 "with spaces in them.")
         ],
         help="Imports snitches from a SnitchMod database.\n"
             "You will likely have to use this command multiple times on the "
             "same database if you have a tiered hierarchy of snitch groups; "
-            "for instance, you might run `.import-snitches -g mta-citizens "
-            "mta-shops -r citizen` to import snitches citizens can render, "
-            "and then `.import-snitches -g mta-cabinet -r cabinet` to import "
+            "for instance, you might run \".import-snitches -g mta-citizens "
+            "mta-shops -r citizen\" to import snitches citizens can render, "
+            "and then \".import-snitches -g mta-cabinet -r cabinet\" to import "
             "snitches only cabinet members can render.",
         help_short="Imports snitches from a SnitchMod database.",
         permissions=["manage_guild"]
@@ -1071,11 +1071,10 @@ class Snitchvis(Client):
             Arg("-n", "--name", help="List events for snitches with the "
                 "specified name."),
             Arg("-l", "--location", help="List events for snitches at this "
-                "location. Format is `-l/--location x y z` or "
-                "`-l/--location x z`. The two parameter version is a "
-                "convenience to avoid having to specify a y level; snitches at "
-                "all y levels at that (x, z) location will be searched for "
-                "events.", nargs="*")
+                "location. The two parameter version is a "
+                "convenience to avoid having to specify a y level, and will match "
+                "a snitch at any y level at those coordinates.",
+                nargs="*", arg_help="<x> <y> <z> or <x> <z>")
         ],
         # TODO temporary until fix permissions
         permissions=["manage_guild"]
@@ -1083,8 +1082,8 @@ class Snitchvis(Client):
     async def events(self, message, name, location):
         # explicitly allow empty name, useful for searching for unnamed snitches
         if not (bool(name) or name == "") ^ bool(location):
-            await message.channel.send("Exactly one of `-n/--name` or "
-                "`-l/--location` must be passed.\nRun `.events --help` for "
+            await message.channel.send("Exactly one of `--name` or "
+                "`--location` must be passed.\nRun `.events --help` for "
                 "more information.")
             return
 
@@ -1103,7 +1102,7 @@ class Snitchvis(Client):
             else:
                 await message.channel.send(f"Invalid location "
                     f"`{' '.join(location)}`. Must be in the form "
-                    "`-l/--location x y z` or `-l/--location x z`")
+                    "`--location x y z` or `--location x z`")
                 return
 
             try:
@@ -1486,7 +1485,7 @@ if __name__ == "__main__":
 # * handle overlapping events on the same snitch
 # * fix permissions on .events, currently returns results for all events,
 #   need to limit to just the events the user has access to
-# * -c/--context n render option to expand the bounding box by n blocks, for
+# * -c|--context n render option to expand the bounding box by n blocks, for
 #   when you want to see more context. MIN_BOUNDING_BOX_SIZE helps with this but
 #   isn't a perfect solution
 # * tiny pop-in / ease animation for new events? hard to see where new events
