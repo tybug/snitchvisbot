@@ -333,8 +333,9 @@ class Snitchvis(Client):
 
             if len(events) % 1_000 == 0:
                 content = f"Indexing {discord_channel.mention}... added {len(events):,} new events so far"
+                embed = utils.create_embed(content)
                 if update_message:
-                    await update_message.edit(content=content)
+                    await update_message.edit(embed=embed)
 
         last_messages = [m async for m in discord_channel.history(limit=1)]
 
@@ -604,8 +605,10 @@ class Snitchvis(Client):
                 events = await self.index_channel(channel, c, update_message=update_message)
                 db.commit()
 
-                await update_message.edit(content=f"Finished indexing {channel.mention} "
+                content = (f"Finished indexing {channel.mention} "
                     f"({len(events):,} new events added)")
+                embed = utils.create_embed(content)
+                await update_message.edit(embed=embed)
 
             await message.channel.send("Finished indexing snitch channels")
         finally:
