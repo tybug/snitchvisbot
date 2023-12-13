@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
 
-from discord import User, Guild
+from discord import User, Guild, Embed
 from discord.abc import Messageable
+
+from utils import embed_grey
 
 @dataclass
 class SnitchChannel:
@@ -131,6 +133,10 @@ class FakeMessage:
 # isinstance.
 class ForwardingChannel:
     def __init__(self, messageable, *, log_prefix, forward_to):
+        # we do support nesting ForwardingChannels, but doing so is almost
+        # certainly an accident by the consumer. We can support this if it ever
+        # becomes a requirement in the future.
+        assert not isinstance(messageable, ForwardingChannel)
         self.__messageable = messageable
         self.__log_prefix = log_prefix
         self.__forward_to = forward_to
@@ -139,7 +145,7 @@ class ForwardingChannel:
         # transparently forward any accesses to our backing messageable object.
         return getattr(self.__messageable, val)
 
-    async def send(self, content=None, *args, file=None, **kwargs):
+    async def send(self, content=None, file=None, type="embed"):
         # this is a bit of a song and dance to achieve the following behavior:
         # * if an attachment is sent with the message, don't upload it to our
         #   forwarding channel. Ideally, we would like to forward attachments as
@@ -149,11 +155,33 @@ class ForwardingChannel:
         #   <attachment> message, since we can't forward the attachment and also
         #   can't send empty messages. Alternative is not forwarding messages
         #   with attachments at all.
-        ret = await self.__messageable.send(content, *args, file=file, **kwargs)
 
-        if not content and file:
-            content = "<attachment>"
+        if content is not None and len(content) >= 1950:
+            assert file is None
+            await self.send(content[:1900], type=type)
+            await self.send(content[1900:], type=type)
+            return
 
-        log_message = f"{self.__log_prefix} [response]\n{content}"
-        await self.__forward_to.send(log_message, *args, **kwargs)
+        embed = None
+
+        if type == "embed":
+            embed = Embed(description=content, color=embed_grey)
+        if type == "code":
+            # support ansi colors in code messages.
+            content = f"```ansi\n{content}\n```"
+
+        # don't combine files and embeds.
+        if file is not None:
+            ret = await self.__messageable.send(content=content, file=file)
+        elif embed is not None:
+            ret = await self.__messageable.send(embed=embed)
+        else:
+            ret = await self.__messageable.send(content=content)
+
+        if self.__forward_to:
+            if not content and file:
+                content = "<attachment>"
+            log_message = f"{self.__log_prefix} [response]\n{content}"
+            await self.__forward_to.send(log_message)
+
         return ret
