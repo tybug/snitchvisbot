@@ -70,6 +70,32 @@ class Client(_Client):
 
 
     async def on_message(self, message):
+        prefix = self.get_prefix(message.guild.id)
+        # this isn't the exact criteria for matching a command (see
+        # self.command_matches), but it filters out 98% of messages that are
+        # not commands, before getting to any more complicated logic.
+
+        # unfortunately we also have to special case any commands without a prefix.
+        # TODO automatically collect commands without prefixes so I don't forget
+        # to update this list in the future.
+        if not message.content.startswith(prefix) and not message.content.startswith("snitchvissetprefix"):
+            return
+
+        log_prefix = message_log_prefix(message.guild, message.author)
+        # don't forward messages by author
+        should_log = message.author.id != config.AUTHOR_ID and self.command_log_channel
+        message.channel = ForwardingChannel(
+            message.channel,
+            log_prefix=log_prefix,
+            forward_to=self.command_log_channel if should_log else None,
+        )
+
+        # some messages, like webhooks, don't have member authors.
+        # running a command for a non-member would make no sense (and cause
+        # errors).
+        if not isinstance(message.author, Member):
+            return
+
         await self.maybe_handle_command(message, message.content)
 
     async def maybe_handle_command(self, message, content, *,
@@ -77,25 +103,13 @@ class Client(_Client):
     ):
         author = message.author
         guild = message.guild
-
-        # some messages, like webhooks, don't have member authors.
-        # running a command for a non-member would make no sense (and cause
-        # errors).
-        if not isinstance(author, Member):
-            return
-
+        log_prefix = message_log_prefix(guild, author)
+        prefix = self.get_prefix(guild.id)
         # only respond to messages from whitelisted guilds if testing, to avoid
         # responding from commands from actual users
         if not override_testing_ignore:
             if config.TESTING and guild.id not in config.TESTING_GUILDS:
                 return
-
-        if guild.id not in self.prefixes:
-            prefix = db.get_snitch_prefix(guild.id)
-            # fall back to default prefix if no prefix specified
-            if prefix is None:
-                self.prefixes[guild.id] = self.default_prefix
-        prefix = self.prefixes[guild.id]
 
         custom_commands = db.get_commands(guild.id)
 
@@ -109,17 +123,13 @@ class Client(_Client):
             if not self.command_matches(guild.id, command, content):
                 continue
 
+            command_name = command.name
             if command.use_prefix:
-                command_name = prefix + command.name
+                command_name = f"{prefix}{command_name}"
 
             # don't log commands by the author, gets annoying for testing
             if author.id != config.AUTHOR_ID and self.command_log_channel:
-                log_prefix = message_log_prefix(guild, author)
-                await self.command_log_channel.send(f"{log_prefix} `{content}`")
-                # wait until here to monkey-patch this so only messages sent as
-                # a result of non-author commands are forwaded.
-                message.channel = ForwardingChannel(message.channel,
-                    log_prefix=log_prefix, forward_to=self.command_log_channel)
+                await self.command_log_channel.send(f"{log_prefix} `{content}`") # TODO separate thread
 
             # also strip any whitespace, particularly after the command name
             args = content.removeprefix(command_name).strip()
@@ -138,14 +148,17 @@ class Client(_Client):
             # custom commands
             return
 
-    def command_matches(self, guild_id, command, content):
+    def get_prefix(self, guild_id):
         if guild_id not in self.prefixes:
             prefix = db.get_snitch_prefix(guild_id)
             # fall back to default prefix if no prefix specified
             if prefix is None:
-                self.prefixes[guild_id] = self.default_prefix
-        prefix = self.prefixes[guild_id]
+                prefix = self.default_prefix
+            self.prefixes[guild_id] = prefix
+        return self.prefixes[guild_id]
 
+    def command_matches(self, guild_id, command, content):
+        prefix = self.get_prefix(guild_id)
         command_name = command.name
         # some commands don't respect the prefix at all, eg
         # snitchvissetprefix
