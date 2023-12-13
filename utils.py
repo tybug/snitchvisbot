@@ -1,6 +1,7 @@
 import dateparser
 from datetime import timezone
 import asyncio
+import itertools
 
 from discord import Color
 
@@ -42,6 +43,71 @@ def try_dateparser(val):
 def message_log_prefix(guild, author):
     return f"[`{guild.name}`] [{author.mention} / `{author.name}`]"
 
+
+def align_right_column(val, *, newline_after, spacing, offset):
+    newline_points = []
+    potential_newline_point = None
+    chars_seen = 0
+    i = 0
+    for c in val:
+        # only allow newlines on whitespace. Only add a newline at the
+        # latest possible point.
+        if c == " ":
+            potential_newline_point = i
+        # skip the first iteration
+        if i > offset and chars_seen % (newline_after - offset) == 0:
+            newline_points.append(potential_newline_point)
+            # we might have added a newline early and have spillover
+            # chars.
+            chars_seen = i - potential_newline_point
+        i += 1
+        chars_seen += 1
+
+    for idx in reversed(newline_points):
+        newline = f"\n{' ' * spacing}"
+        assert val[idx] == " "
+        # replace val[idx] (a space) with the newline
+        val = val[:idx] + newline + val[idx + 1:]
+    return val
+
+
+def align_two_column_table(values, *, max_left_size):
+    left_spacing = " " * 2
+    middle_spacing = " " * 4
+    right_column_newline_after = 60
+    # dont let a single very long arg cause extremely long messages.
+    max_size = min(max_left_size, max(len(left) for (left, _) in values))
+
+    # uncomment for a sampling of ansi colors
+    # colors = itertools.cycle([None] + [getattr(ANSI, attr) for attr in dir(ANSI) if not attr.startswith("__")])
+    # print([attr for attr in dir(ANSI) if not attr.startswith("__")])
+
+    # None of the ansi choices are very good for a zebra striped table.
+    # plain coloring combined with ANSI.GREEN or ANSI.BROWN seems like the
+    # best combination.
+    colors = itertools.cycle([None, ANSI.GREEN])
+
+    def align_value(left, right):
+        total_spacing = len(left_spacing) + max_size + len(middle_spacing)
+        # offset caused by arg going out of bounds of max_size. need to
+        # inset our aligned right column to account for this
+        offset = max(0, len(left) - max_size)
+
+        aligned_right = align_right_column(
+            right,
+            newline_after=right_column_newline_after,
+            spacing=total_spacing,
+            offset=offset
+        )
+
+        v = f"{left_spacing}{left:{max_size}}{middle_spacing}{aligned_right}"
+        color = next(colors)
+        if color is not None:
+            v = f"{color}{v}{ANSI.END}"
+
+        return v
+
+    return"\n".join(align_value(left, right) for (left, right) in values)
 
 # https://gist.github.com/kkrypt0nn/a02506f3712ff2d1c8ca7c9e0aed7c06
 class ANSI:

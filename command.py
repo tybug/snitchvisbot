@@ -6,7 +6,7 @@ import itertools
 from discord.utils import utcnow
 
 import config
-from utils import try_dateparser, ANSI
+from utils import try_dateparser, align_two_column_table
 
 class ParseError(Exception):
     pass
@@ -38,79 +38,18 @@ class Command:
         positional_args = [arg for arg in self.args if arg.positional]
         flag_args = [arg for arg in self.args if not arg.positional]
 
-        padding = max(len(arg.str_full) for arg in self.args) if self.args else 0
-        # dont let a single very long arg cause extremely long help messages.
-        padding = min(padding, 20)
         text = f"{self.help}"
         if positional_args:
-            text += f"\n\nArguments:\n{self.align_args(positional_args, max_size=padding)}"
+            values = [(arg.str_full, arg.help) for arg in positional_args]
+            aligned = align_two_column_table(values, max_left_size=20)
+            text += f"\n\nArguments:\n{aligned}"
 
         if flag_args:
-            text += f"\n\nOptions:\n{self.align_args(flag_args, max_size=padding)}"
+            values = [(arg.str_full, arg.help) for arg in flag_args]
+            aligned = align_two_column_table(values, max_left_size=20)
+            text += f"\n\nOptions:\n{aligned}"
 
         return text
-
-    def align_help(self, val, *, newline_after, spacing, offset):
-        newline_points = []
-        potential_newline_point = None
-        chars_seen = 0
-        i = 0
-        for c in val:
-            # only allow newlines on whitespace. Only add a newline at the
-            # latest possible point.
-            if c == " ":
-                potential_newline_point = i
-            # skip the first iteration
-            if i > offset and chars_seen % (newline_after - offset) == 0:
-                newline_points.append(potential_newline_point)
-                # we might have added a newline early and have spillover
-                # chars.
-                chars_seen = i - potential_newline_point
-            i += 1
-            chars_seen += 1
-
-        for idx in reversed(newline_points):
-            newline = f"\n{' ' * spacing}"
-            assert val[idx] == " "
-            # replace val[idx] (a space) with the newline
-            val = val[:idx] + newline + val[idx + 1:]
-        return val
-
-    def align_args(self, args, *, max_size):
-        left_spacing = " " * 2
-        middle_spacing = " " * 4
-        help_newline_after = 60
-
-        # uncomment for a sampling of ansi colors
-        # colors = itertools.cycle([None] + [getattr(ANSI, attr) for attr in dir(ANSI) if not attr.startswith("__")])
-        # print([attr for attr in dir(ANSI) if not attr.startswith("__")])
-
-        # None of the ansi choices are very good for a zebra striped table.
-        # plain coloring combined with ANSI.GREEN or ANSI.BROWN seems like the
-        # best combination.
-        colors = itertools.cycle([None, ANSI.GREEN])
-
-        def align_arg(arg):
-            total_spacing = len(left_spacing) + max_size + len(middle_spacing)
-            # offset caused by arg going out of bounds of max_size. need to
-            # inset our aligned help to account for this
-            offset = max(0, len(arg.str_full) - max_size)
-
-            aligned_help = self.align_help(
-                arg.help,
-                newline_after=help_newline_after,
-                spacing=total_spacing,
-                offset=offset
-            )
-
-            v = f"{left_spacing}{arg.str_full:{max_size}}{middle_spacing}{aligned_help}"
-            color = next(colors)
-            if color is not None:
-                v = f"{color}{v}{ANSI.END}"
-
-            return v
-
-        return"\n".join(align_arg(arg) for arg in args)
 
     async def invoke(self, message, arg_string):
         if self.permissions:
