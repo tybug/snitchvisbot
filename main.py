@@ -345,9 +345,13 @@ class Snitchvis(Client):
                 db.commit()
                 events = []
 
-        last_messages = [m async for m in discord_channel.history(limit=1)]
+        # commit any stragglers
+        for (message_, event) in events:
+            db.add_event(message_, event, commit=False)
+        db.commit()
 
-        # only update if the channel has messages
+        # update last_indexed (if the channel has messages at all)
+        last_messages = [m async for m in discord_channel.history(limit=1)]
         if last_messages:
             last_message = last_messages[0]
             db.update_last_indexed(channel.id, last_message.id)
