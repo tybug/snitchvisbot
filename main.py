@@ -88,10 +88,10 @@ class Snitchvis(Client):
             self.permissions,
             self.index,
             self.full_reindex,
-            self.set_prefix,
             self.tutorial,
             self.invite,
-            self.help
+            self.help,
+            self.set_prefix,
         ]
 
         self.default_kira_config = KiraConfig(None, "`[%TIME%]` `[%GROUP%]` "
