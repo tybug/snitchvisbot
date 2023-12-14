@@ -334,9 +334,9 @@ class Snitchvis(Client):
             num_events += 1
 
             if len(events) >= 1_000:
-                content = f"Indexing {discord_channel.mention}... added {num_events:,} new events so far"
-                embed = utils.create_embed(content)
                 if update_message:
+                    content = f"Indexing {discord_channel.mention}... added {num_events:,} new events so far"
+                    embed = utils.create_embed(content)
                     await update_message.edit(embed=embed)
 
                 # batch commit
