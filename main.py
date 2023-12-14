@@ -343,8 +343,8 @@ class Snitchvis(Client):
                     except Exception as e:
                         # Users have run into "connection reset by peer" while
                         # indexing. I suspect this edit call is where it occured.
-                        # Indexing is very costly to restart, so we need to be
-                        # resilient here.
+                        # Indexing can be very costly to restart, so we need to
+                        # be resilient here.
                         #
                         # TODO we should retry this at a lower level, for all
                         # messages. Replace message with our own class that
