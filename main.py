@@ -10,6 +10,7 @@ from collections import defaultdict
 import re
 import traceback
 import random
+import asyncio
 
 from discord import File
 from discord.utils import utcnow
@@ -337,7 +338,25 @@ class Snitchvis(Client):
                 if update_message:
                     content = f"Indexing {discord_channel.mention}... added {num_events:,} new events so far"
                     embed = utils.create_embed(content)
-                    await update_message.edit(embed=embed)
+                    try:
+                        await update_message.edit(embed=embed)
+                    except Exception as e:
+                        # Users have run into "connection reset by peer" while
+                        # indexing. I suspect this edit call is where it occured.
+                        # Indexing is very costly to restart, so we need to be
+                        # resilient here.
+                        #
+                        # TODO we should retry this at a lower level, for all
+                        # messages. Replace message with our own class that
+                        # redefines anything awaitable (edit, etc) and retries
+                        # exceptions.
+
+                        err = "".join(traceback.format_exception(e))
+                        await self.error_log_channel.send(f"Ignoring exception while "
+                            f"updating index progress message: \n```\n{err}\n```")
+                        # give any connection issues some time to resolve
+                        # themselves.
+                        asyncio.sleep(5)
 
                 # batch commit
                 for (message_, event) in events:
