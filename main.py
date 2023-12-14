@@ -356,7 +356,7 @@ class Snitchvis(Client):
                             f"updating index progress message: \n```\n{err}\n```")
                         # give any connection issues some time to resolve
                         # themselves.
-                        asyncio.sleep(5)
+                        await asyncio.sleep(5)
 
                 # batch commit
                 for (message_, event) in events:
