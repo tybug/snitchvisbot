@@ -1225,7 +1225,7 @@ class Snitchvis(Client):
         await message.channel.send(aligned, type="code")
 
     @command("snitchvissetprefix",
-        help="Sets a new prefix for snitchvis. The default prefix is `.`.",
+        help="Sets a new prefix for snitchvis. The default prefix is . (a period).",
         args=[
             Arg("prefix", help="The new prefix to use. Must be a single "
             "character.")
