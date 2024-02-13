@@ -21,7 +21,7 @@ def channel_str(channels):
     return ", ".join(channel.mention for channel in channels)
 
 def role_str(roles):
-    return "`" + "`, `".join(role.name for role in roles) + "`"
+    return "`" + "`, `".join("<deleted role>" if role is None else role.name for role in roles) + "`"
 
 def channel_accessible(guild, channel):
     roles = channel.allowed_roles_to_discord(guild)
