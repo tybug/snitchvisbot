@@ -592,6 +592,14 @@ class Snitchvis(Client):
     async def index(self, message):
         channels = db.get_snitch_channels(message.guild.id)
 
+        for channel in channels:
+            if channel.to_discord(message.guild) is None:
+                await message.channel.send("Removing deleted channel "
+                    f"(id {channel.id}) from snitch channels. No action is "
+                    "necessary.")
+                channels.remove(channel)
+                db.remove_snitch_channel(channel.id)
+
         if not channels:
             await message.channel.send("No snitch channels to index. Use "
                 "`.add-channel #channel` to add snitch channels.")
