@@ -79,7 +79,7 @@ class Command:
         except ValueError:
             # lone single quotations break things. apparently single quotes are
             # valid identifiers in namelayer groups. sigh.
-            await message.channel.send("No matching parenthesis found. If you "
+            await message.channel.send("No matching quote found. If you "
                 "are passing a parameter which contains a single quote "
                 "(e.g. `my_nation's_group`), wrap that parameter in double "
                 "quotes instead (e.g. `\"my_nation's_group\"`)")
